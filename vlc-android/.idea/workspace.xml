@@ -1,0 +1,1034 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayoutPreviewToolWindow">
+    <option name="state">
+      <GlobalState>
+        <option name="hideForNonLayoutFiles" value="false" />
+        <option name="showDeviceFrames" value="false" />
+        <option name="showEffects" value="false" />
+        <option name="visible" value="false" />
+      </GlobalState>
+    </option>
+  </component>
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="c33e988d-83fe-47f2-a5c1-dcccabcbebfc" name="Default" comment="" />
+    <ignored path="VLC.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="CLEAR_OUTPUT_DIRECTORY" value="false" />
+  </component>
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="DaemonCodeAnalyzer">
+    <disable_hints />
+  </component>
+  <component name="DebuggerManager">
+    <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </breakpoint_any>
+    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
+    <breakpoint_rules />
+    <ui_properties />
+  </component>
+  <component name="ErrorTreeViewConfiguration">
+    <option name="hideWarnings" value="true" />
+    <option name="HIDE_WARNINGS" value="true" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="FavoritesManager">
+    <favorites_list name="VLC" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="AndroidManifest.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="28" column="36" selection-start="1219" selection-end="1219" vertical-scroll-proportion="0.0" vertical-offset="476" max-vertical-offset="6868">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MainActivity.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="28" column="0" selection-start="1295" selection-end="1295" vertical-scroll-proportion="0.19843341" vertical-offset="18" max-vertical-offset="11815">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Util.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/Util.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="71" column="25" selection-start="2696" selection-end="2696" vertical-scroll-proportion="0.0" vertical-offset="1207" max-vertical-offset="8007">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DirectoryViewFragment.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="181" column="26" selection-start="7085" selection-end="7085" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2584">
+              <folding>
+                <element signature="method#sortBy#0;class#DirectoryViewFragment#0" expanded="false" />
+                <element signature="method#refresh#0;class#DirectoryViewFragment#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="VideoGridFragment.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="182" column="4" selection-start="6964" selection-end="6964" vertical-scroll-proportion="0.0" vertical-offset="4336" max-vertical-offset="6545">
+              <folding>
+                <element signature="method#hasSpaceForGrid#0;class#VideoGridFragment#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PreferencesActivity.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="58" column="64" selection-start="2598" selection-end="2613" vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="3043">
+              <folding>
+                <element signature="e#5587#5609#0" expanded="true" />
+                <element signature="e#5647#5666#0" expanded="true" />
+                <element signature="e#6919#6944#0" expanded="true" />
+                <element signature="e#9543#9568#0" expanded="true" />
+                <element signature="method#onSharedPreferenceChanged#0;class#PreferencesActivity#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="preferences.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/res/xml/preferences.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="10" column="4" selection-start="396" selection-end="722" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
+              <folding>
+                <element signature="e#157#189#0" expanded="true" />
+                <element signature="tag#PreferenceCategory#0;tag#PreferenceScreen#0" expanded="false" />
+                <element signature="e#284#313#0" expanded="true" />
+                <element signature="e#340#361#0" expanded="true" />
+                <element signature="e#430#464#0" expanded="true" />
+                <element signature="e#607#640#0" expanded="true" />
+                <element signature="e#667#692#0" expanded="true" />
+                <element signature="e#762#791#0" expanded="true" />
+                <element signature="tag#PreferenceCategory#2;tag#PreferenceScreen#0" expanded="false" />
+                <element signature="e#1054#1082#0" expanded="true" />
+                <element signature="e#1234#1277#0" expanded="true" />
+                <element signature="e#1304#1339#0" expanded="true" />
+                <element signature="e#1490#1532#0" expanded="true" />
+                <element signature="e#1559#1593#0" expanded="true" />
+                <element signature="e#1740#1777#0" expanded="true" />
+                <element signature="e#1804#1833#0" expanded="true" />
+                <element signature="e#1988#2033#0" expanded="true" />
+                <element signature="e#2060#2097#0" expanded="true" />
+                <element signature="e#2166#2202#0" expanded="true" />
+                <element signature="tag#PreferenceCategory#3;tag#PreferenceScreen#0" expanded="false" />
+                <element signature="e#2448#2479#0" expanded="true" />
+                <element signature="e#2506#2529#0" expanded="true" />
+                <element signature="e#2770#2790#0" expanded="true" />
+                <element signature="e#2819#2847#0" expanded="true" />
+                <element signature="e#2992#3027#0" expanded="true" />
+                <element signature="e#3054#3081#0" expanded="true" />
+                <element signature="e#3179#3208#0" expanded="true" />
+                <element signature="e#3235#3256#0" expanded="true" />
+                <element signature="e#3412#3458#0" expanded="true" />
+                <element signature="e#3485#3523#0" expanded="true" />
+                <element signature="e#3592#3622#0" expanded="true" />
+                <element signature="tag#PreferenceCategory#4;tag#PreferenceScreen#0" expanded="false" />
+                <element signature="e#3927#3960#0" expanded="true" />
+                <element signature="e#4056#4079#0" expanded="true" />
+                <element signature="e#4205#4229#0" expanded="true" />
+                <element signature="e#4297#4330#0" expanded="true" />
+                <element signature="tag#PreferenceCategory#5;tag#PreferenceScreen#0" expanded="false" />
+                <element signature="e#4475#4512#0" expanded="true" />
+                <element signature="e#4539#4568#0" expanded="true" />
+                <element signature="e#4613#4641#0" expanded="true" />
+                <element signature="e#4745#4765#0" expanded="true" />
+                <element signature="e#4865#4887#0" expanded="true" />
+                <element signature="e#4918#4932#0" expanded="true" />
+                <element signature="e#5032#5054#0" expanded="true" />
+                <element signature="e#5085#5099#0" expanded="true" />
+                <element signature="e#5214#5247#0" expanded="true" />
+                <element signature="e#5278#5303#0" expanded="true" />
+                <element signature="e#5531#5558#0" expanded="true" />
+                <element signature="e#5589#5609#0" expanded="true" />
+                <element signature="e#5746#5760#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AudioBrowserFragment.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="369" column="8" selection-start="14136" selection-end="14297" vertical-scroll-proportion="0.0" vertical-offset="4589" max-vertical-offset="5406">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AudioBrowserListAdapter.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="46" column="104" selection-start="1876" selection-end="1876" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5338">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="audio_browser.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/res/layout/audio_browser.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="94" column="20" selection-start="3977" selection-end="3986" vertical-scroll-proportion="0.0" vertical-offset="496" max-vertical-offset="1275">
+              <folding>
+                <element signature="tag#LinearLayout#0;tag#org.videolan.vlc.widget.HeaderScrollView#0;tag#RelativeLayout#0;tag#LinearLayout#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="strings.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/res/values-zh-rCN/strings.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="198" column="48" selection-start="10061" selection-end="10061" vertical-scroll-proportion="0.0" vertical-offset="2736" max-vertical-offset="3502">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="strings.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/res/values/strings.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="409" column="49" selection-start="21006" selection-end="21006" vertical-scroll-proportion="0.0" vertical-offset="4793" max-vertical-offset="5627">
+              <folding>
+                <element signature="tag#string-array#4;tag#resources#0" expanded="false" />
+                <element signature="tag#string-array#5;tag#resources#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DirectoryAdapter.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="352" column="17" selection-start="12356" selection-end="12356" vertical-scroll-proportion="0.0" vertical-offset="2090" max-vertical-offset="4743">
+              <folding>
+                <element signature="class#Node#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="class#DirectoryViewHolder#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#populateNode#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="e#11169#11210#0" expanded="true" />
+                <element signature="method#isChildFile#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#getMediaLocation#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#isRoot#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#getAllMediaLocations#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#refresh#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#getParentDir#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="method#getVisibleName#0;class#DirectoryAdapter#0" expanded="false" />
+                <element signature="e#16121#16187#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Media.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/libvlc/Media.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="85" column="10" selection-start="3848" selection-end="3850" vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="5559">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindManager">
+    <FindUsagesManager>
+      <setting name="OPEN_NEW_TAB" value="false" />
+    </FindUsagesManager>
+  </component>
+  <component name="Git.Settings">
+    <option name="SYNC_SETTING" value="DONT" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="changedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/VLC.iml" />
+        <option value="$PROJECT_DIR$/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java" />
+        <option value="$PROJECT_DIR$/res/xml/preferences.xml" />
+        <option value="$PROJECT_DIR$/res/values-zh-rCN/strings.xml" />
+        <option value="$PROJECT_DIR$/res/values/strings.xml" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="54" />
+    <option name="y" value="-8" />
+    <option name="width" value="1554" />
+    <option name="height" value="916" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+    <OptionsSetting value="true" id="Add" />
+    <OptionsSetting value="true" id="Remove" />
+    <OptionsSetting value="true" id="Checkout" />
+    <OptionsSetting value="true" id="Update" />
+    <OptionsSetting value="true" id="Status" />
+    <OptionsSetting value="true" id="Edit" />
+    <ConfirmationsSetting value="0" id="Add" />
+    <ConfirmationsSetting value="0" id="Remove" />
+  </component>
+  <component name="ProjectReloadState">
+    <option name="STATE" value="0" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+    </navigator>
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="videolan" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="videolan" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="videolan" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="video" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="videolan" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="audio" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VLC" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vlc-android" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="videolan" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="options.splitter.main.proportions" value="0.19595142" />
+    <property name="MemberChooser.sorted" value="false" />
+    <property name="options.lastSelected" value="preferences.fileTypes" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../java-libs/ActionBarSherlock/libs/android-support-v4.jar!/" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
+    <property name="recentsLimit" value="5" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="OverrideImplement.combined" value="true" />
+    <property name="OverrideImplement.overriding.sorted" value="false" />
+  </component>
+  <component name="RunManager" selected="Android Application.VLC">
+    <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Tests">
+      <module name="" />
+      <option name="TESTING_TYPE" value="0" />
+      <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <method />
+    </configuration>
+    <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android Application">
+      <module name="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="DEPLOY" value="true" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <configuration default="false" name="VLC" type="AndroidRunConfigurationType" factoryName="Android Application">
+      <module name="VLC" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="DEPLOY" value="true" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="Android Application.VLC" />
+    </list>
+    <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
+      <Host>localhost</Host>
+      <Port>5050</Port>
+    </configuration>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="all">
+    <option name="USER" value="" />
+    <option name="PASSWORD" value="" />
+    <option name="mySSHConnectionTimeout" value="30000" />
+    <option name="mySSHReadTimeout" value="30000" />
+    <option name="LAST_MERGED_REVISION" />
+    <option name="MERGE_DRY_RUN" value="false" />
+    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
+    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
+    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
+    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
+    <option name="FORCE_UPDATE" value="false" />
+    <option name="IGNORE_EXTERNALS" value="false" />
+    <configuration useDefault="false">C:\Users\archko\AppData\Roaming\Subversion</configuration>
+    <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c33e988d-83fe-47f2-a5c1-dcccabcbebfc" name="Default" comment="" />
+      <created>1387363895516</created>
+      <updated>1387363895516</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="54" y="-8" width="1554" height="916" extended-state="6" />
+    <editor active="false" />
+    <layout>
+      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28485253" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32948717" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="true" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32948717" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24950495" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USERS">
+      <collection />
+    </option>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="myTodoPanelSettings">
+      <TodoPanelSettings />
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+  </component>
+  <component name="antWorkspaceConfiguration">
+    <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
+    <option name="FILTER_TARGETS" value="false" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/../java-libs/ActionBarSherlock/src/com/actionbarsherlock/app/SherlockDialogFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="52" selection-start="1134" selection-end="1134" vertical-scroll-proportion="0.26631853" vertical-offset="0" max-vertical-offset="1054" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../java-libs/ActionBarSherlock/src/com/actionbarsherlock/app/SherlockListFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="42" selection-start="696" selection-end="696" vertical-scroll-proportion="0.08877285" vertical-offset="0" max-vertical-offset="1054" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/VLC.iml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="80" selection-start="1299" selection-end="1299" vertical-scroll-proportion="0.45442876" vertical-offset="54" max-vertical-offset="833" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="36" selection-start="1219" selection-end="1219" vertical-scroll-proportion="0.0" vertical-offset="241" max-vertical-offset="1326">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/widget/HeaderScrollView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="13" selection-start="1357" selection-end="1357" vertical-scroll-proportion="-0.6644909" vertical-offset="611" max-vertical-offset="1377">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/widget/AnimatedCoverView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="34" column="13" selection-start="1511" selection-end="1511" vertical-scroll-proportion="-1.1527416" vertical-offset="985" max-vertical-offset="1751">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/Util.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="71" column="25" selection-start="2696" selection-end="2696" vertical-scroll-proportion="0.0" vertical-offset="1207" max-vertical-offset="8007">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/libvlc/Media.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="85" column="10" selection-start="3848" selection-end="3850" vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="5559">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="58" column="64" selection-start="2598" selection-end="2613" vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="3043">
+          <folding>
+            <element signature="e#5587#5609#0" expanded="true" />
+            <element signature="e#5647#5666#0" expanded="true" />
+            <element signature="e#6919#6944#0" expanded="true" />
+            <element signature="e#9543#9568#0" expanded="true" />
+            <element signature="method#onSharedPreferenceChanged#0;class#PreferencesActivity#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/values-zh-rCN/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="198" column="48" selection-start="10061" selection-end="10061" vertical-scroll-proportion="0.0" vertical-offset="2736" max-vertical-offset="3502">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="409" column="49" selection-start="21006" selection-end="21006" vertical-scroll-proportion="0.0" vertical-offset="4793" max-vertical-offset="5627">
+          <folding>
+            <element signature="tag#string-array#4;tag#resources#0" expanded="false" />
+            <element signature="tag#string-array#5;tag#resources#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/xml/preferences.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="10" column="4" selection-start="396" selection-end="722" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
+          <folding>
+            <element signature="e#157#189#0" expanded="true" />
+            <element signature="tag#PreferenceCategory#0;tag#PreferenceScreen#0" expanded="false" />
+            <element signature="e#284#313#0" expanded="true" />
+            <element signature="e#340#361#0" expanded="true" />
+            <element signature="e#430#464#0" expanded="true" />
+            <element signature="e#607#640#0" expanded="true" />
+            <element signature="e#667#692#0" expanded="true" />
+            <element signature="e#762#791#0" expanded="true" />
+            <element signature="tag#PreferenceCategory#2;tag#PreferenceScreen#0" expanded="false" />
+            <element signature="e#1054#1082#0" expanded="true" />
+            <element signature="e#1234#1277#0" expanded="true" />
+            <element signature="e#1304#1339#0" expanded="true" />
+            <element signature="e#1490#1532#0" expanded="true" />
+            <element signature="e#1559#1593#0" expanded="true" />
+            <element signature="e#1740#1777#0" expanded="true" />
+            <element signature="e#1804#1833#0" expanded="true" />
+            <element signature="e#1988#2033#0" expanded="true" />
+            <element signature="e#2060#2097#0" expanded="true" />
+            <element signature="e#2166#2202#0" expanded="true" />
+            <element signature="tag#PreferenceCategory#3;tag#PreferenceScreen#0" expanded="false" />
+            <element signature="e#2448#2479#0" expanded="true" />
+            <element signature="e#2506#2529#0" expanded="true" />
+            <element signature="e#2770#2790#0" expanded="true" />
+            <element signature="e#2819#2847#0" expanded="true" />
+            <element signature="e#2992#3027#0" expanded="true" />
+            <element signature="e#3054#3081#0" expanded="true" />
+            <element signature="e#3179#3208#0" expanded="true" />
+            <element signature="e#3235#3256#0" expanded="true" />
+            <element signature="e#3412#3458#0" expanded="true" />
+            <element signature="e#3485#3523#0" expanded="true" />
+            <element signature="e#3592#3622#0" expanded="true" />
+            <element signature="tag#PreferenceCategory#4;tag#PreferenceScreen#0" expanded="false" />
+            <element signature="e#3927#3960#0" expanded="true" />
+            <element signature="e#4056#4079#0" expanded="true" />
+            <element signature="e#4205#4229#0" expanded="true" />
+            <element signature="e#4297#4330#0" expanded="true" />
+            <element signature="tag#PreferenceCategory#5;tag#PreferenceScreen#0" expanded="false" />
+            <element signature="e#4475#4512#0" expanded="true" />
+            <element signature="e#4539#4568#0" expanded="true" />
+            <element signature="e#4613#4641#0" expanded="true" />
+            <element signature="e#4745#4765#0" expanded="true" />
+            <element signature="e#4865#4887#0" expanded="true" />
+            <element signature="e#4918#4932#0" expanded="true" />
+            <element signature="e#5032#5054#0" expanded="true" />
+            <element signature="e#5085#5099#0" expanded="true" />
+            <element signature="e#5214#5247#0" expanded="true" />
+            <element signature="e#5278#5303#0" expanded="true" />
+            <element signature="e#5531#5558#0" expanded="true" />
+            <element signature="e#5589#5609#0" expanded="true" />
+            <element signature="e#5746#5760#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioListFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="53" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3842">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/layout/audio_browser.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="94" column="20" selection-start="3977" selection-end="3986" vertical-scroll-proportion="0.0" vertical-offset="496" max-vertical-offset="1275">
+          <folding>
+            <element signature="tag#LinearLayout#0;tag#org.videolan.vlc.widget.HeaderScrollView#0;tag#RelativeLayout#0;tag#LinearLayout#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="46" column="104" selection-start="1876" selection-end="1876" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5338">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="352" column="17" selection-start="12356" selection-end="12356" vertical-scroll-proportion="0.0" vertical-offset="2090" max-vertical-offset="4743">
+          <folding>
+            <element signature="class#Node#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="class#DirectoryViewHolder#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#populateNode#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="e#11169#11210#0" expanded="true" />
+            <element signature="method#isChildFile#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#getMediaLocation#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#isRoot#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#getAllMediaLocations#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#refresh#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#getParentDir#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="method#getVisibleName#0;class#DirectoryAdapter#0" expanded="false" />
+            <element signature="e#16121#16187#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="369" column="8" selection-start="14136" selection-end="14297" vertical-scroll-proportion="0.0" vertical-offset="4589" max-vertical-offset="5406">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="182" column="4" selection-start="6964" selection-end="6964" vertical-scroll-proportion="0.0" vertical-offset="4336" max-vertical-offset="6545">
+          <folding>
+            <element signature="method#hasSpaceForGrid#0;class#VideoGridFragment#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioUtil.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="56" column="13" selection-start="2164" selection-end="2164" vertical-scroll-proportion="0.11096606" vertical-offset="0" max-vertical-offset="4641">
+          <folding>
+            <element signature="method#setRingtone#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#prepareCacheFolder#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#clearCacheFolder#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#deleteContent#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#getCoverFromMediaStore#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#getCoverFromVlc#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#getCoverFromFolder#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#getCover#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#writeBitmap#0;class#AudioUtil#0" expanded="false" />
+            <element signature="method#readCoverBitmap#0;class#AudioUtil#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="181" column="26" selection-start="7085" selection-end="7085" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2584">
+          <folding>
+            <element signature="method#sortBy#0;class#DirectoryViewFragment#0" expanded="false" />
+            <element signature="method#refresh#0;class#DirectoryViewFragment#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="0" selection-start="1295" selection-end="1295" vertical-scroll-proportion="0.19843341" vertical-offset="18" max-vertical-offset="11815">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>Android</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.7</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>ActionBarSherlock</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+                <option value="0.6" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>Android 4.3 Platform</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>
+
