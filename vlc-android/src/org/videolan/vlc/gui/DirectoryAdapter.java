@@ -314,9 +314,10 @@ public class DirectoryAdapter extends BaseAdapter {
         String holderText = "";
         if(selectedNode.isFile()) {
             Log.d(TAG, "Loading media " + selectedNode.name);
-            Media m = new Media(LibVLC.getExistingInstance(), getMediaLocation(position));
+            /*Media m = new Media(LibVLC.getExistingInstance(), getMediaLocation(position));
             holder.title.setText(m.getTitle());
-            holderText = m.getSubtitle();
+            holderText = m.getSubtitle();*/
+            holder.title.setText(mCurrentNode.children.get(position).name);
         } else
             holder.title.setText(selectedNode.getVisibleName());
 
