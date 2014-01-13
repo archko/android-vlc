@@ -198,7 +198,7 @@ public class AudioPlayerFragment extends SherlockFragment implements IAudioPlaye
     public void onResume() {
         super.onResume();
         MainActivity activity = (MainActivity) getActivity();
-        activity.setMiniPlayerKeepHidden(true);
+        //activity.setMiniPlayerKeepHidden(true);
         getSherlockActivity().getSupportActionBar().hide();
         mAudioController.addAudioPlayer(this);
     }
@@ -207,7 +207,7 @@ public class AudioPlayerFragment extends SherlockFragment implements IAudioPlaye
     public void onPause() {
         super.onPause();
         MainActivity activity = (MainActivity) getActivity();
-        activity.setMiniPlayerKeepHidden(false);
+        //activity.setMiniPlayerKeepHidden(false);
         getSherlockActivity().getSupportActionBar().show();
         mAudioController.removeAudioPlayer(this);
     }
@@ -294,6 +294,11 @@ public class AudioPlayerFragment extends SherlockFragment implements IAudioPlaye
         mTimeline.setOnSeekBarChangeListener(mTimelineListner);
 
         updateList();
+    }
+
+    @Override
+    public void updateProgress() {
+
     }
 
     private void updateList() {

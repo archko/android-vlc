@@ -1,7 +1,7 @@
 /*****************************************************************************
  * MainActivity.java
  *****************************************************************************
- * Copyright © 2011-2012 VLC authors and VideoLAN
+ * Copyright © 2011-2014 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@ import org.videolan.vlc.Util;
 import org.videolan.vlc.VLCCallbackTask;
 import org.videolan.vlc.WeakHandler;
 import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
-import org.videolan.vlc.gui.audio.AudioPlayerFragment;
 import org.videolan.vlc.gui.audio.EqualizerFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.widget.AudioMiniPlayer;
+import org.videolan.vlc.widget.SlidingPaneLayout;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
@@ -101,6 +101,7 @@ public class MainActivity extends SherlockFragmentActivity {
     private SidebarAdapter mSidebarAdapter;
     private AudioMiniPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
+    private SlidingPaneLayout mSlidingPane;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -176,6 +177,8 @@ public class MainActivity extends SherlockFragmentActivity {
         View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
         mMenu.setContent(v_main);
 
+        mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
+
         View sidebar = LayoutInflater.from(this).inflate(R.layout.sidebar, null);
         final ListView listView = (ListView)sidebar.findViewById(android.R.id.list);
         listView.setFooterDividersEnabled(true);
@@ -212,6 +215,10 @@ public class MainActivity extends SherlockFragmentActivity {
                  */
                 getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
+                /* Hide the mini player */
+                if(mSlidingPane.getState() == mSlidingPane.STATE_CLOSED)
+                    mSlidingPane.openPane();
+
                 /* Switch the fragment */
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                 ft.replace(R.id.fragment_placeholder, getFragment(entry.id), entry.id);
@@ -235,8 +242,6 @@ public class MainActivity extends SherlockFragmentActivity {
         /* Set up the mini audio player */
         mAudioPlayer = new AudioMiniPlayer();
         mAudioController = AudioServiceController.getInstance();
-        mAudioPlayer.setAudioPlayerControl(mAudioController);
-        mAudioPlayer.update();
 
         getSupportFragmentManager().beginTransaction()
             .replace(R.id.audio_mini_player, mAudioPlayer)
@@ -636,7 +641,7 @@ public class MainActivity extends SherlockFragmentActivity {
                     }
                 }
             } else if (action.equalsIgnoreCase(ACTION_SHOW_PLAYER)) {
-                ShowFragment("player", AudioPlayerFragment.class);
+                showMiniPlayer();
             }
         }
     };
@@ -731,11 +736,18 @@ public class MainActivity extends SherlockFragmentActivity {
     }
 
     /**
-     * Tell the mini player to keep hidden or not.
-     * @param k true if the player must keep hidden, else false.
+     * Show the mini player.
      */
-    public void setMiniPlayerKeepHidden(boolean k)
-    {
-        mAudioPlayer.setKeepHidden(k);
+    public void showMiniPlayer() {
+        // Open the pane only if is entirely opened.
+        if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED_ENTIRELY)
+            mSlidingPane.openPane();
+    }
+
+    /**
+     * Hide the mini player.
+     */
+    public void hideMiniPlayer() {
+        mSlidingPane.openPaneEntirely();
     }
 }

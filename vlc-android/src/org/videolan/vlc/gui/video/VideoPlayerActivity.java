@@ -51,7 +51,6 @@ import org.videolan.vlc.WeakHandler;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
 import org.videolan.vlc.gui.PreferencesActivity;
-import org.videolan.vlc.gui.audio.AudioPlayerFragment;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -70,6 +69,7 @@ import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -178,6 +178,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     //Volume
     private AudioManager mAudioManager;
     private int mAudioMax;
+    private OnAudioFocusChangeListener mAudioFocusListener;
 
     //Touch Events
     private static final int TOUCH_NONE = 0;
@@ -332,7 +333,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             Log.d(TAG, "mLocation = \"" + mLocation + "\"");
             AudioServiceController.getInstance().showWithoutParse(savedIndexPosition);
             AudioServiceController.getInstance().unbindAudioService(this);
-            AudioPlayerFragment.start(this);
             return;
         }
 
@@ -625,6 +625,44 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mInfo.setVisibility(View.INVISIBLE);
     }
 
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    private void changeAudioFocus(boolean gain) {
+        if(!Util.isFroyoOrLater()) // NOP if not supported
+            return;
+
+        if (mAudioFocusListener == null) {
+            mAudioFocusListener = new OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    /*
+                     * Pause playback during alerts and notifications
+                     */
+                    switch (focusChange)
+                    {
+                        case AudioManager.AUDIOFOCUS_LOSS:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                            if (mLibVLC.isPlaying())
+                                mLibVLC.pause();
+                            break;
+                        case AudioManager.AUDIOFOCUS_GAIN:
+                        case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
+                        case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
+                            if (!mLibVLC.isPlaying())
+                                mLibVLC.play();
+                            break;
+                    }
+                }
+            };
+        }
+
+        AudioManager am = (AudioManager)getSystemService(AUDIO_SERVICE);
+        if(gain)
+            am.requestAudioFocus(mAudioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        else
+            am.abandonAudioFocus(mAudioFocusListener);
+    }
+
     /**
      *  Handle libvlc asynchronous events
      */
@@ -648,15 +686,18 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                      *  playback. (#7540) */
                     activity.setESTrackLists(true);
                     activity.setESTracks();
+                    activity.changeAudioFocus(true);
                     break;
                 case EventHandler.MediaPlayerPaused:
                     Log.i(TAG, "MediaPlayerPaused");
                     break;
                 case EventHandler.MediaPlayerStopped:
                     Log.i(TAG, "MediaPlayerStopped");
+                    activity.changeAudioFocus(false);
                     break;
                 case EventHandler.MediaPlayerEndReached:
                     Log.i(TAG, "MediaPlayerEndReached");
+                    activity.changeAudioFocus(false);
                     activity.endReached();
                     break;
                 case EventHandler.MediaPlayerVout:
@@ -762,15 +803,16 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     private void changeSurfaceSize() {
         // get screen size
-        int dw = getWindow().getDecorView().getWidth();
-        int dh = getWindow().getDecorView().getHeight();
+        int sw = getWindow().getDecorView().getWidth();
+        int sh = getWindow().getDecorView().getHeight();
+
+        double dw = sw, dh = sh;
 
         // getWindow().getDecorView() doesn't always take orientation into account, we have to correct the values
         boolean isPortrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
-        if (dw > dh && isPortrait || dw < dh && !isPortrait) {
-            int d = dw;
-            dw = dh;
-            dh = d;
+        if (sw > sh && isPortrait || sw < sh && !isPortrait) {
+            dw = sh;
+            dh = sw;
         }
 
         // sanity check
@@ -793,40 +835,40 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         }
 
         // compute the display aspect ratio
-        double dar = (double) dw / (double) dh;
+        double dar = dw / dh;
 
         switch (mCurrentSize) {
             case SURFACE_BEST_FIT:
                 if (dar < ar)
-                    dh = (int) (dw / ar);
+                    dh = dw / ar;
                 else
-                    dw = (int) (dh * ar);
+                    dw = dh * ar;
                 break;
             case SURFACE_FIT_HORIZONTAL:
-                dh = (int) (dw / ar);
+                dh = dw / ar;
                 break;
             case SURFACE_FIT_VERTICAL:
-                dw = (int) (dh * ar);
+                dw = dh * ar;
                 break;
             case SURFACE_FILL:
                 break;
             case SURFACE_16_9:
                 ar = 16.0 / 9.0;
                 if (dar < ar)
-                    dh = (int) (dw / ar);
+                    dh = dw / ar;
                 else
-                    dw = (int) (dh * ar);
+                    dw = dh * ar;
                 break;
             case SURFACE_4_3:
                 ar = 4.0 / 3.0;
                 if (dar < ar)
-                    dh = (int) (dw / ar);
+                    dh = dw / ar;
                 else
-                    dw = (int) (dh * ar);
+                    dw = dh * ar;
                 break;
             case SURFACE_ORIGINAL:
                 dh = mVideoVisibleHeight;
-                dw = (int) vw;
+                dw = vw;
                 break;
         }
 
@@ -835,14 +877,14 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         // set display size
         LayoutParams lp = mSurface.getLayoutParams();
-        lp.width  = dw * mVideoWidth / mVideoVisibleWidth;
-        lp.height = dh * mVideoHeight / mVideoVisibleHeight;
+        lp.width  = (int) Math.ceil(dw * mVideoWidth / mVideoVisibleWidth);
+        lp.height = (int) Math.ceil(dh * mVideoHeight / mVideoVisibleHeight);
         mSurface.setLayoutParams(lp);
 
         // set frame size (crop if necessary)
         lp = mSurfaceFrame.getLayoutParams();
-        lp.width = dw;
-        lp.height = dh;
+        lp.width = (int) Math.floor(dw);
+        lp.height = (int) Math.floor(dh);
         mSurfaceFrame.setLayoutParams(lp);
 
         mSurface.invalidate();
