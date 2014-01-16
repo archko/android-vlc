@@ -24,6 +24,7 @@ package org.videolan.vlc.widget;
  */
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -47,6 +48,8 @@ import android.view.accessibility.AccessibilityEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+
+import org.videolan.vlc.R;
 
 
 public class SlidingPaneLayout extends ViewGroup {
@@ -140,6 +143,34 @@ public class SlidingPaneLayout extends ViewGroup {
         }
     }
 
+    private PanelSlideListener mPanelSlideListener;
+
+    /**
+     * Listener for monitoring events about the sliding pane.
+     */
+    public interface PanelSlideListener {
+        /**
+         * Called when the sliding pane position changes.
+         * @param slideOffset The new offset of this sliding pane within its range, from 0-1
+         */
+        public void onPanelSlide(float slideOffset);
+
+        /**
+         * Called when the sliding pane becomes slid open.
+         */
+        public void onPanelOpened();
+
+        /**
+         * Called when the sliding pane becomes slid open entirely.
+         */
+        public void onPanelOpenedEntirely();
+
+        /**
+         * Called when a sliding pane becomes slid completely closed.
+         */
+        public void onPanelClosed();
+    }
+
     public SlidingPaneLayout(Context context) {
         this(context, null);
     }
@@ -151,17 +182,36 @@ public class SlidingPaneLayout extends ViewGroup {
     public SlidingPaneLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
+        mOverhangSize = -1;
+
+        if (attrs != null) {
+            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingPaneLayout);
+
+            if (ta != null)
+                mOverhangSize = ta.getDimensionPixelSize(R.styleable.SlidingPaneLayout_overhangSize, -1);
+            ta.recycle();
+        }
+
         final float density = context.getResources().getDisplayMetrics().density;
-        mOverhangSize = (int) (DEFAULT_OVERHANG_SIZE * density + 0.5f);
+        if (mOverhangSize == -1) {
+            mOverhangSize = (int) (DEFAULT_OVERHANG_SIZE * density + 0.5f);
+        }
 
         setWillNotDraw(false);
 
         ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegate());
         ViewCompat.setImportantForAccessibility(this, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-        mDragHelper = ViewDragHelper.create(this, 0.5f, new DragHelperCallback());
-        mDragHelper.setEdgeTrackingEnabled(ViewDragHelper.EDGE_TOP);
+        mDragHelper = ViewDragHelper.create(this, 1.0f, new DragHelperCallback());
         mDragHelper.setMinVelocity(MIN_FLING_VELOCITY * density);
+    }
+
+    /**
+     * Set the panel slide listener.
+     * @param l the PanelSlideListener
+     */
+    public void setPanelSlideListener(PanelSlideListener l) {
+        mPanelSlideListener = l;
     }
 
     /**
@@ -402,10 +452,6 @@ public class SlidingPaneLayout extends ViewGroup {
             int offset = 0;
 
             if (lp.slideable) {
-                int overhangSize = child.getMinimumHeight();
-                if (overhangSize != 0)
-                    mOverhangSize = overhangSize;
-
                 final int margin = lp.topMargin + lp.bottomMargin;
                 final int range = Math.min(nextYStart, height - paddingBottom) - yStart - margin;
                 mSlideRange = range;
@@ -541,21 +587,36 @@ public class SlidingPaneLayout extends ViewGroup {
     }
 
     private boolean closePane(View pane, int initialVelocity) {
-        if (mFirstLayout || smoothSlideTo(0.f, initialVelocity))
+        if (mFirstLayout) {
+            mState = STATE_CLOSED;
             return true;
-        return false;
+        }
+        else if (smoothSlideTo(0.f, initialVelocity))
+            return true;
+        else
+            return false;
     }
 
     private boolean openPaneEntirely(View pane, int initialVelocity) {
-        if (mFirstLayout || smoothSlideTo(1.f, initialVelocity))
+        if (mFirstLayout) {
+            mState = STATE_OPENED_ENTIRELY;
             return true;
-        return false;
+        }
+        else if (smoothSlideTo(1.f, initialVelocity))
+            return true;
+        else
+            return false;
     }
 
     private boolean openPane(View pane, int initialVelocity) {
-        if (mFirstLayout || smoothSlideTo(1 - (float)mOverhangSize / mSlideRange, initialVelocity))
+        if (mFirstLayout) {
+            mState = STATE_OPENED;
             return true;
-        return false;
+        }
+        else if (smoothSlideTo(1 - (float)mOverhangSize / mSlideRange, initialVelocity))
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -825,16 +886,27 @@ public class SlidingPaneLayout extends ViewGroup {
         public void onViewDragStateChanged(int state) {
             if (mDragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE) {
                 if (mSlideOffset == 0) {
-                    if (mState != STATE_CLOSED)
+                    if (mState != STATE_CLOSED) {
                         mState = STATE_CLOSED;
+                        if (mPanelSlideListener != null)
+                            mPanelSlideListener.onPanelClosed();
+                    }
                 } else if (mSlideOffset == 1 - (float)mOverhangSize/mSlideRange) {
                     if (mState != STATE_OPENED) {
                         mState = STATE_OPENED;
+                        if (mPanelSlideListener != null)
+                            mPanelSlideListener.onPanelOpened();
                     }
-                } else if (mState != STATE_OPENED_ENTIRELY) {
-                    mState = STATE_OPENED_ENTIRELY;
+                } else if (mSlideOffset == 1) {
+                    if (mState != STATE_OPENED_ENTIRELY) {
+                        mState = STATE_OPENED_ENTIRELY;
+                        if (mPanelSlideListener != null)
+                            mPanelSlideListener.onPanelOpenedEntirely();
+                    }
                 }
             }
+            else if (mPanelSlideListener != null)
+                    mPanelSlideListener.onPanelSlide(mSlideOffset);
         }
 
         @Override
@@ -875,11 +947,6 @@ public class SlidingPaneLayout extends ViewGroup {
             // Make sure we never move views horizontally.
             // This could happen if the child has less width than its parent.
             return child.getLeft();
-        }
-
-        @Override
-        public void onEdgeDragStarted(int edgeFlags, int pointerId) {
-            mDragHelper.captureChildView(mSlideableView, pointerId);
         }
     }
 

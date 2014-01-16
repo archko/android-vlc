@@ -106,6 +106,7 @@ public class MainActivity extends SherlockFragmentActivity {
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
     private TextView mInfoText;
+    private View mAudioPlayerFilling;
     private String mCurrentFragment;
 
     private SharedPreferences mSettings;
@@ -178,6 +179,7 @@ public class MainActivity extends SherlockFragmentActivity {
         mMenu.setContent(v_main);
 
         mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
+        mSlidingPane.setPanelSlideListener(mPanelSlideListener);
 
         View sidebar = LayoutInflater.from(this).inflate(R.layout.sidebar, null);
         final ListView listView = (ListView)sidebar.findViewById(android.R.id.list);
@@ -190,6 +192,7 @@ public class MainActivity extends SherlockFragmentActivity {
         mInfoLayout = v_main.findViewById(R.id.info_layout);
         mInfoProgress = (ProgressBar) v_main.findViewById(R.id.info_progress);
         mInfoText = (TextView) v_main.findViewById(R.id.info_text);
+        mAudioPlayerFilling = v_main.findViewById(R.id.audio_mini_player_filling);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -742,6 +745,7 @@ public class MainActivity extends SherlockFragmentActivity {
         // Open the pane only if is entirely opened.
         if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED_ENTIRELY)
             mSlidingPane.openPane();
+        mAudioPlayerFilling.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -749,5 +753,27 @@ public class MainActivity extends SherlockFragmentActivity {
      */
     public void hideMiniPlayer() {
         mSlidingPane.openPaneEntirely();
+        mAudioPlayerFilling.setVisibility(View.GONE);
     }
+
+    private final SlidingPaneLayout.PanelSlideListener mPanelSlideListener
+        = new SlidingPaneLayout.PanelSlideListener() {
+
+            @Override
+            public void onPanelSlide(float slideOffset) {}
+
+            @Override
+            public void onPanelOpened() {
+                mAudioPlayer.setHeaderButtonVisibilities(false, false, true);
+            }
+
+            @Override
+            public void onPanelOpenedEntirely() {}
+
+            @Override
+            public void onPanelClosed() {
+                mAudioPlayer.setHeaderButtonVisibilities(true, true, false);
+            }
+
+    };
 }

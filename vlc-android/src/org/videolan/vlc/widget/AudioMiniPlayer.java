@@ -63,6 +63,7 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
     private TextView mTime;
     private TextView mLength;
     private ImageButton mPlayPause;
+    private ImageButton mHeaderPlayPause;
     private ImageButton mStop;
     private ImageButton mNext;
     private ImageButton mPrevious;
@@ -79,6 +80,10 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
     private boolean mShowRemainingTime = false;
 
     private AudioListAdapter mSongsListAdapter;
+
+    private boolean mAdvFuncVisible;
+    private boolean mPlaylistSwitchVisible;
+    private boolean mHeaderPlayPauseVisible;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -100,6 +105,7 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
         mTime = (TextView) v.findViewById(R.id.time);
         mLength = (TextView) v.findViewById(R.id.length);
         mPlayPause = (ImageButton) v.findViewById(R.id.play_pause);
+        mHeaderPlayPause = (ImageButton) v.findViewById(R.id.header_play_pause);
         mStop = (ImageButton) v.findViewById(R.id.stop);
         mNext = (ImageButton) v.findViewById(R.id.next);
         mPrevious = (ImageButton) v.findViewById(R.id.previous);
@@ -116,6 +122,11 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
         mSwitcher.setInAnimation(getActivity(), android.R.anim.fade_in);
         mSwitcher.setOutAnimation(getActivity(), android.R.anim.fade_out);
 
+        mAdvFuncVisible = false;
+        mPlaylistSwitchVisible = false;
+        mHeaderPlayPauseVisible = true;
+        restoreHedaderButtonVisibilities();
+
         mTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,6 +134,12 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
             }
         });
         mPlayPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onPlayPauseClick(v);
+            }
+        });
+        mHeaderPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onPlayPauseClick(v);
@@ -231,15 +248,17 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
         mBigCover.setImageBitmap(cover);
 
         mAudioMediaSwitcher.updateMedia();
-        mAdvFunc.setVisibility(ImageButton.VISIBLE);
-        mPlaylistSwitch.setVisibility(ImageButton.VISIBLE);
 
         if (mAudioController.isPlaying()) {
             mPlayPause.setImageResource(R.drawable.ic_pause);
             mPlayPause.setContentDescription(getString(R.string.pause));
+            mHeaderPlayPause.setImageResource(R.drawable.ic_pause);
+            mHeaderPlayPause.setContentDescription(getString(R.string.pause));
         } else {
             mPlayPause.setImageResource(R.drawable.ic_play);
             mPlayPause.setContentDescription(getString(R.string.play));
+            mHeaderPlayPause.setImageResource(R.drawable.ic_play);
+            mHeaderPlayPause.setContentDescription(getString(R.string.play));
         }
         if (mAudioController.isShuffling()) {
             mShuffle.setImageResource(R.drawable.ic_shuffle_glow);
@@ -402,6 +421,32 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
         activity.hideMiniPlayer();
     }
 
+    /**
+     * Set the visibilities of the player header buttons.
+     * @param advFuncVisible
+     * @param playlistSwitchVisible
+     * @param headerPlayPauseVisible
+     */
+    public void setHeaderButtonVisibilities(boolean advFuncVisible, boolean playlistSwitchVisible,
+                                            boolean headerPlayPauseVisible) {
+        mAdvFuncVisible = advFuncVisible;
+        mPlaylistSwitchVisible = playlistSwitchVisible;
+        mHeaderPlayPauseVisible = headerPlayPauseVisible;
+        restoreHedaderButtonVisibilities();
+    }
+
+    private void restoreHedaderButtonVisibilities() {
+        mAdvFunc.setVisibility(mAdvFuncVisible ? ImageButton.VISIBLE : ImageButton.GONE);
+        mPlaylistSwitch.setVisibility(mPlaylistSwitchVisible ? ImageButton.VISIBLE : ImageButton.GONE);
+        mHeaderPlayPause.setVisibility(mHeaderPlayPauseVisible ? ImageButton.VISIBLE : ImageButton.GONE);
+    }
+
+    private void hideHedaderButtons() {
+        mAdvFunc.setVisibility(ImageButton.GONE);
+        mPlaylistSwitch.setVisibility(ImageButton.GONE);
+        mHeaderPlayPause.setVisibility(ImageButton.GONE);
+    }
+
     private final AudioMediaSwitcherListener mAudioMediaSwitcherListener = new AudioMediaSwitcherListener() {
 
         @Override
@@ -417,14 +462,12 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
 
         @Override
         public void onTouchDown() {
-            mAdvFunc.setVisibility(ImageButton.GONE);
-            mPlaylistSwitch.setVisibility(ImageButton.GONE);
+            hideHedaderButtons();
         }
 
         @Override
         public void onTouchUp() {
-            mAdvFunc.setVisibility(ImageButton.VISIBLE);
-            mPlaylistSwitch.setVisibility(ImageButton.VISIBLE);
+            restoreHedaderButtonVisibilities();
         }
     };
 }
