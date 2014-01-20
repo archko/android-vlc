@@ -29,18 +29,24 @@ import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Util;
+import org.videolan.vlc.VlcRunnable;
 import org.videolan.vlc.WeakHandler;
+import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.widget.FlingViewGroup;
 import org.videolan.vlc.widget.FlingViewGroup.ViewSwitchListener;
 import org.videolan.vlc.widget.HeaderScrollView;
 
+import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -48,10 +54,12 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.PopupMenu;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -92,6 +100,11 @@ public class AudioBrowserFragment extends SherlockFragment {
         mArtistsAdapter = new AudioBrowserListAdapter(getActivity(), AudioBrowserListAdapter.ITEM_WITH_COVER);
         mAlbumsAdapter = new AudioBrowserListAdapter(getActivity(), AudioBrowserListAdapter.ITEM_WITH_COVER);
         mGenresAdapter = new AudioBrowserListAdapter(getActivity(), AudioBrowserListAdapter.ITEM_WITHOUT_COVER);
+
+        mSongsAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
+        mArtistsAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
+        mAlbumsAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
+        mGenresAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
     }
 
     @Override
@@ -154,9 +167,8 @@ public class AudioBrowserFragment extends SherlockFragment {
     OnItemClickListener songListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<String> songList = new ArrayList<String>();
-            int selectedId = mSongsAdapter.getListWithPosition(songList, p);
-            mAudioController.load(songList, selectedId);
+            ArrayList<String> mediaLocation = mSongsAdapter.getLocations(p);
+            mAudioController.load(mediaLocation, 0);
         }
     };
 
@@ -190,50 +202,53 @@ public class AudioBrowserFragment extends SherlockFragment {
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.audio_list_browser, menu);
+        setContextMenuItems(menu, v);
+    }
 
+    private void setContextMenuItems(Menu menu, View v) {
         if (v.getId() != R.id.songs_list) {
-            menu.setGroupEnabled(R.id.songs_view_only, false);
-            menu.setGroupEnabled(R.id.phone_only, false);
+            menu.setGroupVisible(R.id.songs_view_only, false);
+            menu.setGroupVisible(R.id.phone_only, false);
         }
         if (!Util.isPhone())
             menu.setGroupVisible(R.id.phone_only, false);
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if(!getUserVisibleHint()) return super.onContextItemSelected(item);
+    public boolean onContextItemSelected(MenuItem menu) {
+        if(!getUserVisibleHint())
+            return super.onContextItemSelected(menu);
 
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) menu.getMenuInfo();
+        if (info != null && handleContextItemSelected(menu, info.position))
+            return true;
+        return super.onContextItemSelected(menu);
+    }
+
+    private boolean handleContextItemSelected(MenuItem item, int position) {
         ContextMenuInfo menuInfo = item.getMenuInfo();
-        if(menuInfo == null) return super.onContextItemSelected(item);
 
         int startPosition;
         int groupPosition;
-        int childPosition;
         List<String> medias;
         int id = item.getItemId();
 
-        boolean useAllItems = (id == R.id.audio_list_browser_play_all ||
-                               id == R.id.audio_list_browser_append_all);
-        boolean append = (id == R.id.audio_list_browser_append ||
-                          id == R.id.audio_list_browser_append_all);
+        boolean useAllItems = id == R.id.audio_list_browser_play_all;
+        boolean append = id == R.id.audio_list_browser_append;
 
         if (ExpandableListContextMenuInfo.class.isInstance(menuInfo)) {
             ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
             groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-            childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
-            if (childPosition < 0)
-                childPosition = 0;
         }
         else {
             AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
             groupPosition = info.position;
-            childPosition = 0;
         }
 
         if (id == R.id.audio_list_browser_delete) {
-            /*AlertDialog alertDialog = CommonDialogs.deleteMedia(
+            AlertDialog alertDialog = CommonDialogs.deleteMedia(
                     getActivity(),
-                    mSongsAdapter.getLocation(groupPosition).get(0),
+                    mSongsAdapter.getLocations(groupPosition).get(0),
                     new VlcRunnable(mSongsAdapter.getItem(groupPosition)) {
                         @Override
                         public void run(Object o) {
@@ -242,7 +257,7 @@ public class AudioBrowserFragment extends SherlockFragment {
                             updateLists();
                         }
                     });
-            alertDialog.show();*/
+            alertDialog.show();
             return true;
         }
 
@@ -252,29 +267,24 @@ public class AudioBrowserFragment extends SherlockFragment {
         }
 
         if (useAllItems) {
-            startPosition = groupPosition;
-            //medias = mSongsAdapter.getMedia(groupPosition);
             medias = new ArrayList<String>();
+            startPosition = mSongsAdapter.getListWithPosition(medias, groupPosition);
         }
         else {
             startPosition = 0;
             switch (mFlingViewGroup.getPosition())
             {
                 case MODE_SONG:
-                    //medias = mSongsAdapter.getMedia(groupPosition);
-                    medias = new ArrayList<String>();
+                    medias = mSongsAdapter.getLocations(groupPosition);
                     break;
                 case MODE_ARTIST:
-                    //medias = mArtistsAdapter.getMedia(groupPosition);
-                    medias = new ArrayList<String>();
+                    medias = mArtistsAdapter.getLocations(groupPosition);
                     break;
                 case MODE_ALBUM:
-                    //medias = mArtistsAdapter.getMedia(groupPosition);
-                    medias = new ArrayList<String>();
+                    medias = mArtistsAdapter.getLocations(groupPosition);
                     break;
                 case MODE_GENRE:
-                    //medias = mGenresAdapter.getMedia(groupPosition);
-                    medias = new ArrayList<String>();
+                    medias = mGenresAdapter.getLocations(groupPosition);
                     break;
                 default:
                     return true;
@@ -381,4 +391,31 @@ public class AudioBrowserFragment extends SherlockFragment {
         mAlbumsAdapter.notifyDataSetChanged();
         mGenresAdapter.notifyDataSetChanged();
     }
+
+    AudioBrowserListAdapter.ContextPopupMenuListener mContextPopupMenuListener
+        = new AudioBrowserListAdapter.ContextPopupMenuListener() {
+
+            @Override
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            public void onPopupMenu(View anchor, final int position) {
+                if (!Util.isHoneycombOrLater()) {
+                    // Call the "classic" context menu
+                    anchor.performLongClick();
+                    return;
+                }
+
+                PopupMenu popupMenu = new PopupMenu(getActivity(), anchor);
+                popupMenu.getMenuInflater().inflate(R.menu.audio_list_browser, popupMenu.getMenu());
+                setContextMenuItems(popupMenu.getMenu(), anchor);
+
+                popupMenu.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        return handleContextItemSelected(item, position);
+                    }
+                });
+                popupMenu.show();
+            }
+
+    };
 }

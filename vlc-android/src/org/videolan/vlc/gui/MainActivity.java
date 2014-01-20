@@ -406,6 +406,13 @@ public class MainActivity extends SherlockFragmentActivity {
             mMenu.showContent();
             return;
         }
+
+        // Slide down the mini player if it is shown entirely.
+        if (mSlidingPane.getState() == mSlidingPane.STATE_CLOSED) {
+            mSlidingPane.openPane();
+            return;
+        }
+
         // If it's the directory view, a "backpressed" action shows a parent.
         if (mCurrentFragment.equals("directories")) {
             DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
@@ -764,7 +771,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelOpened() {
-                mAudioPlayer.setHeaderButtonVisibilities(false, false, true);
+                mAudioPlayer.setHeaderVisibilities(false, false, true, true);
             }
 
             @Override
@@ -772,7 +779,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelClosed() {
-                mAudioPlayer.setHeaderButtonVisibilities(true, true, false);
+                mAudioPlayer.setHeaderVisibilities(true, true, false, false);
             }
 
     };

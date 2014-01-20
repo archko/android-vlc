@@ -541,6 +541,8 @@ public class SlidingPaneLayout extends ViewGroup {
         }
 
         final boolean interceptForDrag = mDragHelper.shouldInterceptTouchEvent(ev);
+                // Intercept touch events only in the overhang area.
+                //&& ev.getY() <= mSlideOffset * mSlideRange + mOverhangSize;
 
         return interceptForDrag;
     }

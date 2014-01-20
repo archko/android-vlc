@@ -22,6 +22,7 @@ package org.videolan.vlc.gui.audio;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.videolan.vlc.BitmapCache;
@@ -33,6 +34,7 @@ import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.ImageView;
@@ -56,6 +58,8 @@ public class AudioBrowserListAdapter extends BaseAdapter {
     public static final int ITEM_WITHOUT_COVER = 0;
     public static final int ITEM_WITH_COVER = 1;
     private int mItemType;
+
+    private ContextPopupMenuListener mContextPopupMenuListener;
 
     // An item of the list: a media or a separator.
     class ListItem {
@@ -162,6 +166,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             holder.cover = (ImageView) v.findViewById(R.id.cover);
             holder.subtitle = (TextView) v.findViewById(R.id.subtitle);
             holder.footer = (View) v.findViewById(R.id.footer);
+            holder.more = (ImageView) v.findViewById(R.id.item_more);
             v.setTag(holder);
         } else
             holder = (ViewHolder) v.getTag();
@@ -183,25 +188,20 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             paramsCover = new RelativeLayout.LayoutParams(0, RelativeLayout.LayoutParams.WRAP_CONTENT);
         holder.cover.setLayoutParams(paramsCover);
 
-        LinearLayout.LayoutParams paramsSubTitle;
-        if (item.mSubTitle == null)
-            paramsSubTitle = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0);
-        else {
-            paramsSubTitle = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            holder.subtitle.setText(item.mSubTitle);
-        }
-        holder.subtitle.setLayoutParams(paramsSubTitle);
+        holder.subtitle.setVisibility(item.mSubTitle == null ? TextView.GONE : TextView.VISIBLE);
+        holder.subtitle.setText(item.mSubTitle);
 
         // Remove the footer if the item is just above a separator.
-        LinearLayout.LayoutParams paramsFooter;
-        if (isMediaItemAboveASeparator(position))
-            paramsFooter = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0);
-        else {
-            int height = (int) mContext.getResources().getDimension(R.dimen.audio_browser_item_footer_height);
-            paramsFooter = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height);
-        }
-        holder.footer.setLayoutParams(paramsFooter);
+        holder.footer.setVisibility(isMediaItemAboveASeparator(position) ? View.GONE : View.VISIBLE);
+
+        final int pos = position;
+        holder.more.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mContextPopupMenuListener != null)
+                    mContextPopupMenuListener.onPopupMenu(v, pos);
+            }
+        });
 
         return v;
     }
@@ -241,6 +241,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
         TextView title;
         TextView subtitle;
         View footer;
+        ImageView more;
         int viewType;
     }
 
@@ -319,7 +320,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
      * @param position Position to retrieve in to _this_ adapter.
      * @return The position of 'position' in the new single list, or 0 if not found.
      */
-    public int getListWithPosition(ArrayList<String> outputList, int position) {
+    public int getListWithPosition(List<String> outputList, int position) {
         int outputPosition = 0;
         outputList.clear();
         for(int i = 0; i < mItems.size(); i++) {
@@ -346,5 +347,13 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             return true;
         else
             return false;
+    }
+
+    public interface ContextPopupMenuListener {
+        void onPopupMenu(View anchor, final int position);
+    }
+
+    void setContextPopupMenuListener(ContextPopupMenuListener l) {
+        mContextPopupMenuListener = l;
     }
 }
