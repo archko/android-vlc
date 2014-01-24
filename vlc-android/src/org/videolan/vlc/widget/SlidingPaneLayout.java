@@ -202,7 +202,7 @@ public class SlidingPaneLayout extends ViewGroup {
         ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegate());
         ViewCompat.setImportantForAccessibility(this, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-        mDragHelper = ViewDragHelper.create(this, 0.50f, new DragHelperCallback());
+        mDragHelper = ViewDragHelper.create(this, 1.0f, new DragHelperCallback());
         mDragHelper.setMinVelocity(MIN_FLING_VELOCITY * density);
     }
 
@@ -540,9 +540,9 @@ public class SlidingPaneLayout extends ViewGroup {
         }
         }
 
-        final boolean interceptForDrag = mDragHelper.shouldInterceptTouchEvent(ev);
+        final boolean interceptForDrag = mDragHelper.shouldInterceptTouchEvent(ev)
                 // Intercept touch events only in the overhang area.
-                //&& ev.getY() <= mSlideOffset * mSlideRange + mOverhangSize;
+                && ev.getY() <= mSlideOffset * mSlideRange + mOverhangSize;
 
         return interceptForDrag;
     }

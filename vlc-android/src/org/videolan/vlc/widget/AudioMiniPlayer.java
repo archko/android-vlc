@@ -35,6 +35,7 @@ import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
 import org.videolan.vlc.gui.audio.AudioListAdapter;
+import org.videolan.vlc.gui.audio.AudioPlaylistView;
 import org.videolan.vlc.interfaces.IAudioPlayer;
 import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 
@@ -43,12 +44,18 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -74,7 +81,7 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
     private ImageButton mAdvFunc;
     private ImageButton mPlaylistSwitch;
     private SeekBar mTimeline;
-    private ListView mSongsList;
+    private AudioPlaylistView mSongsList;
 
     ViewSwitcher mSwitcher;
 
@@ -120,7 +127,7 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
         mPlaylistSwitch = (ImageButton) v.findViewById(R.id.playlist_switch);
         mTimeline = (SeekBar) v.findViewById(R.id.timeline);
 
-        mSongsList = (ListView) v.findViewById(R.id.songs_list);
+        mSongsList = (AudioPlaylistView) v.findViewById(R.id.songs_list);
         mSongsList.setAdapter(mSongsListAdapter);
 
         mSwitcher = (ViewSwitcher) v.findViewById(R.id.view_switcher);
@@ -203,6 +210,13 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
                 mAudioController.load(mSongsListAdapter.getLocations(), p);
             }
         });
+        mSongsList.setOnItemDraggedListener(new AudioPlaylistView.OnItemDraggedListener() {
+            @Override
+            public void OnItemDradded(int positionStart, int positionEnd) {
+                mAudioController.moveItem(positionStart, positionEnd);
+            }
+        });
+        registerForContextMenu(mSongsList);
 
         getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -222,6 +236,27 @@ public class AudioMiniPlayer extends Fragment implements IAudioPlayer {
     @Override
     public void onStop() {
         super.onStop();
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+        MenuInflater menuInflater = getActivity().getMenuInflater();
+        menuInflater.inflate(R.menu.audio_player_mini, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        if(info == null) // info can be null
+            return super.onContextItemSelected(item);
+        int id = item.getItemId();
+
+        if(id == R.id.audio_player_mini_remove) {
+            Log.d(TAG, "Context menu removing " + info.position);
+            mAudioController.remove(info.position);
+            return true;
+        }
+        return super.onContextItemSelected(item);
     }
 
     /**

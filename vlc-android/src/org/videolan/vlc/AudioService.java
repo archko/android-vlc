@@ -503,12 +503,40 @@ public class AudioService extends Service {
                 index = msg.getData().getInt("item_index");
                 if(service.mCurrentIndex >= index && !expanding)
                     service.mCurrentIndex++;
+
+                service.determinePrevAndNextIndices();
+                service.executeUpdate();
                 break;
             case EventHandler.CustomMediaListItemDeleted:
                 Log.i(TAG, "CustomMediaListItemDeleted");
                 index = msg.getData().getInt("item_index");
                 if(service.mCurrentIndex >= index && !expanding)
                     service.mCurrentIndex--;
+
+                service.determinePrevAndNextIndices();
+                service.executeUpdate();
+                break;
+            case EventHandler.CustomMediaListItemMoved:
+                Log.i(TAG, "CustomMediaListItemMoved");
+                int positionStart = msg.getData().getInt("index_before");
+                int positionEnd = msg.getData().getInt("index_after");
+                if (service.mCurrentIndex == positionStart) {
+                    service.mCurrentIndex = positionEnd;
+                    if (positionEnd > positionStart)
+                        service.mCurrentIndex--;
+                } else if (positionStart > service.mCurrentIndex
+                        && positionEnd <= service.mCurrentIndex)
+                    service.mCurrentIndex++;
+                else if (positionStart < service.mCurrentIndex
+                        && positionEnd >= service.mCurrentIndex)
+                    service.mCurrentIndex--;
+
+                // If we are in random mode, we completely reset the stored previous track
+                // as their indices changed.
+                service.mPrevious.clear();
+
+                service.determinePrevAndNextIndices();
+                service.executeUpdate();
                 break;
             case EventHandler.CustomMediaListExpanding:
                 expanding = true;
@@ -1168,6 +1196,19 @@ public class AudioService extends Service {
             AudioService.this.saveMediaList();
             determinePrevAndNextIndices();
             executeUpdate();
+        }
+
+        /**
+         * Move an item inside the playlist.
+         */
+        @Override
+        public void moveItem(int positionStart, int positionEnd) throws RemoteException {
+            mLibVLC.getMediaList().move(positionStart, positionEnd);
+        }
+
+        @Override
+        public void remove(int position) {
+            mLibVLC.getMediaList().remove(position);
         }
 
         @Override
