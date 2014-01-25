@@ -42,6 +42,7 @@ public class AudioPlaylistView extends ListView {
     private float mTouchY;
 
     private OnItemDraggedListener mOnItemDraggedListener;
+    private OnItemRemovedListener mOnItemRemovedListener;
 
     public AudioPlaylistView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -49,13 +50,13 @@ public class AudioPlaylistView extends ListView {
         mIsDragging = false;
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mDragShadow = inflater.inflate(R.layout.audio_playlist_item, this, false);
+        mDragShadow = inflater.inflate(R.layout.audio_playlist_item_drag_shadow, this, false);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
-        mDragShadow.layout(l, t, l + mDragShadow.getMeasuredWidth(), t + mDragShadow.getMinimumHeight());
+        mDragShadow.layout(l, t, l + mDragShadow.getMeasuredWidth(), t + mDragShadow.getMeasuredHeight());
     }
 
     @Override
@@ -83,7 +84,7 @@ public class AudioPlaylistView extends ListView {
             break;
         }
 
-        return mIsDragging;
+        return mIsDragging || super.onInterceptTouchEvent(event);
     }
 
     @Override
@@ -114,6 +115,7 @@ public class AudioPlaylistView extends ListView {
             }
             invalidate();
         }
+
         return handleEvent || super.onTouchEvent(event);
     }
 
@@ -136,10 +138,8 @@ public class AudioPlaylistView extends ListView {
         if (mDragShadow != null) {
             TextView titleView = (TextView)mDragShadow.findViewById(R.id.title);
             TextView artistView = (TextView)mDragShadow.findViewById(R.id.artist);
-            LinearLayout layout = (LinearLayout)mDragShadow.findViewById(R.id.layout_item);
             titleView.setText(title);
             artistView.setText(artist);
-            layout.setBackgroundResource(R.color.darkorange);
             mIsDragging = true;
         }
     }
@@ -173,23 +173,21 @@ public class AudioPlaylistView extends ListView {
 
         // Find the child view that was touched (perform a hit test)
         Rect rect = new Rect();
+        boolean b_foundHitChild =  false;
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
-            LinearLayout expansion = (LinearLayout)child.findViewById(R.id.item_expansion);
-            LinearLayout layout_item = (LinearLayout)child.findViewById(R.id.layout_item);
-            View layout_footer = (View)child.findViewById(R.id.layout_footer);
-
             child.getHitRect(rect);
             if (rect.contains(getWidth() / 2, (int)mTouchY)) {
                 // Send back the performed change thanks to the listener.
                 AudioListAdapter.ViewHolder holder = (AudioListAdapter.ViewHolder)child.getTag();
                 if (mOnItemDraggedListener != null)
                     mOnItemDraggedListener.OnItemDradded(mPositionDragStart, holder.position);
+                b_foundHitChild = true;
+                break;
             }
-            expansion.setVisibility(LinearLayout.GONE);
-            layout_item.setVisibility(LinearLayout.VISIBLE);
-            layout_footer.setVisibility(LinearLayout.VISIBLE);
         }
+        if (!b_foundHitChild)
+            mOnItemDraggedListener.OnItemDradded(mPositionDragStart, this.getCount());
     }
 
     public void dragAborted() {
@@ -198,6 +196,10 @@ public class AudioPlaylistView extends ListView {
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             LinearLayout expansion = (LinearLayout)child.findViewById(R.id.item_expansion);
+            LinearLayout layout_item = (LinearLayout)child.findViewById(R.id.layout_item);
+            View layout_footer = (View)child.findViewById(R.id.layout_footer);
+            layout_item.setVisibility(LinearLayout.VISIBLE);
+            layout_footer.setVisibility(LinearLayout.VISIBLE);
             expansion.setVisibility(LinearLayout.GONE);
         }
     }
@@ -210,4 +212,16 @@ public class AudioPlaylistView extends ListView {
         mOnItemDraggedListener = l;
     }
 
+    public interface OnItemRemovedListener {
+        public void onItemRemoved(int position);
+    }
+
+    public void setOnItemRemovedListener(OnItemRemovedListener l) {
+        mOnItemRemovedListener = l;
+    }
+
+    public void removeItem(int position) {
+        if (mOnItemRemovedListener != null)
+            mOnItemRemovedListener.onItemRemoved(position);
+    }
 }
