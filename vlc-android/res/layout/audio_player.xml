@@ -55,6 +55,18 @@
             android:scaleType="fitXY"
             android:src="@drawable/dots_dark" />
 
+        <TextView
+            android:id="@+id/header_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|left"
+            android:layout_marginRight="15dp"
+            android:layout_weight="0"
+            android:clickable="true"
+            android:text="@string/time_0"
+            android:textColor="?attr/darkorange"
+            android:textSize="18sp" />
+
         <ImageButton
             android:id="@+id/header_play_pause"
             android:layout_width="40dp"
@@ -82,7 +94,7 @@
 	        android:id="@+id/songs_list"
 	        android:layout_width="fill_parent"
 	        android:layout_height="fill_parent"
-	        android:background="?attr/background_menu" />
+	        android:background="?attr/background_playlist" />
 
 	    <org.videolan.vlc.widget.AnimatedCoverView
 	        android:id="@+id/big_cover"
@@ -145,8 +157,8 @@
 
         <ImageButton
             android:id="@+id/shuffle"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="#00000000"
             android:contentDescription="@string/shuffle"
             android:focusable="true"
@@ -155,8 +167,8 @@
 
         <ImageButton
             android:id="@+id/previous"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="#00000000"
             android:contentDescription="@string/previous"
             android:focusable="true"
@@ -165,10 +177,10 @@
 
         <ImageButton
             android:id="@+id/play_pause"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginLeft="6dip"
-            android:layout_marginRight="6dip"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="10dip"
+            android:layout_marginRight="10dip"
             android:background="#00000000"
             android:contentDescription="@string/pause"
             android:focusable="true"
@@ -176,21 +188,9 @@
             android:src="@drawable/ic_pause" />
 
         <ImageButton
-            android:id="@+id/stop"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginLeft="6dip"
-            android:layout_marginRight="6dip"
-            android:background="#00000000"
-            android:contentDescription="@string/stop"
-            android:focusable="true"
-            android:scaleType="fitXY"
-            android:src="@drawable/ic_stop" />
-
-        <ImageButton
             android:id="@+id/next"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="#00000000"
             android:contentDescription="@string/next"
             android:focusable="true"
@@ -199,8 +199,8 @@
 
         <ImageButton
             android:id="@+id/repeat"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="#00000000"
             android:contentDescription="@string/repeat"
             android:focusable="true"

@@ -27,7 +27,9 @@ import java.util.List;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Util;
 import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.AudioBrowserFragment;
+import org.videolan.vlc.gui.audio.EqualizerFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 
 import android.graphics.drawable.Drawable;
@@ -129,7 +131,13 @@ public class SidebarAdapter extends BaseAdapter {
             f = new DirectoryViewFragment();
         } else if(id.equals("history")) {
             f = new HistoryFragment();
-        } else { /* TODO */
+        } else if(id.equals("albumsSongs")) {
+            f = new AudioAlbumsSongsFragment();
+        } else if(id.equals("equalizer")) {
+            f = new EqualizerFragment();
+        }
+        else
+        { /* TODO */
             f = new AboutLicenceFragment();
         }
         f.setRetainInstance(true);

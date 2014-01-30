@@ -213,7 +213,7 @@
     <string name="clear_history">Clear search history</string>
     <string name="clear_media_db">Clear media database</string>
     <string name="media_db_cleared">Media database cleared!</string>
-    <string name="subtitles_text_encoding">Subtitle text encoding</string>
+    <string name="subtitle_text_encoding">Subtitle text encoding</string>
 
     <string name="debug_logs">Debug logs</string>
     <string name="start_logging">Start logging</string>
@@ -236,7 +236,7 @@
     <string name="set_locale">Set locale</string>
     <string name="set_locale_detail">Leave blank to reset</string>
     <string name="set_locale_popup">Quit and reset VLC for changes to take effect.</string>
-    <string name="quit">Quit application</string>
+    <string name="quit">Quit and restart application</string>
 
     <string-array name="hardware_acceleration_list">
         <item>@string/automatic</item>

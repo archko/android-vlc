@@ -160,6 +160,7 @@ public class AudioBrowserFragment extends SherlockFragment {
         super.onResume();
         mFlingViewGroup.setPosition(mFlingViewPosition);
         mHeader.highlightTab(-1, mFlingViewPosition);
+        mHeader.scroll(mFlingViewPosition / 3.f);
         updateLists();
         mMediaLibrary.addUpdateHandler(mHandler);
     }
@@ -167,9 +168,8 @@ public class AudioBrowserFragment extends SherlockFragment {
     OnItemClickListener songListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<String> songList = new ArrayList<String>();
-            int selectedId = mSongsAdapter.getListWithPosition(songList, p);
-            mAudioController.load(songList, selectedId);
+            ArrayList<String> mediaLocation = mSongsAdapter.getLocations(p);
+            mAudioController.load(mediaLocation, 0);
         }
     };
 
@@ -177,8 +177,9 @@ public class AudioBrowserFragment extends SherlockFragment {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
             ArrayList<Media> mediaList = mArtistsAdapter.getMedia(p);
-            AudioAlbumsSongsFragment frag = new AudioAlbumsSongsFragment(mediaList, mediaList.get(0).getArtist());
-            MainActivity.ShowFragment(getActivity(), "albumsSongsFromArtist", frag);
+            MainActivity activity = (MainActivity)getActivity();
+            AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showNewFragment("albumsSongs");
+            frag.setMediaList(mediaList, mediaList.get(0).getArtist());
         }
     };
 
@@ -194,8 +195,9 @@ public class AudioBrowserFragment extends SherlockFragment {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
             ArrayList<Media> mediaList = mGenresAdapter.getMedia(p);
-            AudioAlbumsSongsFragment frag = new AudioAlbumsSongsFragment(mediaList, mediaList.get(0).getGenre());
-            MainActivity.ShowFragment(getActivity(), "albumsSongsFromArtist", frag);
+            MainActivity activity = (MainActivity)getActivity();
+            AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showNewFragment("albumsSongs");
+            frag.setMediaList(mediaList, mediaList.get(0).getGenre());
         }
     };
 
@@ -241,10 +243,8 @@ public class AudioBrowserFragment extends SherlockFragment {
             ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
             groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
         }
-        else {
-            AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-            groupPosition = info.position;
-        }
+        else
+            groupPosition = position;
 
         if (id == R.id.audio_list_browser_delete) {
             AlertDialog alertDialog = CommonDialogs.deleteMedia(

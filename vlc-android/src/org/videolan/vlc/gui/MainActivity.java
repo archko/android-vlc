@@ -30,10 +30,9 @@ import org.videolan.vlc.Util;
 import org.videolan.vlc.VLCCallbackTask;
 import org.videolan.vlc.WeakHandler;
 import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
-import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.audio.AudioPlayer;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
-import org.videolan.vlc.widget.AudioMiniPlayer;
 import org.videolan.vlc.widget.SlidingPaneLayout;
 
 import android.annotation.TargetApi;
@@ -99,7 +98,7 @@ public class MainActivity extends SherlockFragmentActivity {
     private ActionBar mActionBar;
     private SlidingMenu mMenu;
     private SidebarAdapter mSidebarAdapter;
-    private AudioMiniPlayer mAudioPlayer;
+    private AudioPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
     private SlidingPaneLayout mSlidingPane;
 
@@ -108,6 +107,7 @@ public class MainActivity extends SherlockFragmentActivity {
     private TextView mInfoText;
     private View mAudioPlayerFilling;
     private String mCurrentFragment;
+    private String mPreviousFragment;
 
     private SharedPreferences mSettings;
 
@@ -192,7 +192,7 @@ public class MainActivity extends SherlockFragmentActivity {
         mInfoLayout = v_main.findViewById(R.id.info_layout);
         mInfoProgress = (ProgressBar) v_main.findViewById(R.id.info_progress);
         mInfoText = (TextView) v_main.findViewById(R.id.info_text);
-        mAudioPlayerFilling = v_main.findViewById(R.id.audio_mini_player_filling);
+        mAudioPlayerFilling = v_main.findViewById(R.id.audio_player_filling);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -218,9 +218,8 @@ public class MainActivity extends SherlockFragmentActivity {
                  */
                 getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
-                /* Hide the mini player */
-                if(mSlidingPane.getState() == mSlidingPane.STATE_CLOSED)
-                    mSlidingPane.openPane();
+                /* Slide down the audio player */
+                slideDownAudioPlayer();
 
                 /* Switch the fragment */
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -242,12 +241,12 @@ public class MainActivity extends SherlockFragmentActivity {
             }
         });
 
-        /* Set up the mini audio player */
-        mAudioPlayer = new AudioMiniPlayer();
+        /* Set up the audio player */
+        mAudioPlayer = new AudioPlayer();
         mAudioController = AudioServiceController.getInstance();
 
         getSupportFragmentManager().beginTransaction()
-            .replace(R.id.audio_mini_player, mAudioPlayer)
+            .replace(R.id.audio_player, mAudioPlayer)
             .commit();
 
         /* Show info/alpha/beta Warning */
@@ -376,6 +375,10 @@ public class MainActivity extends SherlockFragmentActivity {
         MediaLibrary.getInstance(this).stop();
         /* Save the tab status in pref */
         SharedPreferences.Editor editor = getSharedPreferences("MainActivity", MODE_PRIVATE).edit();
+        /* Do not save the albums songs fragment as the current fragment. */
+        if (mCurrentFragment.equals("albumsSongs")
+            || mCurrentFragment.equals("equalizer"))
+            mCurrentFragment = "audio";
         editor.putString("fragment", mCurrentFragment);
         editor.commit();
 
@@ -407,11 +410,9 @@ public class MainActivity extends SherlockFragmentActivity {
             return;
         }
 
-        // Slide down the mini player if it is shown entirely.
-        if (mSlidingPane.getState() == mSlidingPane.STATE_CLOSED) {
-            mSlidingPane.openPane();
+        // Slide down the audio player if it is shown entirely.
+        if (slideDownAudioPlayer())
             return;
-        }
 
         // If it's the directory view, a "backpressed" action shows a parent.
         if (mCurrentFragment.equals("directories")) {
@@ -421,24 +422,20 @@ public class MainActivity extends SherlockFragmentActivity {
                 return;
             }
         }
+
+        // If it's the albums songs fragment, we leave it.
+        if (mCurrentFragment.equals("albumsSongs")
+            || mCurrentFragment.equals("equalizer")) {
+            popFragmentBackStack();
+            return;
+        }
+
         super.onBackPressed();
     }
 
     private Fragment getFragment(String id)
     {
         return mSidebarAdapter.fetchFragment(id);
-    }
-
-    private void ShowFragment(String tag, Class<? extends Fragment> fragmentClass) {
-        Fragment fragment = null;
-        try {
-            fragment = fragmentClass.newInstance();
-        } catch (InstantiationException e) {
-            Log.e(TAG, "Failed to instantiate "+fragmentClass.getName()+", ShowFragment("+tag+") aborted.");
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "Failed to instantiate "+fragmentClass.getName()+", ShowFragment("+tag+") aborted.");
-        }
-        ShowFragment(this, tag, fragment);
     }
 
     public static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
@@ -464,6 +461,33 @@ public class MainActivity extends SherlockFragmentActivity {
         ft.replace(R.id.fragment_placeholder, fragment, tag);
         ft.addToBackStack(tag);
         ft.commit();
+    }
+
+    /**
+     * Show a new fragment.
+     */
+    public Fragment showNewFragment(String fragmentTag) {
+        // Slide down the audio player if needed.
+        slideDownAudioPlayer();
+
+        // Do not show the new fragment if the requested fragment is already shown.
+        if (mCurrentFragment.equals(fragmentTag))
+            return null;
+
+        mPreviousFragment = mCurrentFragment;
+        mCurrentFragment = fragmentTag;
+        Fragment frag = getFragment(mCurrentFragment);
+        ShowFragment(this, mCurrentFragment, frag);
+        return frag;
+    }
+
+    /**
+     * Hide the albums songs fragment.
+     */
+    public void popFragmentBackStack() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.popBackStack();
+        mCurrentFragment = mPreviousFragment;
     }
 
     /** Create menu from XML
@@ -535,7 +559,7 @@ public class MainActivity extends SherlockFragmentActivity {
                 startActivityForResult(intent, ACTIVITY_RESULT_PREFERENCES);
                 break;
             case R.id.ml_menu_equalizer:
-                ShowFragment("equalizer", EqualizerFragment.class);
+                showNewFragment("equalizer");
                 break;
             // Refresh
             case R.id.ml_menu_refresh:
@@ -562,6 +586,12 @@ public class MainActivity extends SherlockFragmentActivity {
                 onSearchRequested();
                 break;
             case android.R.id.home:
+                // If it's the albums songs view, a "backpressed" action shows .
+                if (mCurrentFragment.equals("albumsSongs")
+                    || mCurrentFragment.equals("equalizer")) {
+                    popFragmentBackStack();
+                    break;
+                }
                 /* Toggle the sidebar */
                 if(mMenu.isMenuShowing())
                     mMenu.showContent();
@@ -651,7 +681,7 @@ public class MainActivity extends SherlockFragmentActivity {
                     }
                 }
             } else if (action.equalsIgnoreCase(ACTION_SHOW_PLAYER)) {
-                showMiniPlayer();
+                showAudioPlayer();
             }
         }
     };
@@ -746,9 +776,9 @@ public class MainActivity extends SherlockFragmentActivity {
     }
 
     /**
-     * Show the mini player.
+     * Show the audio player.
      */
-    public void showMiniPlayer() {
+    public void showAudioPlayer() {
         // Open the pane only if is entirely opened.
         if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED_ENTIRELY)
             mSlidingPane.openPane();
@@ -756,9 +786,21 @@ public class MainActivity extends SherlockFragmentActivity {
     }
 
     /**
-     * Hide the mini player.
+     * Slide down the audio player.
+     * @return true on success else false.
      */
-    public void hideMiniPlayer() {
+    public boolean slideDownAudioPlayer() {
+        if (mSlidingPane.getState() == mSlidingPane.STATE_CLOSED) {
+            mSlidingPane.openPane();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Hide the audio player.
+     */
+    public void hideAudioPlayer() {
         mSlidingPane.openPaneEntirely();
         mAudioPlayerFilling.setVisibility(View.GONE);
     }
@@ -771,7 +813,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelOpened() {
-                mAudioPlayer.setHeaderVisibilities(false, false, true, true);
+                mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
             }
 
             @Override
@@ -779,7 +821,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelClosed() {
-                mAudioPlayer.setHeaderVisibilities(true, true, false, false);
+                mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
             }
 
     };
