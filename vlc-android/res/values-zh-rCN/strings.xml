@@ -194,7 +194,10 @@
     <string name="quit">退出应用程序</string>
 
     <!-- custom prefs -->
-    <string name="show_media_only_category">只显示媒体文件</string>
+    <string name="show_media_only_category">显示媒体文件</string>
     <string name="show_media_only_summary">只显示媒体文件</string>
     <string name="show_media_only">只显示媒体文件</string>
+
+    <string name="show_hidden_summary">显示隐藏文件</string>
+    <string name="show_hidden">显示隐藏文件</string>
 </resources>

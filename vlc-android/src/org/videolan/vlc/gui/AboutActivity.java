@@ -74,7 +74,7 @@ public class AboutActivity extends FragmentActivity implements OnTabChangeListen
         ft.commit();
         DummyContentFactory dcf = new DummyContentFactory(this);
 
-        mTabHost = (TabHost)findViewById(R.id.about_tabhost);
+        mTabHost = (TabHost)findViewById(android.R.id.tabhost);
         mTabHost.setup();
         TabHost.TabSpec tab_main = mTabHost.newTabSpec("main");
         tab_main.setContent(dcf);
@@ -132,8 +132,8 @@ public class AboutActivity extends FragmentActivity implements OnTabChangeListen
 
     private void displayVersionName() {
         String versionName = getVersion(this);
-        TextView tv = (TextView) findViewById(R.id.textViewVersion);
-        tv.setText(versionName);
+        /*TextView tv = (TextView) findViewById(R.id.textViewVersion);
+        tv.setText(versionName);*/
     }
 
     public static String getVersion(Context ctx) {

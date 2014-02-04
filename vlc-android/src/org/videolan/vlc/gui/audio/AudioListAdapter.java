@@ -141,7 +141,7 @@ public class AudioListAdapter extends ArrayAdapter<Media> {
         holder.layoutItem.setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                playlistView.performItemClick(itemView, pos, 0);
+                playlistView.performItemLongClick(itemView, pos, 0);
                 return true;
             }
         });

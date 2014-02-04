@@ -16,6 +16,12 @@
             android:summary="@string/show_media_only_summary"
             android:title="@string/show_media_only" />
 
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="show_hidden"
+            android:summary="@string/show_hidden_summary"
+            android:title="@string/show_hidden" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/main_prefs_category" >
@@ -136,6 +142,11 @@
                 android:enabled="true"
                 android:key="quit_app"
                 android:title="@string/quit" />
+
+            <Preference
+                android:enabled="true"
+                android:key="dump_logcat"
+                android:title="@string/dump_logcat" />
         </PreferenceScreen>
     </PreferenceCategory>
 

@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.R;
@@ -50,6 +51,7 @@ public class DirectoryAdapter extends BaseAdapter {
     public final static String TAG = "VLC/DirectoryAdapter";
 
     static boolean showMediaOnly=false;
+    static boolean showHidden=false;
 
     public static boolean acceptedPath(String f) {
         if (!showMediaOnly) {
@@ -61,10 +63,16 @@ public class DirectoryAdapter extends BaseAdapter {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-        SharedPreferences preferences = VLCApplication.getAppContext().getSharedPreferences(PreferencesActivity.NAME,
-            Activity.MODE_PRIVATE);
-        boolean media_only = preferences.getBoolean(PreferencesActivity.SHOW_MEDIA_ONLY, false);
+        readPrefs();
+    }
+
+    private void readPrefs() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(VLCApplication.getAppContext());
+        boolean media_only = prefs.getBoolean(PreferencesActivity.SHOW_MEDIA_ONLY, false);
         showMediaOnly=media_only;
+        boolean show_hidden=prefs.getBoolean(PreferencesActivity.SHOW_HIDDEN, false);
+        showHidden=show_hidden;
+        System.out.println("showmedia:"+showMediaOnly+" showhidden:"+showHidden);
     }
 
     /**
@@ -209,7 +217,10 @@ public class DirectoryAdapter extends BaseAdapter {
             for(int i = 0; i < files.size(); i++) {
                 String filename = files.get(i);
                 /* Avoid infinite loop */
-                if(filename.equals(".") || filename.equals("..") || filename.startsWith(".")) continue;
+                if(filename.equals(".") || filename.equals("..") /*|| filename.startsWith(".")*/) continue;
+                if (filename.startsWith(".")&&!showHidden) {
+                    continue;
+                }
 
                 DirectoryAdapter.Node nss = new DirectoryAdapter.Node(filename);
                 nss.isFile = false;
@@ -254,6 +265,7 @@ public class DirectoryAdapter extends BaseAdapter {
     private String mCurrentRoot;
 
     public DirectoryAdapter() {
+        readPrefs();
         DirectoryAdapter_Core(null);
     }
 
@@ -343,7 +355,7 @@ public class DirectoryAdapter extends BaseAdapter {
         if(selectedNode.isFile())
             holder.icon.setImageResource(R.drawable.icon);
         else
-            holder.icon.setImageResource(R.drawable.ic_folder);
+            holder.icon.setImageResource(R.drawable.folder);
 
         return v;
     }
