@@ -38,6 +38,7 @@ import org.videolan.vlc.VlcRunnable;
 import org.videolan.vlc.WeakHandler;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.interfaces.ISortable;
 
 import android.annotation.TargetApi;
@@ -257,7 +258,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         if (media instanceof MediaGroup) {
             VideoGridFragment videoList = new VideoGridFragment();
             videoList.setGroup(media.getTitle());
-            MainActivity.ShowFragment(getActivity(), "videolist", videoList);
+            VLCDrawerActivity.ShowFragment(getActivity(), "videolist", videoList);
         }
         else
             playVideo(media, false);

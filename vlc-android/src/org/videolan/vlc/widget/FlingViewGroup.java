@@ -147,6 +147,10 @@ public class FlingViewGroup extends ViewGroup {
                     mInterceptTouchState = TOUCH_STATE_MOVE;
                 if (Math.abs(mLastX - x) > mTouchSlop)
                     mTouchState = TOUCH_STATE_MOVE;
+
+                if (Math.abs(mLastInterceptDownY - y) >= Math.abs(mLastX - x)) {
+                    return true;
+                }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:

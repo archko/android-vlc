@@ -33,6 +33,7 @@ import org.videolan.vlc.VlcRunnable;
 import org.videolan.vlc.WeakHandler;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.widget.FlingViewGroup;
 import org.videolan.vlc.widget.FlingViewGroup.ViewSwitchListener;
 import org.videolan.vlc.widget.HeaderScrollView;
@@ -177,7 +178,7 @@ public class AudioBrowserFragment extends SherlockFragment {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
             ArrayList<Media> mediaList = mArtistsAdapter.getMedia(p);
-            MainActivity activity = (MainActivity)getActivity();
+            VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
             frag.setMediaList(mediaList, mediaList.get(0).getArtist());
         }

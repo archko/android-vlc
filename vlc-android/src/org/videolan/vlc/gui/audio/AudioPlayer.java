@@ -22,6 +22,7 @@ package org.videolan.vlc.gui.audio;
 
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -34,6 +35,7 @@ import org.videolan.vlc.Util;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
+import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
 import org.videolan.vlc.interfaces.IAudioPlayer;
@@ -463,13 +465,25 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     }
 
     public void show() {
-        MainActivity activity = (MainActivity)getActivity();
-        activity.showAudioPlayer();
+        Activity activity = getActivity();
+        if (activity instanceof MainActivity) {
+            MainActivity mainActivity=(MainActivity) activity;
+            mainActivity.showAudioPlayer();
+        } else if (activity instanceof VLCDrawerActivity) {
+            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+            drawerActivity.showAudioPlayer();
+        }
     }
 
     public void hide() {
-        MainActivity activity = (MainActivity)getActivity();
-        activity.hideAudioPlayer();
+        Activity activity = getActivity();
+        if (activity instanceof MainActivity) {
+            MainActivity mainActivity=(MainActivity) activity;
+            mainActivity.hideAudioPlayer();
+        } else if (activity instanceof VLCDrawerActivity) {
+            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+            drawerActivity.hideAudioPlayer();
+        }
     }
 
     /**
@@ -529,8 +543,14 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
         @Override
         public void onTouchClick() {
-            MainActivity activity = (MainActivity)getActivity();
-            activity.slideUpOrDownAudioPlayer();
+            Activity activity = getActivity();
+            if (activity instanceof MainActivity) {
+                MainActivity mainActivity=(MainActivity) activity;
+                mainActivity.slideUpOrDownAudioPlayer();
+            } else if (activity instanceof VLCDrawerActivity) {
+                VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+                drawerActivity.slideUpOrDownAudioPlayer();
+            }
         }
     };
 
