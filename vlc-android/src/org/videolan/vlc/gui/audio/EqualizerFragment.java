@@ -29,13 +29,13 @@ import org.videolan.vlc.widget.EqualizerBar;
 
 import com.actionbarsherlock.app.SherlockFragment;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
@@ -43,7 +43,6 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -71,30 +70,39 @@ public class EqualizerFragment extends SherlockFragment {
 
         super.onCreateView(inflater, container, savedInstanceState);
         View v = inflater.inflate(R.layout.equalizer, container, false);
+        saveViewChildren(v);
 
+        return v;
+    }
+
+    private void saveViewChildren(View v) {
         button = (ToggleButton) v.findViewById(R.id.equalizer_button);
         equalizer_presets = (Spinner) v.findViewById(R.id.equalizer_presets);
         preamp = (SeekBar) v.findViewById(R.id.equalizer_preamp);
         bands_layout = (LinearLayout) v.findViewById(R.id.equalizer_bands);
+    }
 
-        // only allow scroll in the lower 50dp part of the layout (where frequencies are displayed)
-        HorizontalScrollView scroll = (HorizontalScrollView) v.findViewById(R.id.equalizer_scroll);
-        final float density = this.getResources().getDisplayMetrics().density;
-        scroll.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                int delta = v.getHeight() - (int) event.getY();
-                return delta > 50 * density;
-            }
-        });
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
 
-        return v;
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.equalizer, null);
+        ViewGroup rootView = (ViewGroup) getView();
+        rootView.removeAllViews();
+        rootView.addView(v);
+        saveViewChildren(v);
+
+        fillViews();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        fillViews();
+    }
 
+    private void fillViews() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(VLCApplication.getAppContext());
         float[] bands = null;
         String[] presets = null;
@@ -123,12 +131,14 @@ public class EqualizerFragment extends SherlockFragment {
 
         // presets
         equalizer_presets.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_dropdown_item, presets));
-        equalizer_presets.setSelection(preferences.getInt("equalizer_preset", 0), false);
-        // set listener asynchronously to prevent the listener from being fired during spinner init
+        equalizer_presets.setOnItemSelectedListener(mPresetListener);
+
+        // Set the default selection asynchronously to prevent a layout initialization bug.
+        final int equalizer_preset_pref = preferences.getInt("equalizer_preset", 0);
         equalizer_presets.post(new Runnable() {
             @Override
             public void run() {
-                equalizer_presets.setOnItemSelectedListener(mPresetListener);
+                equalizer_presets.setSelection(equalizer_preset_pref, false);
             }
         });
 
@@ -146,8 +156,9 @@ public class EqualizerFragment extends SherlockFragment {
             bar.setListener(new BandListener(i + 1));
 
             bands_layout.addView(bar);
-            LayoutParams params = bar.getLayoutParams();
-            params.height = LayoutParams.MATCH_PARENT;
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                                  LayoutParams.MATCH_PARENT, 1);
             bar.setLayoutParams(params);
         }
     }
