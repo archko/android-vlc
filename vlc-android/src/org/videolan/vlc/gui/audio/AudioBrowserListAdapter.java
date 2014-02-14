@@ -77,6 +77,16 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             mSubTitle = subTitle;
             mIsSeparator = isSeparator;
         }
+
+        @Override
+        public String toString() {
+            return "ListItem{"+
+                "mTitle='"+mTitle+'\''+
+                ", mSubTitle='"+mSubTitle+'\''+
+                ", mMediaList="+mMediaList+
+                ", mIsSeparator="+mIsSeparator+
+                '}';
+        }
     }
 
     public AudioBrowserListAdapter(Context context, int itemType) {
@@ -171,6 +181,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             holder = (ViewHolder) v.getTag();
 
         ListItem item = getItem(position);
+        System.out.println("item:"+item);
         holder.title.setText(item.mTitle);
 
         RelativeLayout.LayoutParams paramsCover;
