@@ -40,6 +40,7 @@ import java.util.Stack;
 import org.videolan.libvlc.EventHandler;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
+import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaList;
 import org.videolan.vlc.gui.MainActivity;
@@ -174,7 +175,7 @@ public class AudioService extends Service {
         final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         boolean stealRemoteControl = pref.getBoolean("enable_steal_remote_control", false);
 
-        if(!Util.isFroyoOrLater() || stealRemoteControl) {
+        if (!LibVlcUtil.isFroyoOrLater() || stealRemoteControl) {
             /* Backward compatibility for API 7 */
             filter = new IntentFilter();
             if (stealRemoteControl)
@@ -195,7 +196,7 @@ public class AudioService extends Service {
         Context context = VLCApplication.getAppContext();
         AudioManager audioManager = (AudioManager)context.getSystemService(AUDIO_SERVICE);
 
-        if(Util.isICSOrLater()) {
+        if (LibVlcUtil.isICSOrLater()) {
             audioManager.registerMediaButtonEventReceiver(mRemoteControlClientReceiverComponent);
 
             if (mRemoteControlClient == null) {
@@ -214,7 +215,7 @@ public class AudioService extends Service {
                     RemoteControlClient.FLAG_KEY_MEDIA_PREVIOUS |
                     RemoteControlClient.FLAG_KEY_MEDIA_NEXT |
                     RemoteControlClient.FLAG_KEY_MEDIA_STOP);
-        } else if (Util.isFroyoOrLater()) {
+        } else if (LibVlcUtil.isFroyoOrLater()) {
             audioManager.registerMediaButtonEventReceiver(mRemoteControlClientReceiverComponent);
         }
     }
@@ -227,7 +228,7 @@ public class AudioService extends Service {
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setRemoteControlClientPlaybackState(int state) {
-        if(!Util.isICSOrLater() || mRemoteControlClient == null)
+        if (!LibVlcUtil.isICSOrLater() || mRemoteControlClient == null)
             return;
 
         switch (state) {
@@ -269,7 +270,7 @@ public class AudioService extends Service {
 
     @TargetApi(Build.VERSION_CODES.FROYO)
     private void changeAudioFocus(boolean gain) {
-        if(!Util.isFroyoOrLater()) // NOP if not supported
+        if (!LibVlcUtil.isFroyoOrLater()) // NOP if not supported
             return;
 
         if (audioFocusListener == null) {
@@ -679,7 +680,7 @@ public class AudioService extends Service {
             notificationIntent.putExtra(START_FROM_NOTIFICATION, true);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            if (Util.isJellyBeanOrLater()) {
+            if (LibVlcUtil.isJellyBeanOrLater()) {
                 Intent iBackward = new Intent(ACTION_REMOTE_BACKWARD);
                 Intent iPlay = new Intent(ACTION_REMOTE_PLAYPAUSE);
                 Intent iForward = new Intent(ACTION_REMOTE_FORWARD);
@@ -694,7 +695,7 @@ public class AudioService extends Service {
                     view.setImageViewBitmap(R.id.cover, cover);
                 view.setTextViewText(R.id.songName, title);
                 view.setTextViewText(R.id.artist, artist);
-                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_wpause : R.drawable.ic_wplay);
                 view.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view.setOnClickPendingIntent(R.id.forward, piForward);
                 view.setOnClickPendingIntent(R.id.stop, piStop);
@@ -706,7 +707,7 @@ public class AudioService extends Service {
                 view_expanded.setTextViewText(R.id.songName, title);
                 view_expanded.setTextViewText(R.id.artist, artist);
                 view_expanded.setTextViewText(R.id.album, album);
-                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_wpause : R.drawable.ic_wplay);
                 view_expanded.setOnClickPendingIntent(R.id.backward, piBackward);
                 view_expanded.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view_expanded.setOnClickPendingIntent(R.id.forward, piForward);
@@ -720,7 +721,8 @@ public class AudioService extends Service {
             else {
                 builder.setLargeIcon(cover)
                        .setContentTitle(title)
-                       .setContentText(Util.isJellyBeanOrLater() ? artist : media.getSubtitle())
+                        .setContentText(LibVlcUtil.isJellyBeanOrLater() ? artist
+                                        : media.getSubtitle())
                        .setContentInfo(album)
                        .setContentIntent(pendingIntent);
                 notification = builder.build();
@@ -858,7 +860,7 @@ public class AudioService extends Service {
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void updateRemoteControlClientMetadata() {
-        if(!Util.isICSOrLater()) // NOP check
+        if (!LibVlcUtil.isICSOrLater()) // NOP check
             return;
 
         Media media = getCurrentMedia();

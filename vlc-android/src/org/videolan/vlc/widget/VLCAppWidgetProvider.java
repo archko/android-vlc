@@ -20,8 +20,8 @@
 
 package org.videolan.vlc.widget;
 
+import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
 
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
@@ -77,7 +77,7 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
         }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.vlcwidget);
-        boolean partial = Util.isHoneycombOrLater();
+        boolean partial = LibVlcUtil.isHoneycombOrLater();
 
         if (ACTION_WIDGET_INIT.equals(action) || !partial) {
             /* commands */
@@ -110,7 +110,7 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
 
             views.setTextViewText(R.id.songName, title);
             views.setTextViewText(R.id.artist, artist);
-            views.setImageViewResource(R.id.play_pause, isplaying ? R.drawable.ic_pause : R.drawable.ic_play);
+            views.setImageViewResource(R.id.play_pause, isplaying ? R.drawable.ic_wpause : R.drawable.ic_wplay);
             views.setViewVisibility(R.id.timeline_parent, artist != null && artist.length() > 0 ? View.VISIBLE : View.INVISIBLE);
         }
         else if (ACTION_WIDGET_UPDATE_COVER.equals(action)) {
