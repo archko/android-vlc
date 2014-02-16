@@ -60,7 +60,7 @@
         android:background="#00ffffff"
         android:clickable="true"
         android:scaleType="fitXY"
-        android:src="@drawable/ic_stop" />
+        android:src="@drawable/ic_wstop" />
 
     <LinearLayout
         android:id="@+id/buttons"
@@ -79,7 +79,7 @@
             android:background="#00ffffff"
             android:clickable="true"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_backward" />
+            android:src="@drawable/ic_wbackward" />
 
         <ImageButton
             android:id="@+id/play_pause"
@@ -91,7 +91,7 @@
             android:background="#00ffffff"
             android:clickable="true"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_play" />
+            android:src="@drawable/ic_wplay" />
 
         <ImageButton
             android:id="@+id/forward"
@@ -101,7 +101,7 @@
             android:background="#00ffffff"
             android:clickable="true"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_forward" />
+            android:src="@drawable/ic_wforward" />
     </LinearLayout>
 
 </RelativeLayout>

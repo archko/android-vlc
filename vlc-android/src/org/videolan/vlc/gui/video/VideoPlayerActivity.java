@@ -41,6 +41,7 @@ import org.videolan.libvlc.EventHandler;
 import org.videolan.libvlc.IVideoPlayer;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
+import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaDatabase;
@@ -210,13 +211,13 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     private ArrayList<String> mSubtitleSelectedFiles = new ArrayList<String>();
 
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.player);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        if(Util.isICSOrLater())
+        if (LibVlcUtil.isICSOrLater())
             getWindow().getDecorView().findViewById(android.R.id.content).setOnSystemUiVisibilityChangeListener(
                     new OnSystemUiVisibilityChangeListener() {
                         @Override
@@ -280,7 +281,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mSurfaceHolder = mSurface.getHolder();
         mSurfaceFrame = (FrameLayout) findViewById(R.id.player_surface_frame);
         String chroma = pref.getString("chroma_format", "");
-        if(Util.isGingerbreadOrLater() && chroma.equals("YV12")) {
+        if(LibVlcUtil.isGingerbreadOrLater() && chroma.equals("YV12")) {
             mSurfaceHolder.setFormat(ImageFormat.YV12);
         } else if (chroma.equals("RV16")) {
             mSurfaceHolder.setFormat(PixelFormat.RGB_565);
@@ -340,7 +341,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 ? mScreenOrientation
                 : getScreenOrientation());
 
-        if (Util.isJellyBeanOrLater()) {
+        if (LibVlcUtil.isJellyBeanMR1OrLater()) {
             // Get the media router service (miracast)
             mMediaRouter = (MediaRouter)getSystemService(Context.MEDIA_ROUTER_SERVICE);
             mMediaRouterCallback = new MediaRouter.SimpleCallback() {
@@ -491,7 +492,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             }
         }
 
-        if (Util.isJellyBeanOrLater()) {
+        if (LibVlcUtil.isJellyBeanMR1OrLater()) {
             updatePresentation();
         }
     }
@@ -688,7 +689,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     @TargetApi(Build.VERSION_CODES.FROYO)
     private void changeAudioFocus(boolean gain) {
-        if(!Util.isFroyoOrLater()) // NOP if not supported
+        if(!LibVlcUtil.isFroyoOrLater()) // NOP if not supported
             return;
 
         if (mAudioFocusListener == null) {
@@ -1493,10 +1494,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void dimStatusBar(boolean dim) {
-        if (!Util.isHoneycombOrLater() || !Util.hasNavBar())
+        if (!LibVlcUtil.isHoneycombOrLater() || !Util.hasNavBar())
             return;
         int layout = 0;
-        if (!Util.hasCombBar() && Util.isJellyBeanOrLater())
+        if (!Util.hasCombBar() && LibVlcUtil.isJellyBeanOrLater())
             layout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         int visibility =  (dim ? (Util.hasCombBar()
                 ? View.SYSTEM_UI_FLAG_LOW_PROFILE
@@ -1834,7 +1835,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         CommonDialogs.advancedOptions(this, v, MenuType.Video);
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private void updatePresentation() {
         if (mMediaRouter == null)
             return;
@@ -1883,6 +1884,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         }
     };
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private final static class SecondaryDisplay extends Presentation {
         public final static String TAG = "VLC/SecondaryDisplay";
 
@@ -1920,7 +1922,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mSurfaceHolder = mSurface.getHolder();
             mSurfaceFrame = (FrameLayout) findViewById(R.id.remote_player_surface_frame);
             String chroma = pref.getString("chroma_format", "");
-            if(Util.isGingerbreadOrLater() && chroma.equals("YV12")) {
+            if(LibVlcUtil.isGingerbreadOrLater() && chroma.equals("YV12")) {
                 mSurfaceHolder.setFormat(ImageFormat.YV12);
             } else if (chroma.equals("RV16")) {
                 mSurfaceHolder.setFormat(PixelFormat.RGB_565);
