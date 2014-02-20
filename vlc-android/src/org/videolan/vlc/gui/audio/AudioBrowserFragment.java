@@ -179,7 +179,7 @@ public class AudioBrowserFragment extends SherlockFragment {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
             ArrayList<Media> mediaList = mArtistsAdapter.getMedia(p);
-            VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+            MainActivity activity = (MainActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
             frag.setMediaList(mediaList, mediaList.get(0).getArtist());
         }

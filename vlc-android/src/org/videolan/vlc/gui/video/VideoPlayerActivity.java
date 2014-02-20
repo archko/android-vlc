@@ -210,6 +210,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      */
     private ArrayList<String> mSubtitleSelectedFiles = new ArrayList<String>();
 
+    // Whether fallback from HW acceleration to SW decoding was done.
+    private boolean mDisabledHardwareAcceleration = false;
+    private int mPreviousHardwareAccelerationMode;
+
     @Override
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected void onCreate(Bundle savedInstanceState) {
@@ -451,6 +455,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         EventHandler em = EventHandler.getInstance();
         em.removeHandler(eventHandler);
+
+        // HW acceleration was temporarily disabled because of an error, restore the previous value.
+        if (mDisabledHardwareAcceleration)
+            mLibVLC.setHardwareAcceleration(mPreviousHardwareAccelerationMode);
 
         mAudioManager = null;
     }
@@ -774,6 +782,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     Log.i(TAG, "MediaPlayerEncounteredError");
                     activity.encounteredError();
                     break;
+                case EventHandler.HardwareAccelerationError:
+                    Log.i(TAG, "HardwareAccelerationError");
+                    activity.handleHardwareAccelerationError();
+                    break;
                 default:
                     Log.e(TAG, String.format("Event not handled (0x%x)", msg.getData().getInt("event")));
                     break;
@@ -850,6 +862,35 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         })
         .setTitle(R.string.encountered_error_title)
         .setMessage(R.string.encountered_error_message)
+        .create();
+        dialog.show();
+    }
+
+    public void eventHardwareAccelerationError() {
+        EventHandler em = EventHandler.getInstance();
+        em.callback(EventHandler.HardwareAccelerationError, new Bundle());
+    }
+
+    private void handleHardwareAccelerationError() {
+        mLibVLC.stop();
+        AlertDialog dialog = new AlertDialog.Builder(VideoPlayerActivity.this)
+        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                mDisabledHardwareAcceleration = true;
+                mPreviousHardwareAccelerationMode = mLibVLC.getHardwareAcceleration();
+                mLibVLC.setHardwareAcceleration(0);
+                load();
+            }
+        })
+        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                finish();
+            }
+        })
+        .setTitle(R.string.hardware_acceleration_error_title)
+        .setMessage(R.string.hardware_acceleration_error_message)
         .create();
         dialog.show();
     }
@@ -995,6 +1036,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "onTouchEvent:"+mIsLocked+" showing:"+mShowing+" event:"+event);
         if (mIsLocked) {
             // locked, only handle show/hide & ignore all actions
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -1019,7 +1061,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         // coef is the gradient's move to determine a neutral zone
         float coef = Math.abs (y_changed / x_changed);
         float xgesturesize = ((x_changed / screen.xdpi) * 2.54f);
-
+        Log.d(TAG, "onTouchEvent switch:"+coef+" showing:"+mShowing+" event:"+event);
         switch (event.getAction()) {
 
         case MotionEvent.ACTION_DOWN:
@@ -1070,6 +1112,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void doSeekTouch(float coef, float gesturesize, boolean seek) {
+        Log.d(TAG, "onTouchEvent:doSeekTouch"+mTouchAction+" showing:"+mShowing);
         // No seek action if coef > 0.5 and gesturesize < 1cm
         if (coef > 0.5 || Math.abs(gesturesize) < 1 || !mCanSeek)
             return;
@@ -1108,8 +1151,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void doVolumeTouch(float y_changed) {
-        if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_VOLUME)
+        if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_VOLUME) {
+            Log.d(TAG, "onTouchEvent:doVolumeTouch"+mTouchAction+" showing:"+mShowing);
             return;
+        }
         int delta = -(int) ((y_changed / mSurfaceYDisplayRange) * mAudioMax);
         int vol = (int) Math.min(Math.max(mVol + delta, 0), mAudioMax);
         if (delta != 0) {
@@ -1136,6 +1181,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void doBrightnessTouch(float y_changed) {
+        Log.d(TAG, "onTouchEvent:doBrightnessTouch"+mTouchAction+" showing:"+mShowing);
         if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_BRIGHTNESS)
             return;
         if (mIsFirstBrightnessGesture) initBrightnessTouch();
@@ -1619,7 +1665,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             if (getIntent().getData() != null
                     && getIntent().getData().getScheme() != null
                     && getIntent().getData().getScheme().equals("content")) {
-                if(getIntent().getData().getHost().equals("media")) {
+                if(getIntent().getData().getHost().equals("media") || getIntent().getData().getHost().equals("mms")) {
                     // Media URI
                     Cursor cursor = managedQuery(getIntent().getData(), new String[]{ MediaStore.Video.Media.DATA }, null, null, null);
                     int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
