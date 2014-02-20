@@ -329,7 +329,7 @@ public class AudioService extends Service {
              * Launch the activity if needed
              */
             if (action.startsWith(ACTION_REMOTE_GENERIC) && !mLibVLC.isPlaying() && !hasCurrentMedia()) {
-                Intent iVlc = new Intent(context, MainActivity.class);
+                Intent iVlc = new Intent(context, VLCDrawerActivity.class);
                 iVlc.putExtra(START_FROM_NOTIFICATION, true);
                 iVlc.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 context.startActivity(iVlc);
@@ -674,7 +674,7 @@ public class AudioService extends Service {
                 .setAutoCancel(false)
                 .setOngoing(true);
 
-            Intent notificationIntent = new Intent(this, MainActivity.class);
+            Intent notificationIntent = new Intent(this, VLCDrawerActivity.class);
             notificationIntent.setAction(MainActivity.ACTION_SHOW_PLAYER);
             notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             notificationIntent.putExtra(START_FROM_NOTIFICATION, true);

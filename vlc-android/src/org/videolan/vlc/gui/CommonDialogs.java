@@ -148,7 +148,7 @@ public class CommonDialogs {
             });
             equalizer.setVisibility(View.GONE);
         } else {
-            final MainActivity activity = (MainActivity)context;
+            final VLCDrawerActivity activity = (VLCDrawerActivity)context;
             equalizer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

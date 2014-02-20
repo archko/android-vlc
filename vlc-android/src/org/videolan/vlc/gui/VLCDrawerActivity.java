@@ -862,7 +862,12 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         = new SlidingPaneLayout.PanelSlideListener() {
 
             @Override
-            public void onPanelSlide(float slideOffset) {}
+            public void onPanelSlide(float slideOffset) {
+                if (slideOffset <= 0.1)
+                    getSupportActionBar().hide();
+                else
+                    getSupportActionBar().show();
+            }
 
             @Override
             public void onPanelOpened() {

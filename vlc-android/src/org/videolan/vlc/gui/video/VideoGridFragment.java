@@ -259,7 +259,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         if (media instanceof MediaGroup) {
             VideoGridFragment videoList = new VideoGridFragment();
             videoList.setGroup(media.getTitle());
-            MainActivity.ShowFragment(getActivity(), "videolist", videoList);
+            VLCDrawerActivity.ShowFragment(getActivity(), "videolist", videoList);
         }
         else
             playVideo(media, false);
