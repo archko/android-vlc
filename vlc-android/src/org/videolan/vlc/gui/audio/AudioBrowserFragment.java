@@ -255,8 +255,10 @@ public class AudioBrowserFragment extends SherlockFragment {
                     new VlcRunnable(mSongsAdapter.getItem(groupPosition)) {
                         @Override
                         public void run(Object o) {
-                            Media aMedia = (Media) o;
-                            mMediaLibrary.getMediaItems().remove(aMedia);
+                            AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;
+                            Media media = listItem.mMediaList.get(0);
+                            mMediaLibrary.getMediaItems().remove(media);
+                            mAudioController.removeLocation(media.getLocation());
                             updateLists();
                         }
                     });

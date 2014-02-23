@@ -37,6 +37,8 @@ import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
 import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.AudioPlayer;
 import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.video.MediaInfoFragment;
+import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.widget.SlidingPaneLayout;
@@ -115,7 +117,8 @@ public class MainActivity extends SherlockFragmentActivity {
     private String mCurrentFragment;
     private String mPreviousFragment;
     private List<String> secondaryFragments = Arrays.asList("albumsSongs", "equalizer",
-                                                            "about", "search");
+                                                            "about", "search", "mediaInfo",
+                                                            "videoGroupList");
     private HashMap<String, Fragment> mSecondaryFragments = new HashMap<String, Fragment>();
 
     private SharedPreferences mSettings;
@@ -192,7 +195,7 @@ public class MainActivity extends SherlockFragmentActivity {
         View sidebar = LayoutInflater.from(this).inflate(R.layout.sidebar, null);
         final ListView listView = (ListView)sidebar.findViewById(android.R.id.list);
         listView.setFooterDividersEnabled(true);
-        mSidebarAdapter = new SidebarAdapter();
+        mSidebarAdapter = new SidebarAdapter(this);
         listView.setAdapter(mSidebarAdapter);
         mMenu.setMenu(sidebar);
         mMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT, true);
@@ -444,7 +447,7 @@ public class MainActivity extends SherlockFragmentActivity {
         return mSidebarAdapter.fetchFragment(id);
     }
 
-    public static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
+    private static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
         if (fragment == null) {
             Log.e(TAG, "Cannot show a null fragment, ShowFragment("+tag+") aborted.");
             return;
@@ -488,6 +491,10 @@ public class MainActivity extends SherlockFragmentActivity {
             f = new AboutFragment();
         } else if(id.equals("search")) {
             f = new SearchFragment();
+        } else if(id.equals("mediaInfo")) {
+            f = new MediaInfoFragment();
+        } else if(id.equals("videoGroupList")) {
+            f = new VideoGridFragment();
         }
         else {
             throw new IllegalArgumentException("Wrong fragment id.");

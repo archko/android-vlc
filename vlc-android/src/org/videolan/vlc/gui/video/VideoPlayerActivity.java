@@ -101,6 +101,7 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import org.videolan.vlc.gui.VLCDrawerActivity;
 
 public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     public final static String TAG = "VLC/VideoPlayerActivity";
@@ -747,8 +748,17 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         public void handleMessage(Message msg) {
             VideoPlayerActivity activity = getOwner();
             if(activity == null) return;
+            // Do not handle events if we are leaving the VideoPlayerActivity
+            if (activity.mSwitchingView) return;
 
             switch (msg.getData().getInt("event")) {
+                case EventHandler.MediaParsedChanged:
+                    Log.i(TAG, "MediaParsedChanged");
+                    if (activity.mLibVLC.getVideoTracksCount() < 1) {
+                        Log.i(TAG, "No video track, open in audio mode");
+                        activity.switchToAudioMode();
+                    }
+                    break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
                     activity.showOverlay();
@@ -902,6 +912,17 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mSwitchingView = true;
             finish();
         }
+    }
+
+    private void switchToAudioMode() {
+        mSwitchingView = true;
+        // Show the MainActivity if it is not in background.
+        if (getIntent().getAction() != null
+            && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
+            Intent i = new Intent(this, VLCDrawerActivity.class);
+            startActivity(i);
+        }
+        finish();
     }
 
     private void changeSurfaceSize() {

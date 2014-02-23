@@ -27,7 +27,6 @@
     <orderEntry type="jdk" jdkName="Android API 19 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="WheelView" />
-    <orderEntry type="module" module-name="SlidingMenu" />
     <orderEntry type="module" module-name="ActionBarSherlock" />
     <orderEntry type="module-library">
       <library>
@@ -38,6 +37,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="SlidingMenu" />
   </component>
 </module>
 

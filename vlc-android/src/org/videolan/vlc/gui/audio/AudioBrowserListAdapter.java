@@ -106,6 +106,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             mMediaItemMap.put(title, item);
             mItems.add(item);
         }
+        notifyDataSetChanged();
     }
 
     public void addLeterSeparators() {
@@ -133,16 +134,42 @@ public class AudioBrowserListAdapter extends BaseAdapter {
                 firstSeparator = false;
             }
         }
+        notifyDataSetChanged();
     }
 
     public void addSeparator(String title) {
         ListItem item = new ListItem(title, null, null, true);
         mItems.add(item);
+        notifyDataSetChanged();
+    }
+
+    /**
+     * Remove all the reference to a media in the list items.
+     * Remove also all the list items that contain only this media.
+     * @param media the media to remove
+     */
+    public void removeMedia(Media media) {
+        for (int i = 0; i < mItems.size(); ++i) {
+            ListItem item = mItems.get(i);
+            if (item.mMediaList == null)
+                continue;
+            for (int j = 0; j < item.mMediaList.size(); ++j)
+                if (item.mMediaList.get(j).getLocation().equals(media.getLocation())) {
+                    item.mMediaList.remove(j);
+                    j--;
+                }
+            if (item.mMediaList.isEmpty() && !item.mIsSeparator) {
+                mItems.remove(i);
+                i--;
+            }
+        }
+        notifyDataSetChanged();
     }
 
     public void clear() {
         mMediaItemMap.clear();
         mItems.clear();
+        notifyDataSetChanged();
     }
 
     @Override
@@ -181,7 +208,6 @@ public class AudioBrowserListAdapter extends BaseAdapter {
             holder = (ViewHolder) v.getTag();
 
         ListItem item = getItem(position);
-        System.out.println("item:"+item);
         holder.title.setText(item.mTitle);
 
         RelativeLayout.LayoutParams paramsCover;

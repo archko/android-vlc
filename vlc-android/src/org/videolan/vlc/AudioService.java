@@ -402,6 +402,9 @@ public class AudioService extends Service {
             if(service == null) return;
 
             switch (msg.getData().getInt("event")) {
+                case EventHandler.MediaParsedChanged:
+                    Log.i(TAG, "MediaParsedChanged");
+                    break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
                     service.executeUpdate();
@@ -1179,6 +1182,7 @@ public class AudioService extends Service {
             // Notify everyone
             mHandler.sendEmptyMessage(SHOW_PROGRESS);
             showNotification();
+            determinePrevAndNextIndices();
             executeUpdate();
             executeUpdateProgress();
         }
@@ -1224,6 +1228,11 @@ public class AudioService extends Service {
         @Override
         public void remove(int position) {
             mLibVLC.getMediaList().remove(position);
+        }
+
+        @Override
+        public void removeLocation(String location) {
+            mLibVLC.getMediaList().remove(location);
         }
 
         @Override
