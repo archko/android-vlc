@@ -264,16 +264,16 @@ public class DirectoryAdapter extends BaseAdapter {
     private String mCurrentDir;
     private String mCurrentRoot;
 
-    public DirectoryAdapter() {
+    public DirectoryAdapter(Context context) {
         readPrefs();
-        DirectoryAdapter_Core(null);
+        DirectoryAdapter_Core(context, null);
     }
 
-    private void DirectoryAdapter_Core(String rootDir) {
+    private void DirectoryAdapter_Core(Context activityContext, String rootDir) {
         if (rootDir != null)
             rootDir = Util.stripTrailingSlash(rootDir);
         Log.v(TAG, "rootMRL is " + rootDir);
-        mInflater = LayoutInflater.from(VLCApplication.getAppContext());
+        mInflater = LayoutInflater.from(activityContext);
         mRootNode = new DirectoryAdapter.Node(rootDir);
         mCurrentDir = rootDir;
         this.populateNode(mRootNode, rootDir);

@@ -21,10 +21,10 @@
 package org.videolan.vlc.widget;
 
 import org.videolan.vlc.R;
+import org.videolan.vlc.Util;
 import org.videolan.vlc.interfaces.OnExpandableListener;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,12 +42,9 @@ public class ExpandableLayout extends LinearLayout {
     private final LinearLayout mContent;
     private Boolean mExpanded;
     private OnExpandableListener listener = null;
-    private Context mContext;
 
     public ExpandableLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        mContext = context;
 
         LayoutInflater.from(context).inflate(R.layout.expandable_layout, this, true);
 
@@ -70,7 +67,9 @@ public class ExpandableLayout extends LinearLayout {
 
     private void setState(Boolean expanded) {
         mExpanded = expanded;
-        mMore.setImageResource(expanded ? R.drawable.ic_up : R.drawable.ic_down);
+        mMore.setImageResource(expanded ?
+                Util.getResourceFromAttribute(getContext(), R.attr.ic_up_style) :
+                    Util.getResourceFromAttribute(getContext(), R.attr.ic_down_style));
         mContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
     }
 
@@ -86,13 +85,6 @@ public class ExpandableLayout extends LinearLayout {
     public void setIcon(int resid) {
         mIcon.setImageResource(resid);
         mIcon.setVisibility(View.VISIBLE);
-    }
-
-    public void setIconAttribute(int attrid) {
-        TypedArray a = mContext.getTheme().obtainStyledAttributes(new int[] {attrid});
-        int resId = a.getResourceId(0, 0);
-        a.recycle();
-        setIcon(resId);
     }
 
     public void setContent(Context context, int resid) {
