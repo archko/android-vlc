@@ -186,6 +186,11 @@ public class MainActivity extends SherlockFragmentActivity {
         mMenu = (SlidingMenu) LayoutInflater.from(this).inflate(R.layout.sliding_menu, null);
         changeMenuOffset();
 
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme)
+            setTheme(R.style.Theme_VLC_Black);
+
         View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
         setContentView(v_main);
 
@@ -660,6 +665,11 @@ public class MainActivity extends SherlockFragmentActivity {
         if (requestCode == ACTIVITY_RESULT_PREFERENCES) {
             if (resultCode == PreferencesActivity.RESULT_RESCAN)
                 MediaLibrary.getInstance(this).loadMediaItems(this, true);
+            else if (resultCode == PreferencesActivity.RESULT_RESTART) {
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
         }
     }
 
@@ -880,18 +890,23 @@ public class MainActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelOpened() {
-                mSlidingPane.setShadowResource(R.drawable.mini_player_top_shadow);
+                int resId = Util.getResourceFromAttribute(MainActivity.this, R.attr.mini_player_top_shadow);
+                if (resId != 0)
+                    mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
+                mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
+                mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
+                mMenu.setSlidingEnabled(false);
             }
 
     };

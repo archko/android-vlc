@@ -8,6 +8,7 @@
     <attr name="playlist_item_footer" format="reference|color" />
     <attr name="background_menu_divider" format="reference|color" />
     <attr name="background_menu" format="reference|color" />
+    <attr name="background_header" format="reference|color" />
     <attr name="background_player" format="reference|color" />
     <attr name="background_playlist" format="reference|color" />
     <attr name="font_default" format="reference|color" />
@@ -27,6 +28,23 @@
     <attr name="ic_jumpto_normal_style" format="reference" />
     <attr name="ic_down_style" format="reference" />
     <attr name="ic_up_style" format="reference" />
+    <attr name="ic_playlist_normal" format="reference" />
+    <attr name="ic_playlist_pressed" format="reference" />
+    <attr name="ic_repeat_normal" format="reference" />
+    <attr name="ic_repeat_pressed" format="reference" />
+    <attr name="ic_repeat_one" format="reference" />
+    <attr name="ic_shuffle_normal" format="reference" />
+    <attr name="ic_shuffle_pressed" format="reference" />
+    <attr name="ic_audio_player_dots" format="reference" />
+    <attr name="ic_play" format="reference" />
+    <attr name="ic_pause" format="reference" />
+    <attr name="ic_previous" format="reference" />
+    <attr name="ic_next" format="reference" />
+
+    <attr name="mini_player_top_shadow" format="reference" />
+    <attr name="audio_playlist_shadow" format="reference" />
+    <attr name="header_fadein_overlay" format="reference" />
+    <attr name="header_fadeout_overlay" format="reference" />
 
     <declare-styleable name="SlidingPaneLayout">
         <attr name="overhangSize" format="dimension" />

@@ -42,7 +42,7 @@
             android:background="#00000000"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_playlist_pressed" />
+            android:src="?attr/ic_playlist_pressed" />
 
         <ImageButton
             android:id="@+id/adv_function"
@@ -53,7 +53,7 @@
             android:background="#00000000"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/dots_dark" />
+            android:src="?attr/ic_audio_player_dots" />
 
         <TextView
             android:id="@+id/header_time"
@@ -76,7 +76,7 @@
             android:contentDescription="@string/pause"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_pause" />
+            android:src="?attr/ic_pause" />
 
         <View
             android:layout_width="10dp"
@@ -161,7 +161,7 @@
             android:contentDescription="@string/shuffle"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_shuffle_normal" />
+            android:src="?attr/ic_shuffle_normal" />
 
         <ImageButton
             android:id="@+id/previous"
@@ -171,7 +171,7 @@
             android:contentDescription="@string/previous"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_previous" />
+            android:src="?attr/ic_previous" />
 
         <ImageButton
             android:id="@+id/play_pause"
@@ -183,7 +183,7 @@
             android:contentDescription="@string/pause"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_pause" />
+            android:src="?attr/ic_pause" />
 
         <ImageButton
             android:id="@+id/next"
@@ -193,7 +193,7 @@
             android:contentDescription="@string/next"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_next" />
+            android:src="?attr/ic_next" />
 
         <ImageButton
             android:id="@+id/repeat"
@@ -203,7 +203,7 @@
             android:contentDescription="@string/repeat"
             android:focusable="true"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_repeat_normal" />
+            android:src="?attr/ic_repeat_normal" />
     </LinearLayout>
 
 </LinearLayout>

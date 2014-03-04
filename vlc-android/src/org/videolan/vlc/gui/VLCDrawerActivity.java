@@ -183,6 +183,11 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         /* Enable the indeterminate progress feature */
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme)
+            setTheme(R.style.Theme_VLC_Black);
+
         // Set up the sliding menu
         setContentView(R.layout.main_drawer_layout);
 
@@ -658,6 +663,11 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         if (requestCode == ACTIVITY_RESULT_PREFERENCES) {
             if (resultCode == PreferencesActivity.RESULT_RESCAN)
                 MediaLibrary.getInstance(this).loadMediaItems(this, true);
+            else if (resultCode == PreferencesActivity.RESULT_RESTART) {
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
         }
     }
 
@@ -878,18 +888,23 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
 
             @Override
             public void onPanelOpened() {
-                mSlidingPane.setShadowResource(R.drawable.mini_player_top_shadow);
+                int resId = Util.getResourceFromAttribute(VLCDrawerActivity.this, R.attr.mini_player_top_shadow);
+                if (resId != 0)
+                    mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
+                //mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
+                //mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
+                //mMenu.setSlidingEnabled(false);
             }
 
     };
