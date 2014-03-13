@@ -556,6 +556,9 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         if (current == null || !(current instanceof ISortable)) {
             menu.findItem(R.id.ml_menu_sortby).setEnabled(false);
             menu.findItem(R.id.ml_menu_sortby).setVisible(false);
+        } else {
+            menu.findItem(R.id.ml_menu_sortby).setEnabled(true);
+            menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
         // Enable the clear search history function for the search fragment.
         if (mCurrentFragment.equals("search"))
