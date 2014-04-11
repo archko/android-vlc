@@ -32,12 +32,13 @@
          width in dp and extends the full height of the container. A
          solid background is used for contrast with the content view. -->
     <ListView android:id="@+id/start_drawer"
-              android:layout_height="match_parent"
-              android:layout_gravity="start"
-            android:divider="?attr/background_menu_divider"
-            android:dividerHeight="0.2dp"
-            android:layout_width="208dp"
-            android:cacheColorHint="#0000"
-              android:background="?attr/background_menu"/>
+        android:paddingTop="?attr/actionBarSize"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:divider="?attr/background_menu_divider"
+        android:dividerHeight="0.2dp"
+        android:layout_width="208dp"
+        android:cacheColorHint="#0000"
+        android:background="?attr/background_menu"/>
 </android.support.v4.widget.DrawerLayout>
 

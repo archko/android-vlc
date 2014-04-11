@@ -135,6 +135,7 @@ public class AudioAlbumsSongsFragment extends SherlockFragment {
         addNewTab(mTabHost, "songs", "Songs");
 
         mTabHost.setCurrentTab(mCurrentTab);
+        mFlingViewGroup.snapToScreen(mCurrentTab);
 
         mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             @Override
@@ -257,9 +258,12 @@ public class AudioAlbumsSongsFragment extends SherlockFragment {
                     new VlcRunnable(mSongsAdapter.getItem(groupPosition)) {
                         @Override
                         public void run(Object o) {
-                            Media aMedia = (Media) o;
-                            mMediaLibrary.getMediaItems().remove(aMedia);
-                            updateList();
+                            AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;
+                            Media media = listItem.mMediaList.get(0);
+                            mMediaLibrary.getMediaItems().remove(media);
+                            mSongsAdapter.removeMedia(media);
+                            mAlbumsAdapter.removeMedia(media);
+                            mAudioController.removeLocation(media.getLocation());
                         }
                     });
             alertDialog.show();

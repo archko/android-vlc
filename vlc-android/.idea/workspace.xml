@@ -16,7 +16,632 @@
     </shared>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c33e988d-83fe-47f2-a5c1-dcccabcbebfc" name="Default" comment="" />
+    <list default="true" id="c33e988d-83fe-47f2-a5c1-dcccabcbebfc" name="Default" comment="同步git">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/background_cone.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/background_cone.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/background_cone.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/background_cone.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_audio_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_audio_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_audio_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_audio_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_audio_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_audio_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_audio_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_audio_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_audio_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_audio_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_audio_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_audio_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_audio_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_audio_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_audio_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_audio_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_backward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_backward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_backward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_backward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_backward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_backward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_backward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_backward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_cone_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_cone_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_cone_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_cone_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_crop_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_crop_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_crop_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_crop_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_crop_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_crop_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_crop_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_crop_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_crop_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_crop_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_crop_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_crop_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_crop_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_crop_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_crop_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_crop_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_dots_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_dots_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_dots_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_dots_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_dots_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_dots_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_dots_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_dots_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_down.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_down.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_down.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_down.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_down_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_down_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_down_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_down_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_equalizer_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_equalizer_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_equalizer_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_equalizer_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_equalizer_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_equalizer_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_equalizer_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_equalizer_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_forward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_forward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_forward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_forward_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_forward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_forward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_forward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_forward_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_jumpto_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_jumpto_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_jumpto_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_jumpto_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_jumpto_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_jumpto_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_jumpto_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_jumpto_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_lock.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_lock.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_lock.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_lock.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_locked.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_locked.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_locked.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_locked.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_audio.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_audio.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_audio.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_audio.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_audio_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_audio_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_audio_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_audio_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_equalizer.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_equalizer.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_equalizer.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_equalizer.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_equalizer_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_equalizer_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_equalizer_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_equalizer_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_folder.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_folder.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_folder.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_folder.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_folder_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_folder_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_folder_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_folder_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_goto_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_goto_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_goto_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_goto_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_history.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_history.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_history.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_history.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_history_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_history_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_history_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_history_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_info.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_info.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_info.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_info.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_info_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_info_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_info_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_info_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_overflow.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_overflow.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_overflow.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_overflow.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_preferences.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_preferences.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_preferences.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_preferences.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_preferences_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_preferences_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_preferences_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_preferences_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_refresh_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_refresh_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_refresh_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_refresh_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_revert_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_revert_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_revert_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_revert_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_search_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_search_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_search_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_search_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_sortby.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_sortby.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_sortby.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_sortby.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_sortby_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_sortby_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_sortby_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_sortby_wb.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_video.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_video.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_video.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_video.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_video_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_video_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_video_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_video_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_move_media.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_move_media.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_move_media.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_move_media.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_move_media_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_move_media_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_move_media_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_move_media_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_next_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_next_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_next_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_next_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_next_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_next_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_next_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_next_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_next_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_next_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_next_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_next_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_next_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_next_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_next_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_next_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_circle_big_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_circle_big_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_playlist_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_playlist_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_playlist_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_playlist_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_previous_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_previous_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_previous_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_previous_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_previous_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_previous_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_previous_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_previous_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_previous_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_previous_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_previous_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_previous_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_previous_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_previous_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_previous_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_previous_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_repeat_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_shuffle_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_shuffle_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_shuffle_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_sleep_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_sleep_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_sleep_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_sleep_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_sleep_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_sleep_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_sleep_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_sleep_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_speed_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_speed_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_speed_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_speed_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_speed_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_speed_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_speed_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_speed_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_stop_normal_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_stop_pressed_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_subtitle_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_subtitle_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_subtitle_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_subtitle_circle_normal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_subtitle_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_subtitle_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_subtitle_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_subtitle_circle_normal_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_subtitle_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_subtitle_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_subtitle_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_subtitle_circle_pressed.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_subtitle_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_subtitle_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_subtitle_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_subtitle_circle_pressed_o.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_up.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_up.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_up.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_up.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_up_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_up_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_up_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_up_w.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/MediaInfoFragment.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/dictionaries/archko.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/bt_header_fadein_overlay.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/bt_header_fadeout_overlay.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/color/bt_list_title.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_audio_circle.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_audio_circle_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_backward_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_crop_circle.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_crop_circle_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_dots_circle_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_forward_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_next.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_next_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_pause_circle.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_pause_circle_big_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_pause_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_play_circle.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_play_circle_big_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_play_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_previous.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_previous_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_stop_w.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_subtitle_circle.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/drawable/ic_subtitle_circle_o.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/menu-v10/media_library.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/menu-v13/media_library.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/menu-v8/media_library.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/layout/player_remote_control.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/res/layout-land/player_remote_control.xml" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\anim\anim_enter_bottom.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\anim\anim_leave_bottom.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\color\list_menu.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\audio.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\audio_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\audio_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\crop_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\crop_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\folder.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\ic_backward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\ic_backward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\ic_folder.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\ic_forward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\ic_forward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\lock.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\locked.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\pause_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\pause_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\play_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\play_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\text_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\text_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\time.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-hdpi\video.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\audio.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\audio_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\audio_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\crop_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\crop_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\folder.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\ic_backward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\ic_backward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\ic_forward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\ic_forward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\lock.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\locked.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\pause_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\pause_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\play_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\play_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\text_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\text_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\time.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-ldpi\video.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\audio.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\audio_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\audio_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\crop_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\crop_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\folder.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\ic_backward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\ic_backward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\ic_forward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\ic_forward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\lock.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\locked.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\pause_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\pause_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\play_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\play_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\text_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\text_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\time.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-mdpi\video.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-v11\fastscroll_thumb.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-v11\fastscroll_thumb_default.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-v11\fastscroll_thumb_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\audio.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\audio_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\audio_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\crop_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\crop_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\folder.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\ic_backward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\ic_backward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\ic_forward_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\ic_forward_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\lock.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\locked.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\pause_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\pause_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\play_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\play_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\text_circle_normal.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\text_circle_pressed.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\time.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable-xhdpi\video.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\actionbar_shadow.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\audio_circle.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\bg_with_shadow.9.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\crop_circle.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\header_icon_loupe.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\header_logo.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\ic_backward.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\ic_down.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\ic_forward.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\ic_move_media.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\ic_up.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\pause_circle.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\play_circle.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\sleep.png" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\drawable\text_circle.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\res\layout\audio_list.xml" afterPath="" />
+      <change type="DELETED" beforePath="D:\OpenAPI\MediaApps\VLC\android-vlc\vlc-android\src\org\videolan\vlc\gui\video\MediaInfoActivity.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_goto.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_goto.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_goto.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_goto.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_goto.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_goto.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_goto.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_goto.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_refresh.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_refresh.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_refresh.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_refresh.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_refresh.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_refresh.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_refresh.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_refresh.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_revert.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_revert.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_revert.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_revert.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_revert.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_revert.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_revert.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_revert.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_search.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_menu_search.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_search.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_menu_search.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_search.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_menu_search.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_search.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_menu_search.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_pause_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_pause_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_pause_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_pause_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_playlist_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_playlist_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_playlist_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_playlist_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_playlist_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_playlist_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_playlist_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_playlist_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_playlist_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_playlist_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_playlist_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_playlist_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_playlist_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_playlist_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_playlist_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_playlist_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_one.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_one.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_normal.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-xhdpi/ic_stop_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_stop_normal.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_pressed.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/libs/armeabi-v7a/libvlcjni.so" afterPath="$PROJECT_DIR$/libs/armeabi-v7a/libvlcjni.so" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/AboutFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/AboutFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/AndroidManifest.xml" afterPath="$PROJECT_DIR$/AndroidManifest.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/AnimatedCoverView.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/AnimatedCoverView.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioAlbumsSongsFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioAlbumsSongsFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlayer.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlayer.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlaylistAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlaylistAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlaylistView.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioPlaylistView.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/AudioService.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/AudioService.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/AudioServiceController.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/AudioServiceController.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioUtil.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioUtil.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/CommonDialogs.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/CommonDialogs.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/ContentLinearLayout.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/ContentLinearLayout.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/EqualizerFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/EqualizerFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/libvlc/EventHandler.java" afterPath="$PROJECT_DIR$/src/org/videolan/libvlc/EventHandler.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/ExpandableLayout.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/ExpandableLayout.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/HeaderScrollView.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/HeaderScrollView.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/HistoryAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/HistoryAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/HistoryFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/HistoryFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/interfaces/IAudioService.aidl" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/interfaces/IAudioService.aidl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/JumpToTime.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/JumpToTime.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/libvlc/LibVLC.java" afterPath="$PROJECT_DIR$/src/org/videolan/libvlc/LibVLC.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/libvlc/MediaList.java" afterPath="$PROJECT_DIR$/src/org/videolan/libvlc/MediaList.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/SearchFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/SearchFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/SidebarAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/SidebarAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/SlidingPaneLayout.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/SlidingPaneLayout.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/SpeedSelector.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/SpeedSelector.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/TimeSleep.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/expandable/TimeSleep.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/Util.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/Util.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/VLC.iml" afterPath="$PROJECT_DIR$/VLC.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/widget/VLCAppWidgetProvider.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/widget/VLCAppWidgetProvider.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/VLCDrawerActivity.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/VLCDrawerActivity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoListAdapter.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoListAdapter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoPlayerActivity.java" afterPath="$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoPlayerActivity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/about.xml" afterPath="$PROJECT_DIR$/res/layout/about.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/about_main.xml" afterPath="$PROJECT_DIR$/res/layout/about_main.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/advanced_options.xml" afterPath="$PROJECT_DIR$/res/layout/advanced_options.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/anim/anim_enter_left.xml" afterPath="$PROJECT_DIR$/res/anim/anim_enter_left.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/anim/anim_enter_right.xml" afterPath="$PROJECT_DIR$/res/anim/anim_enter_right.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/anim/anim_leave_left.xml" afterPath="$PROJECT_DIR$/res/anim/anim_leave_left.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/anim/anim_leave_right.xml" afterPath="$PROJECT_DIR$/res/anim/anim_leave_right.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/values/attrs.xml" afterPath="$PROJECT_DIR$/res/values/attrs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_albums_songs.xml" afterPath="$PROJECT_DIR$/res/layout/audio_albums_songs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_browser.xml" afterPath="$PROJECT_DIR$/res/layout/audio_browser.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_browser_item.xml" afterPath="$PROJECT_DIR$/res/layout/audio_browser_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_browser_separator.xml" afterPath="$PROJECT_DIR$/res/layout/audio_browser_separator.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/menu/audio_list_browser.xml" afterPath="$PROJECT_DIR$/res/menu/audio_list_browser.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_media_switcher_item.xml" afterPath="$PROJECT_DIR$/res/layout/audio_media_switcher_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_player.xml" afterPath="$PROJECT_DIR$/res/layout/audio_player.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_playlist_item.xml" afterPath="$PROJECT_DIR$/res/layout/audio_playlist_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/audio_playlist_item_drag_shadow.xml" afterPath="$PROJECT_DIR$/res/layout/audio_playlist_item_drag_shadow.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable/audio_playlist_shadow.xml" afterPath="$PROJECT_DIR$/res/drawable/audio_playlist_shadow.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/browser.xml" afterPath="$PROJECT_DIR$/res/layout/browser.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/values/colors.xml" afterPath="$PROJECT_DIR$/res/values/colors.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/directory_view.xml" afterPath="$PROJECT_DIR$/res/layout/directory_view.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/directory_view_item.xml" afterPath="$PROJECT_DIR$/res/layout/directory_view_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/equalizer.xml" afterPath="$PROJECT_DIR$/res/layout/equalizer.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout-land/equalizer.xml" afterPath="$PROJECT_DIR$/res/layout-land/equalizer.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/expandable_layout.xml" afterPath="$PROJECT_DIR$/res/layout/expandable_layout.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/history_list.xml" afterPath="$PROJECT_DIR$/res/layout/history_list.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/list_item.xml" afterPath="$PROJECT_DIR$/res/layout/list_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/color/list_subtitle.xml" afterPath="$PROJECT_DIR$/res/color/list_subtitle.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/color/list_title.xml" afterPath="$PROJECT_DIR$/res/color/list_title.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/color/list_title_last.xml" afterPath="$PROJECT_DIR$/res/color/list_title_last.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/main.xml" afterPath="$PROJECT_DIR$/res/layout/main.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/main_drawer_layout.xml" afterPath="$PROJECT_DIR$/res/layout/main_drawer_layout.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/media_info.xml" afterPath="$PROJECT_DIR$/res/layout/media_info.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout-land/media_info.xml" afterPath="$PROJECT_DIR$/res/layout-land/media_info.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/menu/media_library.xml" afterPath="$PROJECT_DIR$/res/menu/media_library.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/drawable/mini_player_top_shadow.xml" afterPath="$PROJECT_DIR$/res/drawable/mini_player_top_shadow.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/notification.xml" afterPath="$PROJECT_DIR$/res/layout/notification.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/notification_expanded.xml" afterPath="$PROJECT_DIR$/res/layout/notification_expanded.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/player.xml" afterPath="$PROJECT_DIR$/res/layout/player.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/xml/preferences.xml" afterPath="$PROJECT_DIR$/res/xml/preferences.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project.properties" afterPath="$PROJECT_DIR$/project.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/search.xml" afterPath="$PROJECT_DIR$/res/layout/search.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/sidebar.xml" afterPath="$PROJECT_DIR$/res/layout/sidebar.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/sidebar_item.xml" afterPath="$PROJECT_DIR$/res/layout/sidebar_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/values/strings.xml" afterPath="$PROJECT_DIR$/res/values/strings.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/values-zh-rCN/strings.xml" afterPath="$PROJECT_DIR$/res/values-zh-rCN/strings.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/values/styles.xml" afterPath="$PROJECT_DIR$/res/values/styles.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/video_grid_item.xml" afterPath="$PROJECT_DIR$/res/layout/video_grid_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/menu/video_list.xml" afterPath="$PROJECT_DIR$/res/menu/video_list.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/video_list_item.xml" afterPath="$PROJECT_DIR$/res/layout/video_list_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/res/layout/vlcwidget.xml" afterPath="$PROJECT_DIR$/res/layout/vlcwidget.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_play_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_repeat_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_one.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_repeat_one.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_repeat_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_shuffle_normal.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_shuffle_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_shuffle_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_shuffle_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-xhdpi/ic_stop_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_play_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_one.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_one.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_repeat_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_normal.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_shuffle_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_shuffle_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_shuffle_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-ldpi/ic_stop_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_play_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_play_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_one.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_one.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_repeat_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_repeat_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_shuffle_normal.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_shuffle_normal.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_shuffle_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_shuffle_pressed.png" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/res/drawable-mdpi/ic_stop_pressed.png" afterPath="$PROJECT_DIR$/res/drawable-hdpi/ic_stop_pressed.png" />
+    </list>
     <ignored path="VLC.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -36,7 +661,7 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
-    <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
+    <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true" converted="true">
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
         <option name="NOTIFY_UNCAUGHT" value="true" />
@@ -72,9 +697,8 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
-    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
-    <breakpoint_rules />
-    <ui_properties />
+    <breakpoint_rules converted="true" />
+    <ui_properties converted="true" />
   </component>
   <component name="ErrorTreeViewConfiguration">
     <option name="hideWarnings" value="true" />
@@ -89,26 +713,69 @@
       <file leaf-file-name="AndroidManifest.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="36" selection-start="1219" selection-end="1219" vertical-scroll-proportion="0.0" vertical-offset="476" max-vertical-offset="6868">
+            <state vertical-scroll-proportion="0.0" vertical-offset="476" max-vertical-offset="6902">
+              <caret line="28" column="36" selection-start-line="28" selection-start-column="36" selection-end-line="28" selection-end-column="36" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MainActivity.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="MainActivity.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="0" selection-start="1295" selection-end="1295" vertical-scroll-proportion="0.19843341" vertical-offset="18" max-vertical-offset="11815">
-              <folding />
+            <state vertical-scroll-proportion="0.0" vertical-offset="14161" max-vertical-offset="14807">
+              <caret line="446" column="9" selection-start-line="431" selection-start-column="8" selection-end-line="446" selection-end-column="9" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Util.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/Util.java">
+      <file leaf-file-name="VLCDrawerActivity.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/VLCDrawerActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="71" column="25" selection-start="2696" selection-end="2696" vertical-scroll-proportion="0.0" vertical-offset="1207" max-vertical-offset="8007">
-              <folding />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1530" max-vertical-offset="5644">
+              <caret line="191" column="40" selection-start-line="191" selection-start-column="40" selection-end-line="191" selection-end-column="40" />
+              <folding>
+                <element signature="method#changeMenuOffset#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#prepareActionBar#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onResume#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onResumeFragments#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onPause#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onDestroy#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onRestart#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onBackPressed#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#ShowFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#fetchSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#showSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#popSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onCreateOptionsMenu#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onPrepareOptionsMenu#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onConfigurationChanged#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onSearchRequested#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onOptionsItemSelected#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onActivityResult#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#reloadPreferences#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#showInfoDialog#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="class#MainActivityHandler#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#handleMessage#0;class#MainActivityHandler#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#showProgressBar#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#hideProgressBar#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#sendTextInfo#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#onOpenMRL#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="class#31329:32102" expanded="false" />
+                <element signature="method#run#0;class#31329:32102" expanded="false" />
+                <element signature="method#showAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#slideDownAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#slideUpOrDownAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="method#hideAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+                <element signature="class#33660:34784" expanded="false" />
+                <element signature="method#onPanelSlide#0;class#33660:34784" expanded="false" />
+                <element signature="method#onPanelOpened#0;class#33660:34784" expanded="false" />
+                <element signature="method#onPanelOpenedEntirely#0;class#33660:34784" expanded="false" />
+                <element signature="method#onPanelClosed#0;class#33660:34784" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -116,11 +783,9 @@
       <file leaf-file-name="DirectoryViewFragment.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="181" column="26" selection-start="7085" selection-end="7085" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2584">
-              <folding>
-                <element signature="method#sortBy#0;class#DirectoryViewFragment#0" expanded="false" />
-                <element signature="method#refresh#0;class#DirectoryViewFragment#0" expanded="false" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="3230" max-vertical-offset="3825">
+              <caret line="190" column="26" selection-start-line="190" selection-start-column="26" selection-end-line="190" selection-end-column="26" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -128,10 +793,9 @@
       <file leaf-file-name="VideoGridFragment.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="182" column="4" selection-start="6964" selection-end="6964" vertical-scroll-proportion="0.0" vertical-offset="4336" max-vertical-offset="6545">
-              <folding>
-                <element signature="method#hasSpaceForGrid#0;class#VideoGridFragment#0" expanded="false" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="3315" max-vertical-offset="8551">
+              <caret line="195" column="4" selection-start-line="195" selection-start-column="0" selection-end-line="195" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -139,14 +803,9 @@
       <file leaf-file-name="PreferencesActivity.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="58" column="64" selection-start="2598" selection-end="2613" vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="3043">
-              <folding>
-                <element signature="e#5587#5609#0" expanded="true" />
-                <element signature="e#5647#5666#0" expanded="true" />
-                <element signature="e#6919#6944#0" expanded="true" />
-                <element signature="e#9543#9568#0" expanded="true" />
-                <element signature="method#onSharedPreferenceChanged#0;class#PreferencesActivity#0" expanded="false" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="1037" max-vertical-offset="5763">
+              <caret line="61" column="64" selection-start-line="61" selection-start-column="64" selection-end-line="61" selection-end-column="64" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -154,59 +813,79 @@
       <file leaf-file-name="preferences.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/res/xml/preferences.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="4" selection-start="396" selection-end="722" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
+            <state vertical-scroll-proportion="0.0" vertical-offset="770" max-vertical-offset="2975">
+              <caret line="26" column="69" selection-start-line="26" selection-start-column="69" selection-end-line="26" selection-end-column="69" />
               <folding>
-                <element signature="e#157#189#0" expanded="true" />
-                <element signature="tag#PreferenceCategory#0;tag#PreferenceScreen#0" expanded="false" />
-                <element signature="e#284#313#0" expanded="true" />
-                <element signature="e#340#361#0" expanded="true" />
-                <element signature="e#430#464#0" expanded="true" />
-                <element signature="e#607#640#0" expanded="true" />
-                <element signature="e#667#692#0" expanded="true" />
-                <element signature="e#762#791#0" expanded="true" />
-                <element signature="tag#PreferenceCategory#2;tag#PreferenceScreen#0" expanded="false" />
-                <element signature="e#1054#1082#0" expanded="true" />
-                <element signature="e#1234#1277#0" expanded="true" />
-                <element signature="e#1304#1339#0" expanded="true" />
-                <element signature="e#1490#1532#0" expanded="true" />
-                <element signature="e#1559#1593#0" expanded="true" />
-                <element signature="e#1740#1777#0" expanded="true" />
-                <element signature="e#1804#1833#0" expanded="true" />
-                <element signature="e#1988#2033#0" expanded="true" />
-                <element signature="e#2060#2097#0" expanded="true" />
-                <element signature="e#2166#2202#0" expanded="true" />
-                <element signature="tag#PreferenceCategory#3;tag#PreferenceScreen#0" expanded="false" />
-                <element signature="e#2448#2479#0" expanded="true" />
-                <element signature="e#2506#2529#0" expanded="true" />
-                <element signature="e#2770#2790#0" expanded="true" />
-                <element signature="e#2819#2847#0" expanded="true" />
-                <element signature="e#2992#3027#0" expanded="true" />
-                <element signature="e#3054#3081#0" expanded="true" />
-                <element signature="e#3179#3208#0" expanded="true" />
-                <element signature="e#3235#3256#0" expanded="true" />
-                <element signature="e#3412#3458#0" expanded="true" />
-                <element signature="e#3485#3523#0" expanded="true" />
-                <element signature="e#3592#3622#0" expanded="true" />
-                <element signature="tag#PreferenceCategory#4;tag#PreferenceScreen#0" expanded="false" />
-                <element signature="e#3927#3960#0" expanded="true" />
-                <element signature="e#4056#4079#0" expanded="true" />
-                <element signature="e#4205#4229#0" expanded="true" />
-                <element signature="e#4297#4330#0" expanded="true" />
-                <element signature="tag#PreferenceCategory#5;tag#PreferenceScreen#0" expanded="false" />
-                <element signature="e#4475#4512#0" expanded="true" />
-                <element signature="e#4539#4568#0" expanded="true" />
-                <element signature="e#4613#4641#0" expanded="true" />
-                <element signature="e#4745#4765#0" expanded="true" />
-                <element signature="e#4865#4887#0" expanded="true" />
-                <element signature="e#4918#4932#0" expanded="true" />
-                <element signature="e#5032#5054#0" expanded="true" />
-                <element signature="e#5085#5099#0" expanded="true" />
-                <element signature="e#5214#5247#0" expanded="true" />
-                <element signature="e#5278#5303#0" expanded="true" />
-                <element signature="e#5531#5558#0" expanded="true" />
-                <element signature="e#5589#5609#0" expanded="true" />
-                <element signature="e#5746#5760#0" expanded="true" />
+                <element signature="e#157#189#0" expanded="false" />
+                <element signature="e#284#313#0" expanded="false" />
+                <element signature="e#340#361#0" expanded="false" />
+                <element signature="e#430#464#0" expanded="false" />
+                <element signature="e#607#640#0" expanded="false" />
+                <element signature="e#667#692#0" expanded="false" />
+                <element signature="e#832#861#0" expanded="false" />
+                <element signature="e#888#909#0" expanded="false" />
+                <element signature="e#1288#1327#0" expanded="false" />
+                <element signature="e#1355#1386#0" expanded="false" />
+                <element signature="e#1656#1684#0" expanded="false" />
+                <element signature="e#1831#1867#0" expanded="false" />
+                <element signature="e#1894#1922#0" expanded="false" />
+                <element signature="e#2228#2260#0" expanded="false" />
+                <element signature="e#2328#2358#0" expanded="false" />
+                <element signature="e#2401#2435#0" expanded="false" />
+                <element signature="e#2484#2518#0" expanded="false" />
+                <element signature="e#2701#2744#0" expanded="false" />
+                <element signature="e#2779#2814#0" expanded="false" />
+                <element signature="e#2997#3039#0" expanded="false" />
+                <element signature="e#3074#3108#0" expanded="false" />
+                <element signature="e#3287#3324#0" expanded="false" />
+                <element signature="e#3359#3388#0" expanded="false" />
+                <element signature="e#3575#3620#0" expanded="false" />
+                <element signature="e#3655#3692#0" expanded="false" />
+                <element signature="e#3798#3834#0" expanded="false" />
+                <element signature="e#3883#3919#0" expanded="false" />
+                <element signature="e#4213#4244#0" expanded="false" />
+                <element signature="e#4279#4302#0" expanded="false" />
+                <element signature="e#4593#4621#0" expanded="false" />
+                <element signature="e#4656#4676#0" expanded="false" />
+                <element signature="e#4854#4889#0" expanded="false" />
+                <element signature="e#4924#4951#0" expanded="false" />
+                <element signature="e#5139#5185#0" expanded="false" />
+                <element signature="e#5220#5258#0" expanded="false" />
+                <element signature="e#5364#5397#0" expanded="false" />
+                <element signature="e#5446#5479#0" expanded="false" />
+                <element signature="e#5589#5611#0" expanded="false" />
+                <element signature="e#5646#5660#0" expanded="false" />
+                <element signature="e#5771#5793#0" expanded="false" />
+                <element signature="e#5828#5842#0" expanded="false" />
+                <element signature="e#6001#6025#0" expanded="false" />
+                <element signature="e#6146#6169#0" expanded="false" />
+                <element signature="e#6335#6362#0" expanded="false" />
+                <element signature="e#6397#6417#0" expanded="false" />
+                <element signature="e#6629#6662#0" expanded="false" />
+                <element signature="e#6697#6722#0" expanded="false" />
+                <element signature="e#6875#6889#0" expanded="false" />
+                <element signature="e#6995#7029#0" expanded="false" />
+                <element signature="e#7078#7112#0" expanded="false" />
+                <element signature="e#7289#7326#0" expanded="false" />
+                <element signature="e#7361#7390#0" expanded="false" />
+                <element signature="e#7508#7528#0" expanded="false" />
+                <element signature="e#7684#7705#0" expanded="false" />
+                <marker date="1397191802614" expanded="true" signature="115:7816" placeholder="..." />
+                <marker date="1397191802614" expanded="true" signature="189:389" placeholder="..." />
+                <marker date="1397191802614" expanded="true" signature="464:938" placeholder="..." />
+                <marker date="1397191802614" expanded="true" signature="1011:2288" placeholder="..." />
+                <marker date="1397191802614" expanded="true" signature="2358:7795" placeholder="..." />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AudioService.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/AudioService.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.3222749" vertical-offset="12410" max-vertical-offset="22338">
+              <caret line="869" column="47" selection-start-line="869" selection-start-column="47" selection-end-line="869" selection-end-column="47" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -214,7 +893,8 @@
       <file leaf-file-name="AudioBrowserFragment.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="369" column="8" selection-start="14136" selection-end="14297" vertical-scroll-proportion="0.0" vertical-offset="4589" max-vertical-offset="5406">
+            <state vertical-scroll-proportion="0.0" vertical-offset="6596" max-vertical-offset="7633">
+              <caret line="388" column="8" selection-start-line="388" selection-start-column="0" selection-end-line="388" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -223,7 +903,8 @@
       <file leaf-file-name="AudioBrowserListAdapter.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="46" column="104" selection-start="1876" selection-end="1876" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5338">
+            <state vertical-scroll-proportion="0.0" vertical-offset="952" max-vertical-offset="6851">
+              <caret line="56" column="104" selection-start-line="56" selection-start-column="51" selection-end-line="56" selection-end-column="51" />
               <folding />
             </state>
           </provider>
@@ -232,10 +913,9 @@
       <file leaf-file-name="audio_browser.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/res/layout/audio_browser.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="94" column="20" selection-start="3977" selection-end="3986" vertical-scroll-proportion="0.0" vertical-offset="496" max-vertical-offset="1275">
-              <folding>
-                <element signature="tag#LinearLayout#0;tag#org.videolan.vlc.widget.HeaderScrollView#0;tag#RelativeLayout#0;tag#LinearLayout#0" expanded="false" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="1751" max-vertical-offset="2159">
+              <caret line="103" column="20" selection-start-line="103" selection-start-column="20" selection-end-line="103" selection-end-column="20" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -243,7 +923,8 @@
       <file leaf-file-name="strings.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/res/values-zh-rCN/strings.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="198" column="48" selection-start="10061" selection-end="10061" vertical-scroll-proportion="0.0" vertical-offset="2736" max-vertical-offset="3502">
+            <state vertical-scroll-proportion="0.0" vertical-offset="3740" max-vertical-offset="3927">
+              <caret line="220" column="48" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
               <folding />
             </state>
           </provider>
@@ -252,11 +933,9 @@
       <file leaf-file-name="strings.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/res/values/strings.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="409" column="49" selection-start="21006" selection-end="21006" vertical-scroll-proportion="0.0" vertical-offset="4793" max-vertical-offset="5627">
-              <folding>
-                <element signature="tag#string-array#4;tag#resources#0" expanded="false" />
-                <element signature="tag#string-array#5;tag#resources#0" expanded="false" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="7157" max-vertical-offset="7667">
+              <caret line="421" column="49" selection-start-line="421" selection-start-column="19" selection-end-line="421" selection-end-column="19" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -264,21 +943,9 @@
       <file leaf-file-name="DirectoryAdapter.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="352" column="17" selection-start="12356" selection-end="12356" vertical-scroll-proportion="0.0" vertical-offset="2090" max-vertical-offset="4743">
-              <folding>
-                <element signature="class#Node#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="class#DirectoryViewHolder#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#populateNode#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="e#11169#11210#0" expanded="true" />
-                <element signature="method#isChildFile#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#getMediaLocation#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#isRoot#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#getAllMediaLocations#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#refresh#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#getParentDir#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="method#getVisibleName#0;class#DirectoryAdapter#0" expanded="false" />
-                <element signature="e#16121#16187#0" expanded="true" />
-              </folding>
+            <state vertical-scroll-proportion="0.0" vertical-offset="6392" max-vertical-offset="8653">
+              <caret line="376" column="17" selection-start-line="376" selection-start-column="7" selection-end-line="376" selection-end-column="7" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -286,7 +953,8 @@
       <file leaf-file-name="Media.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/videolan/libvlc/Media.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="85" column="10" selection-start="3848" selection-end="3850" vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="5559">
+            <state vertical-scroll-proportion="0.0" vertical-offset="1445" max-vertical-offset="7429">
+              <caret line="85" column="10" selection-start-line="85" selection-start-column="10" selection-end-line="85" selection-end-column="10" />
               <folding />
             </state>
           </provider>
@@ -301,6 +969,7 @@
   </component>
   <component name="Git.Settings">
     <option name="SYNC_SETTING" value="DONT" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
@@ -309,21 +978,25 @@
         <option value="$PROJECT_DIR$/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java" />
         <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java" />
-        <option value="$PROJECT_DIR$/res/xml/preferences.xml" />
         <option value="$PROJECT_DIR$/res/values-zh-rCN/strings.xml" />
         <option value="$PROJECT_DIR$/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java" />
         <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/gui/VLCDrawerActivity.java" />
+        <option value="$PROJECT_DIR$/res/xml/preferences.xml" />
+        <option value="$PROJECT_DIR$/res/layout/main_drawer_layout.xml" />
+        <option value="$PROJECT_DIR$/res/layout/main.xml" />
+        <option value="$PROJECT_DIR$/src/org/videolan/vlc/AudioService.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="54" />
     <option name="y" value="-8" />
-    <option name="width" value="1554" />
-    <option name="height" value="916" />
+    <option name="width" value="1320" />
+    <option name="height" value="784" />
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
     <OptionsSetting value="true" id="Remove" />
     <OptionsSetting value="true" id="Checkout" />
@@ -337,7 +1010,7 @@
     <option name="STATE" value="0" />
   </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
+    <navigator currentView="ProjectPane" proportions="" version="1">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -350,7 +1023,6 @@
     </navigator>
     <panes>
       <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -366,7 +1038,7 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -376,19 +1048,19 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="videolan" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="vlc" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -398,23 +1070,15 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="videolan" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vlc" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gui" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -424,79 +1088,16 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="videolan" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vlc" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gui" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="video" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="VLC" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="videolan" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vlc" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gui" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="audio" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="VLC" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="vlc-android" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="videolan" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -504,7 +1105,7 @@
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="options.splitter.main.proportions" value="0.19595142" />
     <property name="MemberChooser.sorted" value="false" />
-    <property name="options.lastSelected" value="preferences.fileTypes" />
+    <property name="options.lastSelected" value="project.propVCSSupport.Mappings" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../java-libs/ActionBarSherlock/libs/android-support-v4.jar!/" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
@@ -537,6 +1138,7 @@
       <option name="NETWORK_LATENCY" value="none" />
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
       <method />
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
@@ -603,6 +1205,7 @@
       <option name="NETWORK_LATENCY" value="none" />
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
       <method />
     </configuration>
     <configuration default="false" name="VLC" type="AndroidRunConfigurationType" factoryName="Android Application">
@@ -622,6 +1225,7 @@
       <option name="NETWORK_LATENCY" value="none" />
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
       <method />
     </configuration>
     <list size="1">
@@ -660,37 +1264,40 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="54" y="-8" width="1554" height="916" extended-state="6" />
-    <editor active="false" />
+    <frame x="54" y="-8" width="1320" height="784" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Preview" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28485253" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32921174" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.284153" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32948717" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32921174" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="true" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32948717" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32921174" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24950495" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2490242" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
-    <option name="RECENTLY_FILTERED_USERS">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
       <collection />
     </option>
   </component>
@@ -710,234 +1317,270 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../java-libs/ActionBarSherlock/src/com/actionbarsherlock/app/SherlockDialogFragment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="52" selection-start="1134" selection-end="1134" vertical-scroll-proportion="0.26631853" vertical-offset="0" max-vertical-offset="1054" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../java-libs/ActionBarSherlock/src/com/actionbarsherlock/app/SherlockListFragment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="42" selection-start="696" selection-end="696" vertical-scroll-proportion="0.08877285" vertical-offset="0" max-vertical-offset="1054" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/VLC.iml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="80" selection-start="1299" selection-end="1299" vertical-scroll-proportion="0.45442876" vertical-offset="54" max-vertical-offset="833" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="36" selection-start="1219" selection-end="1219" vertical-scroll-proportion="0.0" vertical-offset="241" max-vertical-offset="1326">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/widget/HeaderScrollView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="13" selection-start="1357" selection-end="1357" vertical-scroll-proportion="-0.6644909" vertical-offset="611" max-vertical-offset="1377">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/widget/AnimatedCoverView.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="34" column="13" selection-start="1511" selection-end="1511" vertical-scroll-proportion="-1.1527416" vertical-offset="985" max-vertical-offset="1751">
-          <folding />
+        <state vertical-scroll-proportion="-1.1527416" vertical-offset="985" max-vertical-offset="1751">
+          <caret line="34" column="13" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/Util.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="71" column="25" selection-start="2696" selection-end="2696" vertical-scroll-proportion="0.0" vertical-offset="1207" max-vertical-offset="8007">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1275" max-vertical-offset="9860">
+          <caret line="75" column="25" selection-start-line="75" selection-start-column="25" selection-end-line="75" selection-end-column="25" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/libvlc/Media.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="85" column="10" selection-start="3848" selection-end="3850" vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="5559">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1445" max-vertical-offset="7429">
+          <caret line="85" column="10" selection-start-line="85" selection-start-column="10" selection-end-line="85" selection-end-column="10" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/PreferencesActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="58" column="64" selection-start="2598" selection-end="2613" vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="3043">
-          <folding>
-            <element signature="e#5587#5609#0" expanded="true" />
-            <element signature="e#5647#5666#0" expanded="true" />
-            <element signature="e#6919#6944#0" expanded="true" />
-            <element signature="e#9543#9568#0" expanded="true" />
-            <element signature="method#onSharedPreferenceChanged#0;class#PreferencesActivity#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="1037" max-vertical-offset="5763">
+          <caret line="61" column="64" selection-start-line="61" selection-start-column="64" selection-end-line="61" selection-end-column="64" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/res/values-zh-rCN/strings.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="198" column="48" selection-start="10061" selection-end="10061" vertical-scroll-proportion="0.0" vertical-offset="2736" max-vertical-offset="3502">
+        <state vertical-scroll-proportion="0.0" vertical-offset="3740" max-vertical-offset="3927">
+          <caret line="220" column="48" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/res/values/strings.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="409" column="49" selection-start="21006" selection-end="21006" vertical-scroll-proportion="0.0" vertical-offset="4793" max-vertical-offset="5627">
-          <folding>
-            <element signature="tag#string-array#4;tag#resources#0" expanded="false" />
-            <element signature="tag#string-array#5;tag#resources#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/res/xml/preferences.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="4" selection-start="396" selection-end="722" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
-          <folding>
-            <element signature="e#157#189#0" expanded="true" />
-            <element signature="tag#PreferenceCategory#0;tag#PreferenceScreen#0" expanded="false" />
-            <element signature="e#284#313#0" expanded="true" />
-            <element signature="e#340#361#0" expanded="true" />
-            <element signature="e#430#464#0" expanded="true" />
-            <element signature="e#607#640#0" expanded="true" />
-            <element signature="e#667#692#0" expanded="true" />
-            <element signature="e#762#791#0" expanded="true" />
-            <element signature="tag#PreferenceCategory#2;tag#PreferenceScreen#0" expanded="false" />
-            <element signature="e#1054#1082#0" expanded="true" />
-            <element signature="e#1234#1277#0" expanded="true" />
-            <element signature="e#1304#1339#0" expanded="true" />
-            <element signature="e#1490#1532#0" expanded="true" />
-            <element signature="e#1559#1593#0" expanded="true" />
-            <element signature="e#1740#1777#0" expanded="true" />
-            <element signature="e#1804#1833#0" expanded="true" />
-            <element signature="e#1988#2033#0" expanded="true" />
-            <element signature="e#2060#2097#0" expanded="true" />
-            <element signature="e#2166#2202#0" expanded="true" />
-            <element signature="tag#PreferenceCategory#3;tag#PreferenceScreen#0" expanded="false" />
-            <element signature="e#2448#2479#0" expanded="true" />
-            <element signature="e#2506#2529#0" expanded="true" />
-            <element signature="e#2770#2790#0" expanded="true" />
-            <element signature="e#2819#2847#0" expanded="true" />
-            <element signature="e#2992#3027#0" expanded="true" />
-            <element signature="e#3054#3081#0" expanded="true" />
-            <element signature="e#3179#3208#0" expanded="true" />
-            <element signature="e#3235#3256#0" expanded="true" />
-            <element signature="e#3412#3458#0" expanded="true" />
-            <element signature="e#3485#3523#0" expanded="true" />
-            <element signature="e#3592#3622#0" expanded="true" />
-            <element signature="tag#PreferenceCategory#4;tag#PreferenceScreen#0" expanded="false" />
-            <element signature="e#3927#3960#0" expanded="true" />
-            <element signature="e#4056#4079#0" expanded="true" />
-            <element signature="e#4205#4229#0" expanded="true" />
-            <element signature="e#4297#4330#0" expanded="true" />
-            <element signature="tag#PreferenceCategory#5;tag#PreferenceScreen#0" expanded="false" />
-            <element signature="e#4475#4512#0" expanded="true" />
-            <element signature="e#4539#4568#0" expanded="true" />
-            <element signature="e#4613#4641#0" expanded="true" />
-            <element signature="e#4745#4765#0" expanded="true" />
-            <element signature="e#4865#4887#0" expanded="true" />
-            <element signature="e#4918#4932#0" expanded="true" />
-            <element signature="e#5032#5054#0" expanded="true" />
-            <element signature="e#5085#5099#0" expanded="true" />
-            <element signature="e#5214#5247#0" expanded="true" />
-            <element signature="e#5278#5303#0" expanded="true" />
-            <element signature="e#5531#5558#0" expanded="true" />
-            <element signature="e#5589#5609#0" expanded="true" />
-            <element signature="e#5746#5760#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioListFragment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="53" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3842">
+        <state vertical-scroll-proportion="0.0" vertical-offset="7157" max-vertical-offset="7667">
+          <caret line="421" column="49" selection-start-line="421" selection-start-column="19" selection-end-line="421" selection-end-column="19" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/res/layout/audio_browser.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="94" column="20" selection-start="3977" selection-end="3986" vertical-scroll-proportion="0.0" vertical-offset="496" max-vertical-offset="1275">
-          <folding>
-            <element signature="tag#LinearLayout#0;tag#org.videolan.vlc.widget.HeaderScrollView#0;tag#RelativeLayout#0;tag#LinearLayout#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="1751" max-vertical-offset="2159">
+          <caret line="103" column="20" selection-start-line="103" selection-start-column="20" selection-end-line="103" selection-end-column="20" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserListAdapter.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="46" column="104" selection-start="1876" selection-end="1876" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5338">
+        <state vertical-scroll-proportion="0.0" vertical-offset="952" max-vertical-offset="6851">
+          <caret line="56" column="104" selection-start-line="56" selection-start-column="51" selection-end-line="56" selection-end-column="51" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryAdapter.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="352" column="17" selection-start="12356" selection-end="12356" vertical-scroll-proportion="0.0" vertical-offset="2090" max-vertical-offset="4743">
-          <folding>
-            <element signature="class#Node#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="class#DirectoryViewHolder#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#populateNode#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="e#11169#11210#0" expanded="true" />
-            <element signature="method#isChildFile#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#getMediaLocation#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#isRoot#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#getAllMediaLocations#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#refresh#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#getParentDir#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="method#getVisibleName#0;class#DirectoryAdapter#0" expanded="false" />
-            <element signature="e#16121#16187#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="6392" max-vertical-offset="8653">
+          <caret line="376" column="17" selection-start-line="376" selection-start-column="7" selection-end-line="376" selection-end-column="7" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioBrowserFragment.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="369" column="8" selection-start="14136" selection-end="14297" vertical-scroll-proportion="0.0" vertical-offset="4589" max-vertical-offset="5406">
+        <state vertical-scroll-proportion="0.0" vertical-offset="6596" max-vertical-offset="7633">
+          <caret line="388" column="8" selection-start-line="388" selection-start-column="0" selection-end-line="388" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/video/VideoGridFragment.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="182" column="4" selection-start="6964" selection-end="6964" vertical-scroll-proportion="0.0" vertical-offset="4336" max-vertical-offset="6545">
-          <folding>
-            <element signature="method#hasSpaceForGrid#0;class#VideoGridFragment#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="3315" max-vertical-offset="8551">
+          <caret line="195" column="4" selection-start-line="195" selection-start-column="0" selection-end-line="195" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/audio/AudioUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="13" selection-start="2164" selection-end="2164" vertical-scroll-proportion="0.11096606" vertical-offset="0" max-vertical-offset="4641">
-          <folding>
-            <element signature="method#setRingtone#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#prepareCacheFolder#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#clearCacheFolder#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#deleteContent#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#getCoverFromMediaStore#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#getCoverFromVlc#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#getCoverFromFolder#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#getCover#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#writeBitmap#0;class#AudioUtil#0" expanded="false" />
-            <element signature="method#readCoverBitmap#0;class#AudioUtil#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.11096606" vertical-offset="0" max-vertical-offset="4641">
+          <caret line="56" column="13" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/DirectoryViewFragment.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="181" column="26" selection-start="7085" selection-end="7085" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2584">
-          <folding>
-            <element signature="method#sortBy#0;class#DirectoryViewFragment#0" expanded="false" />
-            <element signature="method#refresh#0;class#DirectoryViewFragment#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="3230" max-vertical-offset="3825">
+          <caret line="190" column="26" selection-start-line="190" selection-start-column="26" selection-end-line="190" selection-end-column="26" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/MainActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="1295" selection-end="1295" vertical-scroll-proportion="0.19843341" vertical-offset="18" max-vertical-offset="11815">
+        <state vertical-scroll-proportion="0.0" vertical-offset="6738" max-vertical-offset="14807">
+          <caret line="446" column="9" selection-start-line="431" selection-start-column="8" selection-end-line="446" selection-end-column="9" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/xml/preferences.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="770" max-vertical-offset="2975">
+          <caret line="26" column="69" selection-start-line="26" selection-start-column="69" selection-end-line="26" selection-end-column="69" />
+          <folding>
+            <element signature="e#157#189#0" expanded="false" />
+            <element signature="e#284#313#0" expanded="false" />
+            <element signature="e#340#361#0" expanded="false" />
+            <element signature="e#430#464#0" expanded="false" />
+            <element signature="e#607#640#0" expanded="false" />
+            <element signature="e#667#692#0" expanded="false" />
+            <element signature="e#832#861#0" expanded="false" />
+            <element signature="e#888#909#0" expanded="false" />
+            <element signature="e#1288#1327#0" expanded="false" />
+            <element signature="e#1355#1386#0" expanded="false" />
+            <element signature="e#1656#1684#0" expanded="false" />
+            <element signature="e#1831#1867#0" expanded="false" />
+            <element signature="e#1894#1922#0" expanded="false" />
+            <element signature="e#2228#2260#0" expanded="false" />
+            <element signature="e#2328#2358#0" expanded="false" />
+            <element signature="e#2401#2435#0" expanded="false" />
+            <element signature="e#2484#2518#0" expanded="false" />
+            <element signature="e#2701#2744#0" expanded="false" />
+            <element signature="e#2779#2814#0" expanded="false" />
+            <element signature="e#2997#3039#0" expanded="false" />
+            <element signature="e#3074#3108#0" expanded="false" />
+            <element signature="e#3287#3324#0" expanded="false" />
+            <element signature="e#3359#3388#0" expanded="false" />
+            <element signature="e#3575#3620#0" expanded="false" />
+            <element signature="e#3655#3692#0" expanded="false" />
+            <element signature="e#3798#3834#0" expanded="false" />
+            <element signature="e#3883#3919#0" expanded="false" />
+            <element signature="e#4213#4244#0" expanded="false" />
+            <element signature="e#4279#4302#0" expanded="false" />
+            <element signature="e#4593#4621#0" expanded="false" />
+            <element signature="e#4656#4676#0" expanded="false" />
+            <element signature="e#4854#4889#0" expanded="false" />
+            <element signature="e#4924#4951#0" expanded="false" />
+            <element signature="e#5139#5185#0" expanded="false" />
+            <element signature="e#5220#5258#0" expanded="false" />
+            <element signature="e#5364#5397#0" expanded="false" />
+            <element signature="e#5446#5479#0" expanded="false" />
+            <element signature="e#5589#5611#0" expanded="false" />
+            <element signature="e#5646#5660#0" expanded="false" />
+            <element signature="e#5771#5793#0" expanded="false" />
+            <element signature="e#5828#5842#0" expanded="false" />
+            <element signature="e#6001#6025#0" expanded="false" />
+            <element signature="e#6146#6169#0" expanded="false" />
+            <element signature="e#6335#6362#0" expanded="false" />
+            <element signature="e#6397#6417#0" expanded="false" />
+            <element signature="e#6629#6662#0" expanded="false" />
+            <element signature="e#6697#6722#0" expanded="false" />
+            <element signature="e#6875#6889#0" expanded="false" />
+            <element signature="e#6995#7029#0" expanded="false" />
+            <element signature="e#7078#7112#0" expanded="false" />
+            <element signature="e#7289#7326#0" expanded="false" />
+            <element signature="e#7361#7390#0" expanded="false" />
+            <element signature="e#7508#7528#0" expanded="false" />
+            <element signature="e#7684#7705#0" expanded="false" />
+            <marker date="1397191802614" expanded="true" signature="115:7816" placeholder="..." />
+            <marker date="1397191802614" expanded="true" signature="189:389" placeholder="..." />
+            <marker date="1397191802614" expanded="true" signature="464:938" placeholder="..." />
+            <marker date="1397191802614" expanded="true" signature="1011:2288" placeholder="..." />
+            <marker date="1397191802614" expanded="true" signature="2358:7795" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/layout/sidebar_item.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="646">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/SidebarAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="765" max-vertical-offset="2210">
+          <caret line="103" column="46" selection-start-line="103" selection-start-column="46" selection-end-line="103" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/layout/main_drawer_layout.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.55263156" vertical-offset="0" max-vertical-offset="646">
+          <caret line="34" column="37" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
+          <folding>
+            <element signature="e#39#669#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/layout/main.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.08056872" vertical-offset="255" max-vertical-offset="1088">
+          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/gui/VLCDrawerActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1530" max-vertical-offset="5644">
+          <caret line="191" column="40" selection-start-line="191" selection-start-column="40" selection-end-line="191" selection-end-column="40" />
+          <folding>
+            <element signature="method#changeMenuOffset#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#prepareActionBar#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onResume#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onResumeFragments#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onPause#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onDestroy#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onRestart#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onBackPressed#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#ShowFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#fetchSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#showSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#popSecondaryFragment#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onCreateOptionsMenu#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onPrepareOptionsMenu#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onConfigurationChanged#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onSearchRequested#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onOptionsItemSelected#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onActivityResult#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#reloadPreferences#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#showInfoDialog#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="class#MainActivityHandler#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#handleMessage#0;class#MainActivityHandler#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#showProgressBar#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#hideProgressBar#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#sendTextInfo#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#onOpenMRL#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="class#31329:32102" expanded="false" />
+            <element signature="method#run#0;class#31329:32102" expanded="false" />
+            <element signature="method#showAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#slideDownAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#slideUpOrDownAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="method#hideAudioPlayer#0;class#VLCDrawerActivity#0" expanded="false" />
+            <element signature="class#33660:34784" expanded="false" />
+            <element signature="method#onPanelSlide#0;class#33660:34784" expanded="false" />
+            <element signature="method#onPanelOpened#0;class#33660:34784" expanded="false" />
+            <element signature="method#onPanelOpenedEntirely#0;class#33660:34784" expanded="false" />
+            <element signature="method#onPanelClosed#0;class#33660:34784" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/videolan/vlc/AudioService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.3222749" vertical-offset="12410" max-vertical-offset="22338">
+          <caret line="869" column="47" selection-start-line="869" selection-start-column="47" selection-end-line="869" selection-end-column="47" />
           <folding />
         </state>
       </provider>

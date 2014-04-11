@@ -15,7 +15,7 @@
         <ImageView
             android:layout_width="35dip"
             android:layout_height="35dip"
-            android:src="@drawable/header_icon_loupe"
+            android:src="@drawable/ic_menu_search"
             android:scaleType="fitXY"
             android:paddingTop="2dip"
             android:layout_marginLeft="5dip"
@@ -34,7 +34,5 @@
         android:id="@id/android:list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:divider="?attr/item_divider"
-        android:dividerHeight="1dp"
         android:fastScrollEnabled="true" />
 </LinearLayout>

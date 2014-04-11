@@ -79,6 +79,8 @@ import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
 import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.AudioPlayer;
 import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.video.MediaInfoFragment;
+import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.widget.SlidingPaneLayout;
@@ -116,7 +118,8 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
     private String mCurrentFragment;
     private String mPreviousFragment;
     private List<String> secondaryFragments = Arrays.asList("albumsSongs", "equalizer",
-                                                            "about", "search");
+                                                            "about", "search", "mediaInfo",
+                                                            "videoGroupList");
     private HashMap<String, Fragment> mSecondaryFragments = new HashMap<String, Fragment>();
 
     private SharedPreferences mSettings;
@@ -180,6 +183,11 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         /* Enable the indeterminate progress feature */
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme)
+            setTheme(R.style.Theme_VLC_Black);
+
         // Set up the sliding menu
         setContentView(R.layout.main_drawer_layout);
 
@@ -189,7 +197,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawer = (ListView)findViewById(R.id.start_drawer);
         mDrawer.setFooterDividersEnabled(true);
-        mSidebarAdapter = new SidebarAdapter();
+        mSidebarAdapter = new SidebarAdapter(this);
 
         //mDrawerLayout.setDrawerListener(new DemoDrawerListener());
 
@@ -486,6 +494,10 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
             f = new AboutFragment();
         } else if(id.equals("search")) {
             f = new SearchFragment();
+        } else if(id.equals("mediaInfo")) {
+            f = new MediaInfoFragment();
+        } else if(id.equals("videoGroupList")) {
+            f = new VideoGridFragment();
         }
         else {
             throw new IllegalArgumentException("Wrong fragment id.");
@@ -544,6 +556,9 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         if (current == null || !(current instanceof ISortable)) {
             menu.findItem(R.id.ml_menu_sortby).setEnabled(false);
             menu.findItem(R.id.ml_menu_sortby).setVisible(false);
+        } else {
+            menu.findItem(R.id.ml_menu_sortby).setEnabled(true);
+            menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
         // Enable the clear search history function for the search fragment.
         if (mCurrentFragment.equals("search"))
@@ -651,6 +666,11 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         if (requestCode == ACTIVITY_RESULT_PREFERENCES) {
             if (resultCode == PreferencesActivity.RESULT_RESCAN)
                 MediaLibrary.getInstance(this).loadMediaItems(this, true);
+            else if (resultCode == PreferencesActivity.RESULT_RESTART) {
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
         }
     }
 
@@ -862,22 +882,32 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         = new SlidingPaneLayout.PanelSlideListener() {
 
             @Override
-            public void onPanelSlide(float slideOffset) {}
+            public void onPanelSlide(float slideOffset) {
+                if (slideOffset <= 0.1)
+                    getSupportActionBar().hide();
+                else
+                    getSupportActionBar().show();
+            }
 
             @Override
             public void onPanelOpened() {
-                mSlidingPane.setShadowResource(R.drawable.mini_player_top_shadow);
+                int resId = Util.getResourceFromAttribute(VLCDrawerActivity.this, R.attr.mini_player_top_shadow);
+                if (resId != 0)
+                    mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
+                //mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
+                //mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
+                //mMenu.setSlidingEnabled(false);
             }
 
     };

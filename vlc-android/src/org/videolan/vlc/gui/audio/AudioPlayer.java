@@ -44,6 +44,7 @@ import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -210,9 +211,11 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
             public void onClick(View v) {
                 mSwitcher.showNext();
                 if (mSwitcher.getDisplayedChild() == 0)
-                    mPlaylistSwitch.setImageResource(R.drawable.ic_playlist_pressed);
+                    mPlaylistSwitch.setImageResource(Util.getResourceFromAttribute(getActivity(),
+                                                     R.attr.ic_playlist_pressed));
                 else
-                    mPlaylistSwitch.setImageResource(R.drawable.ic_playlist_normal);
+                    mPlaylistSwitch.setImageResource(Util.getResourceFromAttribute(getActivity(),
+                                                     R.attr.ic_playlist_normal));
             }
         });
         mSongsList.setOnItemClickListener(new OnItemClickListener() {
@@ -311,32 +314,34 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         mHeaderMediaSwitcher.updateMedia();
         mCoverMediaSwitcher.updateMedia();
 
+        FragmentActivity act = getActivity();
+
         if (mAudioController.isPlaying()) {
-            mPlayPause.setImageResource(R.drawable.ic_pause);
+            mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mPlayPause.setContentDescription(getString(R.string.pause));
-            mHeaderPlayPause.setImageResource(R.drawable.ic_pause);
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mHeaderPlayPause.setContentDescription(getString(R.string.pause));
         } else {
-            mPlayPause.setImageResource(R.drawable.ic_play);
+            mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mPlayPause.setContentDescription(getString(R.string.play));
-            mHeaderPlayPause.setImageResource(R.drawable.ic_play);
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mHeaderPlayPause.setContentDescription(getString(R.string.play));
         }
         if (mAudioController.isShuffling()) {
-            mShuffle.setImageResource(R.drawable.ic_shuffle_pressed);
+            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_pressed));
         } else {
-            mShuffle.setImageResource(R.drawable.ic_shuffle_normal);
+            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_normal));
         }
         switch(mAudioController.getRepeatType()) {
         case None:
-            mRepeat.setImageResource(R.drawable.ic_repeat_normal);
+            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_normal));
             break;
         case Once:
-            mRepeat.setImageResource(R.drawable.ic_repeat_one);
+            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_one));
             break;
         default:
         case All:
-            mRepeat.setImageResource(R.drawable.ic_repeat_pressed);
+            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_pressed));
             break;
         }
         if (mAudioController.hasNext())

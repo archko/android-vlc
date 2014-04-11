@@ -565,6 +565,8 @@ public class SlidingPaneLayout extends ViewGroup {
     private boolean closePane(View pane, int initialVelocity) {
         if (mFirstLayout) {
             mState = STATE_CLOSED;
+            if (mPanelSlideListener != null)
+                mPanelSlideListener.onPanelClosed();
             return true;
         }
         else if (smoothSlideTo(0.f, initialVelocity))
@@ -576,6 +578,8 @@ public class SlidingPaneLayout extends ViewGroup {
     private boolean openPaneEntirely(View pane, int initialVelocity) {
         if (mFirstLayout) {
             mState = STATE_OPENED_ENTIRELY;
+            if (mPanelSlideListener != null)
+                mPanelSlideListener.onPanelOpenedEntirely();
             return true;
         }
         else if (smoothSlideTo(1.f, initialVelocity))
@@ -587,6 +591,8 @@ public class SlidingPaneLayout extends ViewGroup {
     private boolean openPane(View pane, int initialVelocity) {
         if (mFirstLayout) {
             mState = STATE_OPENED;
+            if (mPanelSlideListener != null)
+                mPanelSlideListener.onPanelOpened();
             return true;
         }
         else if (smoothSlideTo(1 - (float)mOverhangSize / mSlideRange, initialVelocity))
@@ -868,7 +874,7 @@ public class SlidingPaneLayout extends ViewGroup {
                             mPanelSlideListener.onPanelClosed();
                     }
                 } else if (Math.abs(mSlideOffset - (1 - (float)mOverhangSize / mSlideRange))
-                           <= 0.0001) {
+                           <= 0.001) {
                     if (mState != STATE_OPENED) {
                         mState = STATE_OPENED;
                         if (mPanelSlideListener != null)
@@ -882,13 +888,13 @@ public class SlidingPaneLayout extends ViewGroup {
                     }
                 }
             }
-            else if (mPanelSlideListener != null)
-                    mPanelSlideListener.onPanelSlide(mSlideOffset);
         }
 
         @Override
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
             onPanelDragged(top);
+            if (mPanelSlideListener != null)
+                mPanelSlideListener.onPanelSlide(mSlideOffset);
             invalidate();
         }
 
@@ -1140,6 +1146,7 @@ public class SlidingPaneLayout extends ViewGroup {
     private class DisableLayerRunnable implements Runnable {
         final View mChildView;
 
+        @SuppressWarnings("unused")
         DisableLayerRunnable(View childView) {
             mChildView = childView;
         }

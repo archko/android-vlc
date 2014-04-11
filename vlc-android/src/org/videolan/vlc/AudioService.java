@@ -402,6 +402,9 @@ public class AudioService extends Service {
             if(service == null) return;
 
             switch (msg.getData().getInt("event")) {
+                case EventHandler.MediaParsedChanged:
+                    Log.i(TAG, "MediaParsedChanged");
+                    break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
                     service.executeUpdate();
@@ -574,9 +577,6 @@ public class AudioService extends Service {
         // Preserve playback when switching to video
         hideNotification(false);
 
-        // Don't crash if user stopped the media
-        if(!mLibVLC.isPlaying()) return;
-
         // Switch to the video player & don't lose the currently playing stream
         VideoPlayerActivity.start(VLCApplication.getAppContext(), MRL, title, index, true);
     }
@@ -675,7 +675,7 @@ public class AudioService extends Service {
                 .setOngoing(true);
 
             Intent notificationIntent = new Intent(this, VLCDrawerActivity.class);
-            notificationIntent.setAction(VLCDrawerActivity.ACTION_SHOW_PLAYER);
+            notificationIntent.setAction(MainActivity.ACTION_SHOW_PLAYER);
             notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             notificationIntent.putExtra(START_FROM_NOTIFICATION, true);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -695,7 +695,7 @@ public class AudioService extends Service {
                     view.setImageViewBitmap(R.id.cover, cover);
                 view.setTextViewText(R.id.songName, title);
                 view.setTextViewText(R.id.artist, artist);
-                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_wpause : R.drawable.ic_wplay);
+                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause_w : R.drawable.ic_play_w);
                 view.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view.setOnClickPendingIntent(R.id.forward, piForward);
                 view.setOnClickPendingIntent(R.id.stop, piStop);
@@ -707,7 +707,7 @@ public class AudioService extends Service {
                 view_expanded.setTextViewText(R.id.songName, title);
                 view_expanded.setTextViewText(R.id.artist, artist);
                 view_expanded.setTextViewText(R.id.album, album);
-                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_wpause : R.drawable.ic_wplay);
+                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause_w : R.drawable.ic_play_w);
                 view_expanded.setOnClickPendingIntent(R.id.backward, piBackward);
                 view_expanded.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view_expanded.setOnClickPendingIntent(R.id.forward, piForward);
@@ -1179,6 +1179,7 @@ public class AudioService extends Service {
             // Notify everyone
             mHandler.sendEmptyMessage(SHOW_PROGRESS);
             showNotification();
+            determinePrevAndNextIndices();
             executeUpdate();
             executeUpdateProgress();
         }
@@ -1224,6 +1225,11 @@ public class AudioService extends Service {
         @Override
         public void remove(int position) {
             mLibVLC.getMediaList().remove(position);
+        }
+
+        @Override
+        public void removeLocation(String location) {
+            mLibVLC.getMediaList().remove(location);
         }
 
         @Override

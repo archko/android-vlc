@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ListIterator;
 import java.util.regex.Pattern;
 
 import android.app.Activity;
@@ -130,6 +131,19 @@ public class DirectoryAdapter extends BaseAdapter {
                 if(Util.nullEquals(n.name, _n)) return true;
             }
             return false;
+        }
+
+        public int getChildPosition(DirectoryAdapter.Node child){
+            if(child == null)
+                return -1;
+
+            ListIterator<DirectoryAdapter.Node> it = children.listIterator();
+            while(it.hasNext()){
+                DirectoryAdapter.Node node = it.next();
+                if(child.equals(node)) return it.previousIndex();
+            }
+
+            return -1;
         }
 
         public DirectoryAdapter.Node ensureExists(String _n) {
@@ -264,16 +278,16 @@ public class DirectoryAdapter extends BaseAdapter {
     private String mCurrentDir;
     private String mCurrentRoot;
 
-    public DirectoryAdapter() {
+    public DirectoryAdapter(Context context) {
         readPrefs();
-        DirectoryAdapter_Core(null);
+        DirectoryAdapter_Core(context, null);
     }
 
-    private void DirectoryAdapter_Core(String rootDir) {
+    private void DirectoryAdapter_Core(Context activityContext, String rootDir) {
         if (rootDir != null)
             rootDir = Util.stripTrailingSlash(rootDir);
         Log.v(TAG, "rootMRL is " + rootDir);
-        mInflater = LayoutInflater.from(VLCApplication.getAppContext());
+        mInflater = LayoutInflater.from(activityContext);
         mRootNode = new DirectoryAdapter.Node(rootDir);
         mCurrentDir = rootDir;
         this.populateNode(mRootNode, rootDir);
@@ -355,18 +369,28 @@ public class DirectoryAdapter extends BaseAdapter {
         if(selectedNode.isFile())
             holder.icon.setImageResource(R.drawable.icon);
         else
-            holder.icon.setImageResource(R.drawable.folder);
+            holder.icon.setImageResource(R.drawable.ic_menu_folder);
 
         return v;
     }
 
-    public boolean browse(int position) {
+    /**
+     * @return position of the current directory in a newly formed listview
+     * or -1 if opening not successful
+     * */
+
+    public int browse(int position) {
         DirectoryAdapter.Node selectedNode = mCurrentNode.children.get(position);
-        if(selectedNode.isFile()) return false;
+        if(selectedNode.isFile()) return -1;
         return browse(selectedNode.name);
     }
 
-    public boolean browse(String directoryName) {
+    /**
+     * @return position of the current directory in a newly formed listview
+     * or -1 if opening not successful
+     * */
+
+    public int browse(String directoryName) {
         if (this.mCurrentDir == null) {
             // We're on the storage list
             String storages[] = Util.getMediaDirectories();
@@ -392,18 +416,20 @@ public class DirectoryAdapter extends BaseAdapter {
                 }
             } catch(URISyntaxException e) {
                 Log.e(TAG, "URISyntaxException in browse()", e);
-                return false;
+                return -1;
             } catch(NullPointerException e) {
                 Log.e(TAG, "NullPointerException in browse()", e);
-                return false;
+                return -1;
             }
         }
 
         Log.d(TAG, "Browsing to " + this.mCurrentDir);
 
-        if(directoryName.equals(".."))
+        int currentDirPosition = 0;
+        if(directoryName.equals("..")){
+            currentDirPosition = mCurrentNode.parent.getChildPosition(mCurrentNode);
             this.mCurrentNode = this.mCurrentNode.parent;
-        else {
+        } else {
             this.mCurrentNode = this.mCurrentNode.getChildNode(directoryName);
             if(mCurrentNode.subfolderCount() < 1) {
                 // Clear the ".." entry
@@ -413,7 +439,7 @@ public class DirectoryAdapter extends BaseAdapter {
         }
 
         this.notifyDataSetChanged();
-        return true;
+        return (currentDirPosition == -1) ? 0 : currentDirPosition;
     }
 
     public boolean isChildFile(int position) {

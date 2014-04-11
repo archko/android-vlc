@@ -59,9 +59,10 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	$(VLC_BUILD_DIR)/lib/.libs/libvlc.a \
 	$(VLC_BUILD_DIR)/src/.libs/libvlccore.a \
 	$(VLC_BUILD_DIR)/compat/.libs/libcompat.a \
+	/home/dev/android-vlc/vlc/contrib/arm-linux-androideabi/lib/libz.a \
 	-ldl -lz -lm -llog \
 	-ldvbpsi -lebml -lmatroska -ltag \
-	-logg -lFLAC -ltheora \
+	-logg -lFLAC -ltheora -lvorbis \
 	-lmpeg2 -la52 \
 	-lavformat -lavcodec -lswscale -lavutil -lpostproc -lgsm -lopenjpeg \
 	-lliveMedia -lUsageEnvironment -lBasicUsageEnvironment -lgroupsock \
@@ -69,7 +70,7 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-lxml2 -lpng -lgnutls -lgcrypt -lgpg-error \
 	-lnettle -lhogweed -lgmp \
 	-lfreetype -liconv -lass -lfribidi -lopus \
-	-lEGL -lGLESv2 \
+	-lEGL -lGLESv2 -ljpeg \
 	$(CPP_STATIC)
 
 include $(BUILD_SHARED_LIBRARY)

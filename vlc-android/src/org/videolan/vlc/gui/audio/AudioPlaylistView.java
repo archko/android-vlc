@@ -21,6 +21,7 @@
 package org.videolan.vlc.gui.audio;
 
 import org.videolan.vlc.R;
+import org.videolan.vlc.Util;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -46,6 +47,8 @@ public class AudioPlaylistView extends ListView {
     private OnItemRemovedListener mOnItemRemovedListener;
     private OnItemLongClickListener mOnItemLongClickListener;
 
+    Drawable mShadowDrawable;
+
     public AudioPlaylistView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -53,6 +56,9 @@ public class AudioPlaylistView extends ListView {
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mDragShadow = inflater.inflate(R.layout.audio_playlist_item_drag_shadow, this, false);
+
+        int resId = Util.getResourceFromAttribute(context, R.attr.audio_playlist_shadow);
+        mShadowDrawable = resId != 0 ? getResources().getDrawable(resId) : null;
     }
 
     @Override
@@ -139,9 +145,10 @@ public class AudioPlaylistView extends ListView {
     public void draw(Canvas c) {
         super.draw(c);
 
-        // Draw the top and bottom list shadows.
-        Drawable mShadowDrawable = getResources().getDrawable(R.drawable.audio_playlist_shadow);
+        if (mShadowDrawable == null)
+            return;
 
+        // Draw the top and bottom list shadows.
         final int shadowHeight = mShadowDrawable.getIntrinsicHeight();
         final int right = getRight();
         final int left = getLeft();
@@ -151,7 +158,7 @@ public class AudioPlaylistView extends ListView {
         mShadowDrawable.setBounds(left, top, right, bottom);
         mShadowDrawable.draw(c);
 
-        c.rotate(180, c.getWidth() / 2, c.getHeight() / 2);
+        c.rotate(180, getWidth() / 2, getHeight() / 2);
 
         mShadowDrawable.setBounds(left, top, right, bottom);
         mShadowDrawable.draw(c);

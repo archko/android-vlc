@@ -34,6 +34,10 @@
 
 #define THUMBNAIL_POSITION 0.5
 #define PIXEL_SIZE 4 /* RGBA */
+#define THUMBNAIL_MIN_WIDTH 32
+#define THUMBNAIL_MAX_WIDTH 4096
+#define THUMBNAIL_MIN_HEIGHT 32
+#define THUMBNAIL_MAX_HEIGHT 2304
 
 
 /*
@@ -155,6 +159,7 @@ jbyteArray Java_org_videolan_libvlc_LibVLC_getThumbnail(JNIEnv *env, jobject thi
 
     /* Create a media player playing environment */
     libvlc_media_player_t *mp = libvlc_media_player_new(libvlc);
+    libvlc_media_player_set_video_title_display(mp, libvlc_position_disable, 0);
 
     libvlc_media_t *m = new_media(instance, env, thiz, filePath, true, false);
     if (m == NULL)
@@ -206,7 +211,8 @@ jbyteArray Java_org_videolan_libvlc_LibVLC_getThumbnail(JNIEnv *env, jobject thi
         goto end;
     }
 
-    if( videoWidth < 32 || videoHeight < 32 || videoWidth > 2048 || videoWidth > 2048 )
+    if( videoWidth < THUMBNAIL_MIN_WIDTH || videoHeight < THUMBNAIL_MIN_HEIGHT
+        || videoWidth > THUMBNAIL_MAX_WIDTH || videoHeight > THUMBNAIL_MAX_HEIGHT )
     {
         LOGE("Wrong video dimensions.\n");
         goto end;

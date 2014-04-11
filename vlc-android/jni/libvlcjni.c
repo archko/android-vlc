@@ -42,6 +42,10 @@
 #define VOUT_ANDROID_SURFACE 0
 #define VOUT_OPENGLES2       1
 
+#define HW_ACCELERATION_DISABLED 0
+#define HW_ACCELERATION_DECODING 1
+#define HW_ACCELERATION_FULL     2
+
 #define LOG_TAG "VLC/JNI/main"
 #include "log.h"
 
@@ -57,8 +61,9 @@ libvlc_media_t *new_media(jlong instance, JNIEnv *env, jobject thiz, jstring fil
 
     if (!noOmx) {
         jclass cls = (*env)->GetObjectClass(env, thiz);
-        jmethodID methodId = (*env)->GetMethodID(env, cls, "useIOMX", "()Z");
-        if ((*env)->CallBooleanMethod(env, thiz, methodId)) {
+        jmethodID methodId = (*env)->GetMethodID(env, cls, "getHardwareAcceleration", "()I");
+        int hardwareAcceleration = (*env)->CallIntMethod(env, thiz, methodId);
+        if (hardwareAcceleration == HW_ACCELERATION_DECODING || hardwareAcceleration == HW_ACCELERATION_FULL) {
             /*
              * Set higher caching values if using iomx decoding, since some omx
              * decoders have a very high latency, and if the preroll data isn't
@@ -223,15 +228,15 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
 
     methodId = (*env)->GetMethodID(env, cls, "getDeblocking", "()I");
     int deblocking = (*env)->CallIntMethod(env, thiz, methodId);
-    char deblockstr[2] = "3";
-    snprintf(deblockstr, 2, "%d", deblocking);
+    char deblockstr[2];
+    snprintf(deblockstr, sizeof(deblockstr), "%d", deblocking);
     LOGD("Using deblocking level %d", deblocking);
 
     methodId = (*env)->GetMethodID(env, cls, "getNetworkCaching", "()I");
     int networkCaching = (*env)->CallIntMethod(env, thiz, methodId);
-    char networkCachingstr[25] = "0";
+    char networkCachingstr[25];
     if(networkCaching > 0) {
-        snprintf(networkCachingstr, 25, "--network-caching=%d", networkCaching);
+        snprintf(networkCachingstr, sizeof(networkCachingstr), "--network-caching=%d", networkCaching);
         LOGD("Using network caching of %d ms", networkCaching);
     }
 
@@ -248,29 +253,37 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
     methodId = (*env)->GetMethodID(env, cls, "isVerboseMode", "()Z");
     verbosity = (*env)->CallBooleanMethod(env, thiz, methodId);
 
+    methodId = (*env)->GetMethodID(env, cls, "getHardwareAcceleration", "()I");
+    int hardwareAcceleration = (*env)->CallIntMethod(env, thiz, methodId);
+    /* With the MediaCodec opaque mode we cannot use the OpenGL ES vout. */
+    if (hardwareAcceleration == HW_ACCELERATION_FULL)
+        use_opengles2 = false;
+
     /* Don't add any invalid options, otherwise it causes LibVLC to crash */
     const char *argv[] = {
-        "-I", "dummy",
-        "--no-osd",
-        "--no-video-title-show",
-        "--no-stats",
-        "--no-plugins-cache",
-        "--no-drop-late-frames",
-        /* The VLC default is to pick the highest resolution possible
-         * (i.e. 1080p). For mobile, pick a more sane default for slow
-         * mobile data networks and slower hardware. */
-        "--preferred-resolution", "360",
-        "--avcodec-fast",
-        "--avcodec-threads=0",
-        "--subsdec-encoding", subsencodingstr,
+        /* CPU intensive plugin, setting for slow devices */
         enable_time_stretch ? "--audio-time-stretch" : "--no-audio-time-stretch",
+
+        /* avcodec speed settings for slow devices */
+        "--avcodec-fast", // non-spec-compliant speedup tricks
         "--avcodec-skiploopfilter", deblockstr,
         "--avcodec-skip-frame", enable_frame_skip ? "2" : "0",
         "--avcodec-skip-idct", enable_frame_skip ? "2" : "0",
+
+        /* Remove me when UTF-8 is enforced by law */
+        "--subsdec-encoding", subsencodingstr,
+
+        /* XXX: why can't the default be fine ? #7792 */
         (networkCaching > 0) ? networkCachingstr : "",
+
+        /* Android audio API is a mess */
         use_opensles ? "--aout=opensles" : "--aout=android_audiotrack",
+
+        /* Android video API is a mess */
         use_opengles2 ? "--vout=gles2" : "--vout=androidsurface",
         "--androidsurface-chroma", chromastr != NULL && chromastr[0] != 0 ? chromastr : "RV32",
+        /* XXX: we can't recover from direct rendering failure */
+        (hardwareAcceleration == HW_ACCELERATION_FULL) ? "" : "--no-mediacodec-dr",
     };
     libvlc_instance_t *instance = libvlc_new(sizeof(argv) / sizeof(*argv), argv);
 
@@ -330,6 +343,7 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
 
     /* Create a media player playing environment */
     libvlc_media_player_t *mp = libvlc_media_player_new((libvlc_instance_t*)(intptr_t)instance);
+    libvlc_media_player_set_video_title_display(mp, libvlc_position_disable, 0);
     jobject myJavaLibVLC = (*env)->NewGlobalRef(env, thiz);
 
     //if AOUT_AUDIOTRACK_JAVA, we use amem
@@ -356,7 +370,6 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
     for(int i = 0; i < (sizeof(mp_events) / sizeof(*mp_events)); i++)
         libvlc_event_attach(ev, mp_events[i], vlc_event_callback, myVm);
 
-
     /* Keep a pointer to this media player */
     setLong(env, thiz, "mInternalMediaPlayerInstance", (jlong)(intptr_t)mp);
 
@@ -381,6 +394,14 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
     }
 
     (*env)->ReleaseStringUTFChars(env, mrl, p_mrl);
+
+    /* Connect the media event manager. */
+    libvlc_event_manager_t *ev_media = libvlc_media_event_manager(p_md);
+    static const libvlc_event_type_t mp_media_events[] = {
+        libvlc_MediaParsedChanged
+    };
+    for(int i = 0; i < (sizeof(mp_media_events) / sizeof(*mp_media_events)); i++)
+        libvlc_event_attach(ev_media, mp_media_events[i], vlc_event_callback, myVm);
 
     libvlc_media_player_set_media(mp, p_md);
     libvlc_media_player_play(mp);

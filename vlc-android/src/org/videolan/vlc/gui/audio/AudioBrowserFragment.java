@@ -81,6 +81,8 @@ public class AudioBrowserFragment extends SherlockFragment {
     private AudioBrowserListAdapter mAlbumsAdapter;
     private AudioBrowserListAdapter mGenresAdapter;
 
+    private View mEmptyView;
+
     public final static int MODE_TOTAL = 4; // Number of audio browser modes
     public final static int MODE_ARTIST = 0;
     public final static int MODE_ALBUM = 1;
@@ -127,6 +129,8 @@ public class AudioBrowserFragment extends SherlockFragment {
                 return true;
             }
         });
+
+        mEmptyView = v.findViewById(R.id.no_media);
 
         ListView songsList = (ListView)v.findViewById(R.id.songs_list);
         ListView artistList = (ListView)v.findViewById(R.id.artists_list);
@@ -197,7 +201,7 @@ public class AudioBrowserFragment extends SherlockFragment {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
             ArrayList<Media> mediaList = mGenresAdapter.getMedia(p);
-            MainActivity activity = (MainActivity)getActivity();
+            VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
             frag.setMediaList(mediaList, mediaList.get(0).getGenre());
         }
@@ -255,8 +259,10 @@ public class AudioBrowserFragment extends SherlockFragment {
                     new VlcRunnable(mSongsAdapter.getItem(groupPosition)) {
                         @Override
                         public void run(Object o) {
-                            Media aMedia = (Media) o;
-                            mMediaLibrary.getMediaItems().remove(aMedia);
+                            AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;
+                            Media media = listItem.mMediaList.get(0);
+                            mMediaLibrary.getMediaItems().remove(media);
+                            mAudioController.removeLocation(media.getLocation());
                             updateLists();
                         }
                     });
@@ -359,6 +365,12 @@ public class AudioBrowserFragment extends SherlockFragment {
 
     private void updateLists() {
         List<Media> audioList = MediaLibrary.getInstance(getActivity()).getAudioItems();
+
+        if (audioList.isEmpty())
+            mEmptyView.setVisibility(View.VISIBLE);
+        else
+            mEmptyView.setVisibility(View.GONE);
+
         mSongsAdapter.clear();
         mArtistsAdapter.clear();
         mAlbumsAdapter.clear();

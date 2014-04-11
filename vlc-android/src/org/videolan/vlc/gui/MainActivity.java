@@ -37,6 +37,8 @@ import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
 import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.AudioPlayer;
 import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.video.MediaInfoFragment;
+import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.widget.SlidingPaneLayout;
@@ -115,7 +117,8 @@ public class MainActivity extends SherlockFragmentActivity {
     private String mCurrentFragment;
     private String mPreviousFragment;
     private List<String> secondaryFragments = Arrays.asList("albumsSongs", "equalizer",
-                                                            "about", "search");
+                                                            "about", "search", "mediaInfo",
+                                                            "videoGroupList");
     private HashMap<String, Fragment> mSecondaryFragments = new HashMap<String, Fragment>();
 
     private SharedPreferences mSettings;
@@ -180,12 +183,16 @@ public class MainActivity extends SherlockFragmentActivity {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
         // Set up the sliding menu
-        setContentView(R.layout.sliding_menu);
-        mMenu = (SlidingMenu) findViewById(R.id.sliding_menu);
+        mMenu = (SlidingMenu) LayoutInflater.from(this).inflate(R.layout.sliding_menu, null);
         changeMenuOffset();
 
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme)
+            setTheme(R.style.Theme_VLC_Black);
+
         View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
-        mMenu.setContent(v_main);
+        setContentView(v_main);
 
         mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
         mSlidingPane.setPanelSlideListener(mPanelSlideListener);
@@ -193,9 +200,10 @@ public class MainActivity extends SherlockFragmentActivity {
         View sidebar = LayoutInflater.from(this).inflate(R.layout.sidebar, null);
         final ListView listView = (ListView)sidebar.findViewById(android.R.id.list);
         listView.setFooterDividersEnabled(true);
-        mSidebarAdapter = new SidebarAdapter();
+        mSidebarAdapter = new SidebarAdapter(this);
         listView.setAdapter(mSidebarAdapter);
         mMenu.setMenu(sidebar);
+        mMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT, true);
 
         /* Initialize UI variables */
         mInfoLayout = v_main.findViewById(R.id.info_layout);
@@ -444,7 +452,7 @@ public class MainActivity extends SherlockFragmentActivity {
         return mSidebarAdapter.fetchFragment(id);
     }
 
-    public static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
+    private static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
         if (fragment == null) {
             Log.e(TAG, "Cannot show a null fragment, ShowFragment("+tag+") aborted.");
             return;
@@ -488,6 +496,10 @@ public class MainActivity extends SherlockFragmentActivity {
             f = new AboutFragment();
         } else if(id.equals("search")) {
             f = new SearchFragment();
+        } else if(id.equals("mediaInfo")) {
+            f = new MediaInfoFragment();
+        } else if(id.equals("videoGroupList")) {
+            f = new VideoGridFragment();
         }
         else {
             throw new IllegalArgumentException("Wrong fragment id.");
@@ -546,6 +558,10 @@ public class MainActivity extends SherlockFragmentActivity {
         if (current == null || !(current instanceof ISortable)) {
             menu.findItem(R.id.ml_menu_sortby).setEnabled(false);
             menu.findItem(R.id.ml_menu_sortby).setVisible(false);
+        }
+        else {
+            menu.findItem(R.id.ml_menu_sortby).setEnabled(true);
+            menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
         // Enable the clear search history function for the search fragment.
         if (mCurrentFragment.equals("search"))
@@ -653,6 +669,11 @@ public class MainActivity extends SherlockFragmentActivity {
         if (requestCode == ACTIVITY_RESULT_PREFERENCES) {
             if (resultCode == PreferencesActivity.RESULT_RESCAN)
                 MediaLibrary.getInstance(this).loadMediaItems(this, true);
+            else if (resultCode == PreferencesActivity.RESULT_RESTART) {
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
         }
     }
 
@@ -864,22 +885,32 @@ public class MainActivity extends SherlockFragmentActivity {
         = new SlidingPaneLayout.PanelSlideListener() {
 
             @Override
-            public void onPanelSlide(float slideOffset) {}
+            public void onPanelSlide(float slideOffset) {
+                if (slideOffset <= 0.1)
+                    getSupportActionBar().hide();
+                else
+                    getSupportActionBar().show();
+            }
 
             @Override
             public void onPanelOpened() {
-                mSlidingPane.setShadowResource(R.drawable.mini_player_top_shadow);
+                int resId = Util.getResourceFromAttribute(MainActivity.this, R.attr.mini_player_top_shadow);
+                if (resId != 0)
+                    mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
+                mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
+                mMenu.setSlidingEnabled(true);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
+                mMenu.setSlidingEnabled(false);
             }
 
     };
