@@ -136,7 +136,6 @@ public class SearchFragment extends SherlockListFragment {
     }
 
     private void showSearchHistory() {
-
         // Add header to the history
         String headerText = getString(R.string.search_history);
         showListHeader(headerText);
@@ -205,7 +204,7 @@ public class SearchFragment extends SherlockListFragment {
             db.addSearchhistoryItem(mSearchText.getText().toString());
 
             // open media in the player
-            Media item = (Media) getListAdapter().getItem(position - 1);
+            Media item = (Media) getListView().getItemAtPosition(position);
             if (item.getType() == Media.TYPE_VIDEO) {
                 VideoPlayerActivity.start(getActivity(), item.getLocation());
             } else {
@@ -224,6 +223,8 @@ public class SearchFragment extends SherlockListFragment {
     };
 
     public void onSearchKeyPressed() {
+        if (mSearchText == null)
+            return;
         mSearchText.requestFocus();
         mSearchText.setSelection(mSearchText.getText().length());
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

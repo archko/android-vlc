@@ -429,19 +429,21 @@ public class MainActivity extends SherlockFragmentActivity {
         if (slideDownAudioPlayer())
             return;
 
-        // If it's the directory view, a "backpressed" action shows a parent.
-        if (mCurrentFragment.equals("directories")) {
-            DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
-            if (!directoryView.isRootDirectory()) {
-                directoryView.showParentDirectory();
+        if (mCurrentFragment!= null) {
+            // If it's the directory view, a "backpressed" action shows a parent.
+            if (mCurrentFragment.equals("directories")) {
+                DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
+                if (!directoryView.isRootDirectory()) {
+                    directoryView.showParentDirectory();
+                    return;
+                }
+            }
+
+            // If it's the albums songs fragment, we leave it.
+            if (secondaryFragments.contains(mCurrentFragment)) {
+                popSecondaryFragment();
                 return;
             }
-        }
-
-        // If it's the albums songs fragment, we leave it.
-        if (secondaryFragments.contains(mCurrentFragment)) {
-            popSecondaryFragment();
-            return;
         }
 
         super.onBackPressed();
@@ -516,12 +518,14 @@ public class MainActivity extends SherlockFragmentActivity {
         // Slide down the audio player if needed.
         slideDownAudioPlayer();
 
-        // Do not show the new fragment if the requested fragment is already shown.
-        if (mCurrentFragment.equals(fragmentTag))
-            return null;
+        if (mCurrentFragment != null) {
+            // Do not show the new fragment if the requested fragment is already shown.
+            if (mCurrentFragment.equals(fragmentTag))
+                return null;
 
-        if (!secondaryFragments.contains(mCurrentFragment))
-            mPreviousFragment = mCurrentFragment;
+            if (!secondaryFragments.contains(mCurrentFragment))
+                mPreviousFragment = mCurrentFragment;
+        }
 
         mCurrentFragment = fragmentTag;
         Fragment frag = fetchSecondaryFragment(mCurrentFragment);
@@ -564,7 +568,7 @@ public class MainActivity extends SherlockFragmentActivity {
             menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
         // Enable the clear search history function for the search fragment.
-        if (mCurrentFragment.equals("search"))
+        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             menu.findItem(R.id.search_clear_history).setVisible(true);
         return true;
     }
@@ -577,7 +581,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
     @Override
     public boolean onSearchRequested() {
-        if (mCurrentFragment.equals("search"))
+        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             ((SearchFragment)fetchSecondaryFragment("search")).onSearchKeyPressed();
         showSecondaryFragment("search");
         return true;
@@ -619,11 +623,11 @@ public class MainActivity extends SherlockFragmentActivity {
             // Refresh
             case R.id.ml_menu_refresh:
                 // TODO: factor this into each fragment
-                if(mCurrentFragment.equals("directories")) {
+                if(mCurrentFragment != null && mCurrentFragment.equals("directories")) {
                     DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
                     directoryView.refresh();
                 }
-                else if(mCurrentFragment.equals("history"))
+                else if(mCurrentFragment != null && mCurrentFragment.equals("history"))
                     ((HistoryFragment) getFragment(mCurrentFragment)).refresh();
                 else
                     MediaLibrary.getInstance(this).loadMediaItems(this, true);

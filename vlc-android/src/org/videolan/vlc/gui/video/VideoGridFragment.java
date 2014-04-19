@@ -60,6 +60,7 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -90,6 +91,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     private static final int LIST_STRETCH_MODE = GridView.STRETCH_COLUMN_WIDTH;
 
     protected LinearLayout mLayoutFlipperLoading;
+    protected GridView mGridView;
     protected TextView mTextViewNomedia;
     protected Media mItemToUpdate;
     protected String mGroup;
@@ -101,6 +103,9 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     private VideoGridAnimator mAnimator;
 
     private AudioServiceController mAudioController;
+
+    // Gridview position saved in onPause()
+    private int mGVFirstVisiblePos;
 
     /* All subclasses of Fragment must include a public empty constructor. */
     public VideoGridFragment() { }
@@ -131,6 +136,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         // init the information for the scan (1/2)
         mLayoutFlipperLoading = (LinearLayout) v.findViewById(R.id.layout_flipper_loading);
         mTextViewNomedia = (TextView) v.findViewById(R.id.textview_nomedia);
+        mGridView = (GridView) v.findViewById(android.R.id.list);
 
         return v;
     }
@@ -156,6 +162,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     @Override
     public void onPause() {
         super.onPause();
+        mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
         mMediaLibrary.removeUpdateHandler(mHandler);
 
         /* Stop the thumbnailer */
@@ -172,6 +179,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         mVideoAdapter.notifyDataSetChanged();
         updateList();
         mMediaLibrary.addUpdateHandler(mHandler);
+        mGridView.setSelection(mGVFirstVisiblePos);
         updateViewMode();
         mAnimator.animate();
 
@@ -200,14 +208,13 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         if (activity == null)
             return true;
 
-        final GridView grid = (GridView)v.findViewById(android.R.id.list);
-
         DisplayMetrics outMetrics = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
 
         final int itemWidth = Util.convertDpToPx(GRID_ITEM_WIDTH_DP);
         final int horizontalspacing = Util.convertDpToPx(GRID_HORIZONTAL_SPACING_DP);
-        final int width = grid.getPaddingLeft() + grid.getPaddingRight() + horizontalspacing + (itemWidth * 2);
+        final int width = mGridView.getPaddingLeft() + mGridView.getPaddingRight()
+                + horizontalspacing + (itemWidth * 2);
         if (width < outMetrics.widthPixels)
             return true;
         return false;
@@ -219,30 +226,29 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
             return;
         }
 
-        GridView gv = (GridView)getView().findViewById(android.R.id.list);
-
         // Compute the left/right padding dynamically
         DisplayMetrics outMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         int sidePadding = (int) (outMetrics.widthPixels / 100 * Math.pow(outMetrics.density, 3) / 2);
         sidePadding = Math.max(0, Math.min(100, sidePadding));
-        gv.setPadding(sidePadding, gv.getPaddingTop(), sidePadding, gv.getPaddingBottom());
+        mGridView.setPadding(sidePadding, mGridView.getPaddingTop(),
+                sidePadding, mGridView.getPaddingBottom());
 
         // Select between grid or list
         if (hasSpaceForGrid(getView())) {
             Log.d(TAG, "Switching to grid mode");
-            gv.setNumColumns(GridView.AUTO_FIT);
-            gv.setStretchMode(GRID_STRETCH_MODE);
-            gv.setHorizontalSpacing(Util.convertDpToPx(GRID_HORIZONTAL_SPACING_DP));
-            gv.setVerticalSpacing(Util.convertDpToPx(GRID_VERTICAL_SPACING_DP));
-            gv.setColumnWidth(Util.convertDpToPx(GRID_ITEM_WIDTH_DP));
+            mGridView.setNumColumns(GridView.AUTO_FIT);
+            mGridView.setStretchMode(GRID_STRETCH_MODE);
+            mGridView.setHorizontalSpacing(Util.convertDpToPx(GRID_HORIZONTAL_SPACING_DP));
+            mGridView.setVerticalSpacing(Util.convertDpToPx(GRID_VERTICAL_SPACING_DP));
+            mGridView.setColumnWidth(Util.convertDpToPx(GRID_ITEM_WIDTH_DP));
             mVideoAdapter.setListMode(false);
         } else {
             Log.d(TAG, "Switching to list mode");
-            gv.setNumColumns(1);
-            gv.setStretchMode(LIST_STRETCH_MODE);
-            gv.setHorizontalSpacing(LIST_HORIZONTAL_SPACING_DP);
-            gv.setVerticalSpacing(Util.convertDpToPx(LIST_VERTICAL_SPACING_DP));
+            mGridView.setNumColumns(1);
+            mGridView.setStretchMode(LIST_STRETCH_MODE);
+            mGridView.setHorizontalSpacing(LIST_HORIZONTAL_SPACING_DP);
+            mGridView.setVerticalSpacing(Util.convertDpToPx(LIST_VERTICAL_SPACING_DP));
             mVideoAdapter.setListMode(true);
         }
     }
@@ -263,7 +269,9 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         if (media instanceof MediaGroup) {
             VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             VideoGridFragment frag = (VideoGridFragment)activity.showSecondaryFragment("videoGroupList");
-            frag.setGroup(media.getTitle());
+            if (frag != null) {
+                frag.setGroup(media.getTitle());
+            }
         }
         else
             playVideo(media, false);
@@ -282,9 +290,6 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         Media media = mVideoAdapter.getItem(position);
         switch (menu.getItemId())
         {
-        case R.id.video_list_play:
-            playVideo(media, false);
-            return true;
         case R.id.video_list_play_from_start:
             playVideo(media, true);
             return true;
@@ -294,7 +299,9 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         case R.id.video_list_info:
             VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             MediaInfoFragment frag = (MediaInfoFragment)activity.showSecondaryFragment("mediaInfo");
-            frag.setMediaLocation(media.getLocation());
+            if (frag != null) {
+                frag.setMediaLocation(media.getLocation());
+            }
             return true;
         case R.id.video_list_delete:
             AlertDialog alertDialog = CommonDialogs.deleteMedia(
@@ -324,6 +331,15 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
             return;
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.video_list, menu);
+        setContextMenuItems(menu, media);
+    }
+
+    private void setContextMenuItems(Menu menu, Media media) {
+        long lastTime = media.getTime();
+        if (lastTime > 0) {
+            MenuItem playFromStart = menu.findItem(R.id.video_list_play_from_start);
+            playFromStart.setVisible(true);
+        }
     }
 
     @Override
@@ -344,6 +360,8 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
 
         PopupMenu popupMenu = new PopupMenu(getActivity(), anchor);
         popupMenu.getMenuInflater().inflate(R.menu.video_list, popupMenu.getMenu());
+        Media media = mVideoAdapter.getItem(position);
+        setContextMenuItems(popupMenu.getMenu(), media);
         popupMenu.setOnMenuItemClickListener(new OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {

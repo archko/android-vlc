@@ -118,8 +118,8 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
     private String mCurrentFragment;
     private String mPreviousFragment;
     private List<String> secondaryFragments = Arrays.asList("albumsSongs", "equalizer",
-                                                            "about", "search", "mediaInfo",
-                                                            "videoGroupList");
+        "about", "search", "mediaInfo",
+        "videoGroupList");
     private HashMap<String, Fragment> mSecondaryFragments = new HashMap<String, Fragment>();
 
     private SharedPreferences mSettings;

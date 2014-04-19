@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.videolan.vlc"
     android:installLocation="auto"
-    android:versionCode="2000"
-    android:versionName="0.2.0-git" >
+    android:versionCode="9199"
+    android:versionName="0.9.2-git" >
 
     <uses-sdk
         android:minSdkVersion="7"
@@ -14,21 +14,20 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_LOGS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name="org.videolan.vlc.VLCApplication"
         android:debuggable="true"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
-        android:logo="@drawable/icon"
         android:label="@string/app_name"
-        android:theme="@style/Theme.VLC.NoTitleBar"
-        android:hardwareAccelerated="true" >
+        android:logo="@drawable/icon"
+        android:theme="@style/Theme.VLC.NoTitleBar" >
         <activity
             android:name=".gui.MainActivity"
             android:configChanges="orientation|screenSize"
-            android:launchMode="singleTask"
             android:icon="@drawable/icon"
             android:label="@string/app_name"
             android:theme="@style/Theme.VLC" >
@@ -46,26 +45,26 @@
             android:theme="@style/Theme.VLC" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".gui.CompatErrorActivity" />
-        <activity
-            android:name=".gui.PreferencesActivity" />
+        <activity android:name=".gui.CompatErrorActivity" />
+        <activity android:name=".gui.PreferencesActivity" />
         <activity
             android:name=".gui.BrowserActivity"
             android:label="@string/mediafiles"
             android:theme="@style/Theme.VLC.NoTitleBar" />
-        <activity
-            android:name=".gui.DebugLogActivity" />
+        <activity android:name=".gui.DebugLogActivity" />
         <activity
             android:name=".gui.video.VideoPlayerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.VLC.Fullscreen" >
+
             <!-- This filter captures protocols without type info -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
@@ -84,11 +83,12 @@
             <!-- This filter captures protocols with type info -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:mimeType="video/*" />
                 <data android:mimeType="audio/*" />
-
                 <data android:scheme="rtmp" />
                 <data android:scheme="rtmpe" />
                 <data android:scheme="rtmps" />
@@ -102,8 +102,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="" />
                 <data android:scheme="file" />
                 <data android:scheme="ftp" />
@@ -137,8 +139,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="" />
                 <data android:scheme="file" />
                 <data android:scheme="ftp" />
@@ -208,7 +212,6 @@
                 <data android:pathPattern=".*\\.wmv" />
                 <data android:pathPattern=".*\\.wtv" />
                 <data android:pathPattern=".*\\.xesc" />
-
                 <data android:pathPattern=".*\\.3G2" />
                 <data android:pathPattern=".*\\.3GP" />
                 <data android:pathPattern=".*\\.3GP2" />
@@ -318,7 +321,6 @@
                 <data android:pathPattern=".*\\.wv" />
                 <data android:pathPattern=".*\\.xa" />
                 <data android:pathPattern=".*\\.xm" />
-
                 <data android:pathPattern=".*\\.3GA" />
                 <data android:pathPattern=".*\\.A52" />
                 <data android:pathPattern=".*\\.AAC" />
@@ -368,18 +370,18 @@
                 <data android:pathPattern=".*\\.XM" />
             </intent-filter>
         </activity>
+
         <service android:name=".AudioService" />
 
-        <receiver
-            android:name=".PhoneStateReceiver">
+        <receiver android:name=".PhoneStateReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
         <receiver
             android:name=".widget.VLCAppWidgetProvider"
-            android:label="VLC mini player"
-            android:exported="false">
+            android:exported="false"
+            android:label="VLC mini player" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -388,7 +390,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/vlcwidget" />
         </receiver>
-        <receiver android:name=".RemoteControlClientReceiver">
+        <receiver android:name=".RemoteControlClientReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>

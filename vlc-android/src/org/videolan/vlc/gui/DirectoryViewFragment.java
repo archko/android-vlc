@@ -64,7 +64,11 @@ public class DirectoryViewFragment extends SherlockListFragment implements ISort
         super.onCreate(savedInstanceState);
 
         mDirectoryAdapter = new DirectoryAdapter(getActivity());
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
         filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
@@ -99,8 +103,8 @@ public class DirectoryViewFragment extends SherlockListFragment implements ISort
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
         getActivity().unregisterReceiver(messageReceiver);
     }
 

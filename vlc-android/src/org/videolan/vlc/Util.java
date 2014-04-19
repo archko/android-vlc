@@ -34,6 +34,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -420,37 +421,52 @@ public class Util {
         }
     }
 
-    public static String[] getStorageDirectories()
-    {
+    private static boolean StartsWith(String[] array, String text) {
+        for (String item : array)
+            if (text.startsWith(item))
+                return true;
+        return false;
+    }
+
+    public static String[] getStorageDirectories() {
         String[] dirs = null;
         BufferedReader bufReader = null;
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(Environment.getExternalStorageDirectory().getPath());
+
+        List<String> typeWL = Arrays.asList("vfat", "exfat", "sdcardfs", "fuse");
+        List<String> typeBL = Arrays.asList("tmpfs");
+        String[] mountWL = { "/mnt", "/Removable" };
+        String[] mountBL = {
+                "/mnt/secure",
+                "/mnt/shell",
+                "/mnt/asec",
+                "/mnt/obb",
+                "/mnt/media_rw/extSdCard",
+                "/mnt/media_rw/sdcard",
+                "/storage/emulated" };
+        String[] deviceWL = {
+                "/dev/block/vold",
+                "/dev/fuse",
+                "/mnt/media_rw/extSdCard" };
+
         try {
             bufReader = new BufferedReader(new FileReader("/proc/mounts"));
-            ArrayList<String> list = new ArrayList<String>();
-            list.add(Environment.getExternalStorageDirectory().getPath());
             String line;
             while((line = bufReader.readLine()) != null) {
-                if(line.contains("vfat") || line.contains("exfat") ||
-                   line.contains("/mnt") || line.contains("/Removable")) {
-                    StringTokenizer tokens = new StringTokenizer(line, " ");
-                    String s = tokens.nextToken();
-                    s = tokens.nextToken(); // Take the second token, i.e. mount point
 
-                    if (list.contains(s))
-                        continue;
+                StringTokenizer tokens = new StringTokenizer(line, " ");
+                String device = tokens.nextToken();
+                String mountpoint = tokens.nextToken();
+                String type = tokens.nextToken();
 
-                    if (line.contains("/dev/block/vold")) {
-                        if (!line.startsWith("tmpfs") &&
-                            !line.startsWith("/dev/mapper") &&
-                            !s.startsWith("/mnt/secure") &&
-                            !s.startsWith("/mnt/shell") &&
-                            !s.startsWith("/mnt/asec") &&
-                            !s.startsWith("/mnt/obb")
-                            ) {
-                            list.add(s);
-                        }
-                    }
-                }
+                // skip if already in list or if type/mountpoint is blacklisted
+                if (list.contains(mountpoint) || typeBL.contains(type) || StartsWith(mountBL, mountpoint))
+                    continue;
+
+                // check that device is in whitelist, and either type or mountpoint is in a whitelist
+                if (StartsWith(deviceWL, device) && (typeWL.contains(type) || StartsWith(mountWL, mountpoint)))
+                    list.add(mountpoint);
             }
 
             dirs = new String[list.size()];

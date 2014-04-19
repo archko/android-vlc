@@ -1,7 +1,7 @@
 /*****************************************************************************
  * VideoPlayerActivity.java
  *****************************************************************************
- * Copyright © 2011-2013 VLC authors and VideoLAN
+ * Copyright © 2011-2014 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,14 +95,20 @@ import android.view.View.OnClickListener;
 import android.view.View.OnSystemUiVisibilityChangeListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import org.videolan.vlc.gui.VLCDrawerActivity;
 
+@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     public final static String TAG = "VLC/VideoPlayerActivity";
 
@@ -134,6 +140,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     private View mOverlayHeader;
     private View mOverlayOption;
     private View mOverlayProgress;
+    private View mOverlayBackground;
     private static final int OVERLAY_TIMEOUT = 4000;
     private static final int OVERLAY_INFINITE = 3600000;
     private static final int FADE_OUT = 1;
@@ -152,6 +159,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     private TextView mTime;
     private TextView mLength;
     private TextView mInfo;
+    private ImageView mLoading;
+    private TextView mLoadingText;
     private ImageButton mPlayPause;
     private ImageButton mBackward;
     private ImageButton mForward;
@@ -221,7 +230,23 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.player);
+
+        if (LibVlcUtil.isJellyBeanMR1OrLater()) {
+            // Get the media router service (miracast)
+            mMediaRouter = (MediaRouter) getSystemService(Context.MEDIA_ROUTER_SERVICE);
+            mMediaRouterCallback = new MediaRouter.SimpleCallback() {
+                @Override
+                public void onRoutePresentationDisplayChanged(
+                        MediaRouter router, MediaRouter.RouteInfo info) {
+                    Log.d(TAG, "onRoutePresentationDisplayChanged: info="
+                            + info);
+                    removePresentation();
+                }
+            };
+        }
+
+        createPresentation();
+        setContentView(mPresentation == null ? R.layout.player : R.layout.player_remote_control);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         if (LibVlcUtil.isICSOrLater())
@@ -244,6 +269,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mOverlayHeader = findViewById(R.id.player_overlay_header);
         mOverlayOption = findViewById(R.id.option_overlay);
         mOverlayProgress = findViewById(R.id.progress_overlay);
+        mOverlayBackground = findViewById(R.id.player_overlay_background);
 
         /* header */
         mTitle = (TextView) findViewById(R.id.player_overlay_title);
@@ -306,6 +332,12 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mSeekbar = (SeekBar) findViewById(R.id.player_overlay_seekbar);
         mSeekbar.setOnSeekBarChangeListener(mSeekListener);
 
+        /* Loading view */
+        mLoading = (ImageView) findViewById(R.id.player_overlay_loading);
+        mLoadingText = (TextView) findViewById(R.id.player_overlay_loading_text);
+        startLoadingAnimation();
+
+        /* Services and miscellaneous */
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         mAudioMax = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
@@ -347,33 +379,12 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // 100 is the value for screen_orientation_start_lock
-        setRequestedOrientation(mScreenOrientation != 100
-                ? mScreenOrientation
-                : getScreenOrientation());
-
-        if (LibVlcUtil.isJellyBeanMR1OrLater()) {
-            // Get the media router service (miracast)
-            mMediaRouter = (MediaRouter)getSystemService(Context.MEDIA_ROUTER_SERVICE);
-            mMediaRouterCallback = new MediaRouter.SimpleCallback() {
-                @Override
-                public void onRouteSelected(MediaRouter router, int type, MediaRouter.RouteInfo info) {
-                    Log.d(TAG, "onRouteSelected: type=" + type + ", info=" + info);
-                    updatePresentation();
-                }
-
-                @Override
-                public void onRouteUnselected(MediaRouter router, int type, MediaRouter.RouteInfo info) {
-                    Log.d(TAG, "onRouteUnselected: type=" + type + ", info=" + info);
-                    updatePresentation();
-                }
-
-                @Override
-                public void onRoutePresentationDisplayChanged(MediaRouter router, MediaRouter.RouteInfo info) {
-                    Log.d(TAG, "onRoutePresentationDisplayChanged: info=" + info);
-                    updatePresentation();
-                }
-            };
-        }
+        if (mPresentation == null)
+            setRequestedOrientation(mScreenOrientation != 100
+                    ? mScreenOrientation
+                    : getScreenOrientation());
+        else
+            setRequestedOrientation(getScreenOrientation());
     }
 
     @Override
@@ -382,7 +393,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         if (mMediaRouter != null) {
             // Stop listening for changes to media routes.
-            mMediaRouter.removeCallback(mMediaRouterCallback);
+            mediaRouterAddCallback(false);
         }
 
         if(mSwitchingView) {
@@ -490,10 +501,23 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         if (mMediaRouter != null) {
             // Listen for changes to media routes.
-            mMediaRouter.addCallback(MediaRouter.ROUTE_TYPE_LIVE_VIDEO, mMediaRouterCallback);
+            mediaRouterAddCallback(true);
         }
+    }
 
+    /**
+     * Add or remove MediaRouter callbacks. This is provided for version targeting.
+     *
+     * @param add true to add, false to remove
+     */
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private void mediaRouterAddCallback(boolean add) {
+        if(!LibVlcUtil.isJellyBeanMR1OrLater() || mMediaRouter == null) return;
 
+        if(add)
+            mMediaRouter.addCallback(MediaRouter.ROUTE_TYPE_LIVE_VIDEO, mMediaRouterCallback);
+        else
+            mMediaRouter.removeCallback(mMediaRouterCallback);
     }
 
     private void startPlayback() {
@@ -521,10 +545,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 Log.i(TAG, "Adding user-selected subtitle " + file);
                 mLibVLC.addSubtitleTrack(file);
             }
-        }
-
-        if (LibVlcUtil.isJellyBeanMR1OrLater()) {
-            updatePresentation();
         }
     }
 
@@ -638,7 +658,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 setRequestedOrientation(getScreenOrientation());
         }
         showInfo(R.string.locked, 1000);
-        mLock.setBackgroundResource(R.drawable.locked);
+        mLock.setBackgroundResource(R.drawable.ic_locked);
         mTime.setEnabled(false);
         mSeekbar.setEnabled(false);
         mLength.setEnabled(false);
@@ -652,7 +672,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         if(mScreenOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR)
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
         showInfo(R.string.unlocked, 1000);
-        mLock.setBackgroundResource(R.drawable.lock);
+        mLock.setBackgroundResource(R.drawable.ic_lock);
         mTime.setEnabled(true);
         mSeekbar.setEnabled(true);
         mLength.setEnabled(true);
@@ -776,6 +796,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
+                    activity.stopLoadingAnimation();
                     activity.showOverlay();
                     /** FIXME: update the track list when it changes during the
                      *  playback. (#7540) */
@@ -1522,10 +1543,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      * show overlay the the default timeout
      */
     private void showOverlay() {
-        if (mPresentation == null)
             showOverlay(OVERLAY_TIMEOUT);
-        else
-            showOverlay(OVERLAY_INFINITE); // Hack until we have fullscreen controls
     }
 
     /**
@@ -1543,6 +1561,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 dimStatusBar(false);
             }
             mOverlayProgress.setVisibility(View.VISIBLE);
+            if (mPresentation != null) mOverlayBackground.setVisibility(View.VISIBLE);
         }
         Message msg = mHandler.obtainMessage(FADE_OUT);
         if (timeout != 0) {
@@ -1557,9 +1576,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      * hider overlay
      */
     private void hideOverlay(boolean fromUser) {
-        if (mPresentation != null)
-            return; // Hack until we have fullscreen controls
-
         if (mShowing) {
             mHandler.removeMessages(SHOW_PROGRESS);
             Log.i(TAG, "remove View!");
@@ -1569,6 +1585,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 mOverlayProgress.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mPlayPause.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mMenu.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
+            }
+            if (mPresentation != null) {
+                mOverlayBackground.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
+                mOverlayBackground.setVisibility(View.INVISIBLE);
             }
             mOverlayHeader.setVisibility(View.INVISIBLE);
             mOverlayOption.setVisibility(View.INVISIBLE);
@@ -1600,12 +1620,15 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void updateOverlayPausePlay() {
-        if (mLibVLC == null) {
+        if (mLibVLC == null)
             return;
-        }
 
-        mPlayPause.setBackgroundResource(mLibVLC.isPlaying()
-                ? R.drawable.pause_circle : R.drawable.play_circle);
+        if (mPresentation == null)
+            mPlayPause.setBackgroundResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
+                            : R.drawable.ic_play_circle);
+        else
+            mPlayPause.setBackgroundResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
+                            : R.drawable.ic_play_circle_big_o);
     }
 
     /**
@@ -1743,7 +1766,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     // other content-based URI (probably file pickers)
                     mLocation = getIntent().getData().getPath();
                 }
-            } else {
+            } else if (getIntent().getDataString() != null) {
                 // Plain URI
                 mLocation = getIntent().getDataString();
                 // Remove VLC prefix if needed
@@ -1758,6 +1781,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                         e.printStackTrace();
                     }
                 }
+            } else {
+                Log.e(TAG, "Couldn't understand the intent");
+                encounteredError();
             }
             if(getIntent().getExtras() != null)
                 intentPosition = getIntent().getExtras().getLong("position", -1);
@@ -1782,6 +1808,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 // AudioService-transitioned playback for item after sleep and resume
                 mLibVLC.playIndex(savedIndexPosition);
                 dontParse = false;
+            }
+            else {
+                stopLoadingAnimation();
+                showOverlay();
             }
         } else if (savedIndexPosition > -1) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
@@ -1930,7 +1960,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private void updatePresentation() {
+    private void createPresentation() {
         if (mMediaRouter == null)
             return;
 
@@ -1940,18 +1970,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         Display presentationDisplay = route != null ? route.getPresentationDisplay() : null;
 
-        // Dismiss the current presentation if the display has changed.
-        if (mPresentation != null && mPresentation.getDisplay() != presentationDisplay) {
-            Log.i(TAG, "Dismissing presentation because the current route no longer "
-                    + "has a presentation display.");
-            mLibVLC.stop();
-            finish(); //TODO restore the video on the new display instead of closing
-            mPresentation.dismiss();
-            mPresentation = null;
-        }
-
-        // Show a new presentation if needed.
-        if (mPresentation == null && presentationDisplay != null) {
+        if (presentationDisplay != null) {
+            // Show a new presentation if possible.
             Log.i(TAG, "Showing presentation on display: " + presentationDisplay);
             mPresentation = new SecondaryDisplay(this, presentationDisplay);
             mPresentation.setOnDismissListener(mOnDismissListener);
@@ -1963,6 +1983,20 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 mPresentation = null;
             }
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private void removePresentation() {
+        if (mMediaRouter == null)
+            return;
+
+        // Dismiss the current presentation if the display has changed.
+        Log.i(TAG, "Dismissing presentation because the current route no longer "
+                + "has a presentation display.");
+        mLibVLC.pause(); // Stop sending frames to avoid a crash.
+        finish(); //TODO restore the video on the new display instead of closing
+        if (mPresentation != null) mPresentation.dismiss();
+        mPresentation = null;
     }
 
     /**
@@ -2042,5 +2076,28 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             if (mLibVLC != null && mLibVLC.getHardwareAcceleration() == 2)
                 mSubtitlesSurface.setVisibility(View.VISIBLE);
         }
+    }
+
+    /**
+     * Start the video loading animation.
+     */
+    private void startLoadingAnimation() {
+        AnimationSet anim = new AnimationSet(true);
+        RotateAnimation rotate = new RotateAnimation(0f, 360f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        rotate.setDuration(800);
+        rotate.setInterpolator(new DecelerateInterpolator());
+        rotate.setRepeatCount(RotateAnimation.INFINITE);
+        anim.addAnimation(rotate);
+        mLoading.startAnimation(anim);
+        mLoadingText.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Stop the video loading animation.
+     */
+    private void stopLoadingAnimation() {
+        mLoading.setVisibility(View.INVISIBLE);
+        mLoading.clearAnimation();
+        mLoadingText.setVisibility(View.GONE);
     }
 }

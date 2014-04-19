@@ -31,6 +31,7 @@ import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -46,31 +47,27 @@ public class SidebarAdapter extends BaseAdapter {
     static class SidebarEntry {
         String id;
         String name;
-        int drawableID;
+        int attributeID;
 
-        public SidebarEntry(String _id, String _name, int _drawableID) {
-            this.id = _id;
-            this.name = _name;
-            this.drawableID = _drawableID;
-        }
-
-        public SidebarEntry(String _id, int _name, int _drawableID) {
+        public SidebarEntry(String _id, int _name, int _attributeID) {
             this.id = _id;
             this.name = VLCApplication.getAppContext().getString(_name);
-            this.drawableID = _drawableID;
+            this.attributeID = _attributeID;
         }
     }
 
+    private Context mContext;
     private LayoutInflater mInflater;
     static final List<SidebarEntry> entries;
     private HashMap<String, Fragment> mFragments;
+    private String mCurrentFragmentId;
 
     static {
         SidebarEntry entries2[] = {
-            new SidebarEntry( "video", R.string.video, R.drawable.ic_menu_video ),
-            new SidebarEntry( "audio", R.string.audio, R.drawable.ic_menu_audio ),
-            new SidebarEntry( "directories", R.string.directories, R.drawable.ic_menu_folder ),
-            new SidebarEntry( "history", R.string.history, R.drawable.ic_menu_history ),
+            new SidebarEntry( "video", R.string.video, R.attr.ic_menu_video ),
+            new SidebarEntry( "audio", R.string.audio, R.attr.ic_menu_audio ),
+            new SidebarEntry( "directories", R.string.directories, R.attr.ic_menu_folder ),
+            new SidebarEntry( "history", R.string.history, R.attr.ic_menu_history ),
             //new SidebarEntry( "bookmarks", R.string.bookmarks, R.drawable.ic_bookmarks ),
             //new SidebarEntry( "playlists", R.string.playlists, R.drawable.icon ),
         };
@@ -78,6 +75,7 @@ public class SidebarAdapter extends BaseAdapter {
     }
 
     public SidebarAdapter(Context context) {
+        mContext = context;
         mInflater = LayoutInflater.from(context);
         mFragments = new HashMap<String, Fragment>(entries.size());
     }
@@ -107,17 +105,29 @@ public class SidebarAdapter extends BaseAdapter {
         }
         TextView textView = (TextView)v;
         textView.setText(sidebarEntry.name);
-        Drawable img = VLCApplication.getAppResources().getDrawable(sidebarEntry.drawableID);
+        Drawable img = VLCApplication.getAppResources().getDrawable(
+                Util.getResourceFromAttribute(mContext, sidebarEntry.attributeID));
         if (img != null) {
             int dp_32 = Util.convertDpToPx(32);
             img.setBounds(0, 0, dp_32, dp_32);
             textView.setCompoundDrawables(img, null, null, null);
         }
+        // Set in bold the current item.
+        if (mCurrentFragmentId.equals(sidebarEntry.id))
+            textView.setTypeface(null, Typeface.BOLD);
+        else
+            textView.setTypeface(null, Typeface.NORMAL);
 
         return v;
     }
 
     public Fragment fetchFragment(String id) {
+        // Save the previous fragment in case an error happens after.
+        String prevFragmentId = mCurrentFragmentId;
+
+        // Set the current fragment.
+        setCurrentFragment(id);
+
         if(mFragments.containsKey(id) && mFragments.get(id) != null) {
             return mFragments.get(id);
         }
@@ -132,11 +142,17 @@ public class SidebarAdapter extends BaseAdapter {
             f = new HistoryFragment();
         }
         else {
+            mCurrentFragmentId = prevFragmentId; // Restore the current fragment id.
             throw new IllegalArgumentException("Wrong fragment id.");
         }
         f.setRetainInstance(true);
         mFragments.put(id, f);
         return f;
+    }
+
+    private void setCurrentFragment(String id) {
+        mCurrentFragmentId = id;
+        this.notifyDataSetChanged();
     }
 
     /**
@@ -153,6 +169,7 @@ public class SidebarAdapter extends BaseAdapter {
             return;
         }
         mFragments.put(id, f);
+        setCurrentFragment(id);
         // if Android added it, it's been implicitly added already...
     }
 }
