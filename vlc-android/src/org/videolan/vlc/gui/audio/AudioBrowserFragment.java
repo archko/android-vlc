@@ -295,7 +295,7 @@ public class AudioBrowserFragment extends SherlockFragment {
                     medias = mArtistsAdapter.getLocations(groupPosition);
                     break;
                 case MODE_ALBUM:
-                    medias = mArtistsAdapter.getLocations(groupPosition);
+                    medias = mAlbumsAdapter.getLocations(groupPosition);
                     break;
                 case MODE_GENRE:
                     medias = mGenresAdapter.getLocations(groupPosition);

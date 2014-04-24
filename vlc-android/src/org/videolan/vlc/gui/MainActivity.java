@@ -28,6 +28,7 @@ import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.AudioService;
 import org.videolan.vlc.AudioServiceController;
+import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Util;
@@ -228,6 +229,10 @@ public class MainActivity extends SherlockFragmentActivity {
                     return;
                 }
 
+                // This should not happen
+                if(entry == null || entry.id == null)
+                    return;
+
                 /*
                  * Clear any backstack before switching tabs. This avoids
                  * activating an old backstack, when a user hits the back button
@@ -372,7 +377,7 @@ public class MainActivity extends SherlockFragmentActivity {
          */
         if(current == null || (!current.getTag().equals(mCurrentFragment) && found)) {
             Log.d(TAG, "Reloading displayed fragment");
-            if (secondaryFragments.contains(mCurrentFragment))
+            if (mCurrentFragment == null || secondaryFragments.contains(mCurrentFragment))
                 mCurrentFragment = "video";
             Fragment ff = getFragment(mCurrentFragment);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -661,7 +666,7 @@ public class MainActivity extends SherlockFragmentActivity {
                     mMenu.showMenu();
                 break;
             case R.id.search_clear_history:
-                ((SearchFragment)fetchSecondaryFragment("search")).clearSearchHistory();
+                MediaDatabase.getInstance(this).clearSearchHistory();
                 break;
         }
         return super.onOptionsItemSelected(item);

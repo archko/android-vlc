@@ -23,6 +23,12 @@ package org.videolan.vlc.widget;
  * and a simplified to fit the needs of the VLC Android app.
  */
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+
+import org.videolan.vlc.R;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -44,12 +50,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-
-import org.videolan.vlc.R;
 
 
 public class SlidingPaneLayout extends ViewGroup {
@@ -187,9 +187,10 @@ public class SlidingPaneLayout extends ViewGroup {
         if (attrs != null) {
             TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingPaneLayout);
 
-            if (ta != null)
+            if (ta != null) {
                 mOverhangSize = ta.getDimensionPixelSize(R.styleable.SlidingPaneLayout_overhangSize, -1);
-            ta.recycle();
+                ta.recycle();
+            }
         }
 
         final float density = context.getResources().getDisplayMetrics().density;
@@ -999,10 +1000,12 @@ public class SlidingPaneLayout extends ViewGroup {
 
         public static final Parcelable.Creator<SavedState> CREATOR =
                 new Parcelable.Creator<SavedState>() {
+            @Override
             public SavedState createFromParcel(Parcel in) {
                 return new SavedState(in);
             }
 
+            @Override
             public SavedState[] newArray(int size) {
                 return new SavedState[size];
             }
@@ -1014,6 +1017,7 @@ public class SlidingPaneLayout extends ViewGroup {
     }
 
     static class SlidingPanelLayoutImplBase implements SlidingPanelLayoutImpl {
+        @Override
         public void invalidateChildRegion(SlidingPaneLayout parent, View child) {
             ViewCompat.postInvalidateOnAnimation(parent, child.getLeft(), child.getTop(),
                     child.getRight(), child.getBottom());

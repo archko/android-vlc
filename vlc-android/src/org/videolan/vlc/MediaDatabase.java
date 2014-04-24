@@ -237,7 +237,7 @@ public class MediaDatabase {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        return (String[]) playlists.toArray();
+        return playlists.toArray(new String[playlists.size()]);
     }
 
     /**
@@ -653,7 +653,7 @@ public class MediaDatabase {
         return history;
     }
 
-    public synchronized void clearSearchhistory() {
+    public synchronized void clearSearchHistory() {
         mDb.delete(SEARCHHISTORY_TABLE_NAME, null, null);
     }
 

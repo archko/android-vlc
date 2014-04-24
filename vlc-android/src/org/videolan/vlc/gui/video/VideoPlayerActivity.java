@@ -220,7 +220,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      * It is possible to have multiple custom subs in one session
      * (just like desktop VLC allows you as well.)
      */
-    private ArrayList<String> mSubtitleSelectedFiles = new ArrayList<String>();
+    private final ArrayList<String> mSubtitleSelectedFiles = new ArrayList<String>();
 
     // Whether fallback from HW acceleration to SW decoding was done.
     private boolean mDisabledHardwareAcceleration = false;
@@ -521,7 +521,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void startPlayback() {
-        load();
+        loadMedia();
 
         /*
          * if the activity has been paused by pressing the power button,
@@ -893,7 +893,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             eventHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    load();
+                    loadMedia();
                 }
             }, 1000);
         } else {
@@ -933,7 +933,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 mPreviousHardwareAccelerationMode = mLibVLC.getHardwareAcceleration();
                 mLibVLC.setHardwareAcceleration(LibVLC.HW_ACCELERATION_DISABLED);
                 mSubtitlesSurface.setVisibility(View.INVISIBLE);
-                load();
+                loadMedia();
             }
         })
         .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -945,7 +945,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         .setTitle(R.string.hardware_acceleration_error_title)
         .setMessage(R.string.hardware_acceleration_error_message)
         .create();
-        dialog.show();
+        if(!isFinishing())
+            dialog.show();
     }
 
     private void handleVout(Message msg) {
@@ -1004,14 +1005,13 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         // compute the aspect ratio
         double ar, vw;
-        double density = (double)mSarNum / (double)mSarDen;
-        if (density == 1.0) {
+        if (mSarDen == mSarNum) {
             /* No indication about the density, assuming 1:1 */
             vw = mVideoVisibleWidth;
             ar = (double)mVideoVisibleWidth / (double)mVideoVisibleHeight;
         } else {
             /* Use the specified aspect ratio */
-            vw = mVideoVisibleWidth * density;
+            vw = mVideoVisibleWidth * (double)mSarNum / mSarDen;
             ar = vw / mVideoVisibleHeight;
         }
 
@@ -1718,8 +1718,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      * External extras:
      * - position (long) - position of the video to start with (in ms)
      */
-    @SuppressWarnings({ "deprecation", "unchecked" })
-    private void load() {
+    @SuppressWarnings({ "unchecked" })
+    private void loadMedia() {
         mLocation = null;
         String title = getResources().getString(R.string.title);
         boolean dontParse = false;
@@ -1730,43 +1730,64 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         if (getIntent().getAction() != null
                 && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
-            /* Started from external application */
+            /* Started from external application 'content' */
             if (getIntent().getData() != null
                     && getIntent().getData().getScheme() != null
                     && getIntent().getData().getScheme().equals("content")) {
-                if(getIntent().getData().getHost().equals("media") || getIntent().getData().getHost().equals("mms")) {
-                    // Media URI
-                    Cursor cursor = managedQuery(getIntent().getData(), new String[]{ MediaStore.Video.Media.DATA }, null, null, null);
-                    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
-                    if (cursor.moveToFirst())
-                        mLocation = LibVLC.PathToURI(cursor.getString(column_index));
-                } else if(getIntent().getData().getHost().equals("com.fsck.k9.attachmentprovider")
-                       || getIntent().getData().getHost().equals("gmail-ls")) {
-                    // Mail-based apps - download the stream to a temporary file and play it
+
+                // Media or MMS URI
+                if(getIntent().getData().getHost().equals("media")
+                        || getIntent().getData().getHost().equals("mms")) {
                     try {
-                        Cursor cursor = getContentResolver().query(getIntent().getData(), new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null);
-                        cursor.moveToFirst();
-                        String filename = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME));
-                        Log.i(TAG, "Getting file " + filename + " from content:// URI");
-                        InputStream is = getContentResolver().openInputStream(getIntent().getData());
-                        OutputStream os = new FileOutputStream(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
-                        byte[] buffer = new byte[1024];
-                        int bytesRead = 0;
-                        while((bytesRead = is.read(buffer)) >= 0) {
-                            os.write(buffer, 0, bytesRead);
+                        Cursor cursor = getContentResolver().query(getIntent().getData(),
+                                new String[]{ MediaStore.Video.Media.DATA }, null, null, null);
+                        if (cursor != null) {
+                            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+                            if (cursor.moveToFirst())
+                                mLocation = LibVLC.PathToURI(cursor.getString(column_index));
+                            cursor.close();
                         }
-                        os.close();
-                        is.close();
-                        mLocation = LibVLC.PathToURI(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Couldn't read the file from media or MMS");
+                        encounteredError();
+                    }
+                }
+
+                // Mail-based apps - download the stream to a temporary file and play it
+                else if(getIntent().getData().getHost().equals("com.fsck.k9.attachmentprovider")
+                       || getIntent().getData().getHost().equals("gmail-ls")) {
+                    try {
+                        Cursor cursor = getContentResolver().query(getIntent().getData(),
+                                new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null);
+                        if (cursor != null) {
+                            cursor.moveToFirst();
+                            String filename = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME));
+                            cursor.close();
+                            Log.i(TAG, "Getting file " + filename + " from content:// URI");
+
+                            InputStream is = getContentResolver().openInputStream(getIntent().getData());
+                            OutputStream os = new FileOutputStream(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                            byte[] buffer = new byte[1024];
+                            int bytesRead = 0;
+                            while((bytesRead = is.read(buffer)) >= 0) {
+                                os.write(buffer, 0, bytesRead);
+                            }
+                            os.close();
+                            is.close();
+                            mLocation = LibVLC.PathToURI(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                        }
                     } catch (Exception e) {
                         Log.e(TAG, "Couldn't download file from mail URI");
                         encounteredError();
                     }
-                } else {
-                    // other content-based URI (probably file pickers)
+                }
+
+                // other content-based URI (probably file pickers)
+                else {
                     mLocation = getIntent().getData().getPath();
                 }
-            } else if (getIntent().getDataString() != null) {
+            } /* External application */
+            else if (getIntent().getDataString() != null) {
                 // Plain URI
                 mLocation = getIntent().getDataString();
                 // Remove VLC prefix if needed
@@ -1785,11 +1806,15 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 Log.e(TAG, "Couldn't understand the intent");
                 encounteredError();
             }
+
+            // Try to get the position
             if(getIntent().getExtras() != null)
                 intentPosition = getIntent().getExtras().getLong("position", -1);
-        } else if(getIntent().getAction() != null
-                && getIntent().getAction().equals(PLAY_FROM_VIDEOGRID) && getIntent().getExtras() != null) {
-            /* Started from VideoListActivity */
+        } /* ACTION_VIEW */
+        /* Started from VideoListActivity */
+        else if(getIntent().getAction() != null
+                && getIntent().getAction().equals(PLAY_FROM_VIDEOGRID)
+                && getIntent().getExtras() != null) {
             mLocation = getIntent().getExtras().getString("itemLocation");
             itemTitle = getIntent().getExtras().getString("itemTitle");
             dontParse = getIntent().getExtras().getBoolean("dontParse");
@@ -1850,6 +1875,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     mLibVLC.setTime(intentPosition);
             }
 
+            // Get possible subtitles
             String subtitleList_serialized = preferences.getString(PreferencesActivity.VIDEO_SUBTITLE_FILES, null);
             ArrayList<String> prefsList = new ArrayList<String>();
             if(subtitleList_serialized != null) {
@@ -1866,6 +1892,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     mSubtitleSelectedFiles.add(x);
              }
 
+            // Get the title
             try {
                 title = URLDecoder.decode(mLocation, "UTF-8");
             } catch (UnsupportedEncodingException e) {

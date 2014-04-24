@@ -20,6 +20,7 @@
 
 package org.videolan.vlc.gui;
 
+import java.lang.Override;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -49,7 +50,7 @@ import android.widget.TextView.OnEditorActionListener;
 
 public class SearchFragment extends SherlockListFragment {
 
-    public final static String TAG = "VLC/SearchActivit";
+    public final static String TAG = "VLC/SearchActivity";
 
     private EditText mSearchText;
     private SearchHistoryAdapter mHistoryAdapter;
@@ -66,22 +67,37 @@ public class SearchFragment extends SherlockListFragment {
         mHistoryAdapter = new SearchHistoryAdapter(getActivity());
         mResultAdapter = new SearchResultAdapter(getActivity());
 
+        return v;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        View v = getView();
+
         mSearchText = (EditText) v.findViewById(R.id.search_text);
         mSearchText.setOnEditorActionListener(searchTextListener);
         mSearchText.addTextChangedListener(searchTextWatcher);
-
-        mSearchText.requestFocus();
-
-        return v;
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
+        mSearchText.requestFocus();
+
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mSearchText, InputMethodManager.RESULT_SHOWN);
+        imm.showSoftInput(mSearchText, InputMethodManager.SHOW_IMPLICIT);
+
         showSearchHistory();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
     }
 
     private void search(CharSequence key, int type) {
@@ -171,16 +187,6 @@ public class SearchFragment extends SherlockListFragment {
 
         }
     };
-
-    /**
-     * Clear the search history.
-     */
-    public void clearSearchHistory() {
-            MediaDatabase db = MediaDatabase.getInstance(getActivity());
-            db.clearSearchhistory();
-            if (mHistoryAdapter == getListAdapter())
-                showSearchHistory();
-    }
 
     private final OnEditorActionListener searchTextListener = new OnEditorActionListener() {
         @Override
