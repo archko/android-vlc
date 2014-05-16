@@ -25,14 +25,13 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/general_prefs_category" >
-	    <ListPreference
-	            android:defaultValue="-1"
-	            android:entries="@array/hardware_acceleration_list"
-	            android:entryValues="@array/hardware_acceleration_values"
-	            android:key="hardware_acceleration"
-	            android:summary="@string/hardware_acceleration_summary"
-	            android:title="@string/hardware_acceleration" />
-	    
+        <ListPreference
+            android:defaultValue="-1"
+            android:entries="@array/hardware_acceleration_list"
+            android:entryValues="@array/hardware_acceleration_values"
+            android:key="hardware_acceleration"
+            android:summary="@string/hardware_acceleration_summary"
+            android:title="@string/hardware_acceleration" />
         <ListPreference
             android:defaultValue="0"
             android:entries="@array/screen_orientation_list"
@@ -55,13 +54,22 @@
             android:title="@string/subtitle_text_encoding" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/extra_prefs_category" >
-        <PreferenceScreen android:title="@string/interface_prefs_category" >
-            <PreferenceCategory android:title="@string/interface_prefs_category" >
+        <PreferenceScreen android:title="@string/interface_prefs_screen" >
+            <PreferenceCategory android:title="@string/interface_secondary_display_category" >
+                <Preference android:summary="@string/interface_secondary_display_category_summary" />
+
                 <CheckBoxPreference
-                    android:defaultValue="true"
-                    android:key="enable_dual_display"
-                    android:summary="@string/enable_dual_display_summary"
-                    android:title="@string/enable_dual_display" />
+                    android:defaultValue="false"
+                    android:key="enable_clone_mode"
+                    android:summary="@string/enable_clone_mode_summary"
+                    android:title="@string/enable_clone_mode" />
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:key="enable_secondary_display_hardware_acceleration"
+                    android:summary="@string/enable_secondary_display_hardware_acceleration_summary"
+                    android:title="@string/enable_secondary_display_hardware_acceleration" />
+            </PreferenceCategory>
+            <PreferenceCategory android:title="@string/interface_other_category" >
                 <CheckBoxPreference
                     android:defaultValue="true"
                     android:key="enable_brightness_gesture"

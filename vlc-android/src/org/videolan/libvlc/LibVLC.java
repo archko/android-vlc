@@ -75,6 +75,9 @@ public class LibVLC {
     private boolean frameSkip = false;
     private int networkCaching = 0;
 
+    /** Native crash handler */
+    private OnNativeCrashListener mOnNativeCrashListener;
+
     /** Check in libVLC already initialized otherwise crash */
     private boolean mIsInitialized = false;
     public native void attachSurface(Surface surface, IVideoPlayer player);
@@ -635,6 +638,8 @@ public class LibVLC {
     public native int getSpuTracksCount();
 
     public static native String nativeToURI(String path);
+    
+    public native static void sendMouseEvent( int button, int x, int y);
 
     /**
      * Quickly converts path to URIs, which are mandatory in libVLC.
@@ -683,4 +688,17 @@ public class LibVLC {
     public native String[] getPresets();
 
     public native float[] getPreset(int index);
+
+    public static interface OnNativeCrashListener {
+        public void onNativeCrash();
+    }
+
+    public void setOnNativeCrashListener(OnNativeCrashListener l) {
+        mOnNativeCrashListener = l;
+    }
+
+    private void onNativeCrash() {
+        if (mOnNativeCrashListener != null)
+            mOnNativeCrashListener.onNativeCrash();
+    }
 }

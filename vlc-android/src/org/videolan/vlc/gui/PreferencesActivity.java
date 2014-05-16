@@ -60,7 +60,6 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     public final static String VIDEO_RESUME_TIME = "VideoResumeTime";
     public final static String VIDEO_SUBTITLE_FILES = "VideoSubtitleFiles";
     public final static int RESULT_RESCAN = RESULT_FIRST_USER + 1;
-	
     public final static int RESULT_RESTART = RESULT_FIRST_USER + 2;
 
     public final static String SHOW_MEDIA_ONLY= "show_media_only";

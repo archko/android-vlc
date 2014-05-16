@@ -44,8 +44,10 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
+import org.videolan.vlc.gui.NativeCrashActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.TypedArray;
@@ -82,10 +84,19 @@ public class Util {
             Thread.setDefaultUncaughtExceptionHandler(new VlcCrashHandler());
 
             instance = LibVLC.getInstance();
-            Context context = VLCApplication.getAppContext();
+            final Context context = VLCApplication.getAppContext();
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
             updateLibVlcSettings(pref);
             instance.init(context);
+            instance.setOnNativeCrashListener(new LibVLC.OnNativeCrashListener() {
+                @Override
+                public void onNativeCrash() {
+                    Intent i = new Intent(context, NativeCrashActivity.class);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    i.putExtra("PID", android.os.Process.myPid());
+                    context.startActivity(i);
+                }
+            });
         }
         return instance;
     }
@@ -234,6 +245,31 @@ public class Util {
         output.close();
         br.close();
         input.close();
+    }
+
+    /**
+     * Get the last 500 lines of the application logcat.
+     *
+     * @return the log string.
+     * @throws IOException
+     */
+    public static String getLogcat() throws IOException {
+        String[] args = { "logcat", "-v", "time", "-d", "-t", "500" };
+
+        Process process = Runtime.getRuntime().exec(args);
+        InputStreamReader input = new InputStreamReader(
+                process.getInputStream());
+        BufferedReader br = new BufferedReader(input);
+        StringBuilder log = new StringBuilder();
+        String line;
+
+        while ((line = br.readLine()) != null)
+            log.append(line + "\n");
+
+        br.close();
+        input.close();
+
+        return log.toString();
     }
 
     /**

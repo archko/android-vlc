@@ -166,7 +166,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     private ImageButton mForward;
     private boolean mEnableJumpButtons;
     private boolean mEnableBrightnessGesture;
-    private boolean mEnableDualDisplay;
+    private boolean mEnableCloneMode;
     private boolean mDisplayRemainingTime = false;
     private int mScreenOrientation;
     private ImageButton mAudioTrack;
@@ -244,12 +244,13 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     removePresentation();
                 }
             };
+            Log.d(TAG, "MediaRouter information : " + mMediaRouter  .toString());
         }
 
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        mEnableDualDisplay = pref.getBoolean("enable_dual_display", false);
+        mEnableCloneMode = pref.getBoolean("enable_clone_mode", false);
         createPresentation();
         setContentView(mPresentation == null ? R.layout.player : R.layout.player_remote_control);
 
@@ -370,8 +371,17 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             Log.d(TAG, "LibVLC initialisation failed");
             return;
         }
+
+        if (mPresentation != null && !pref.getBoolean("enable_secondary_display_hardware_acceleration", false)) {
+            mDisabledHardwareAcceleration = true;
+            mPreviousHardwareAccelerationMode = mLibVLC.getHardwareAcceleration();
+            mLibVLC.setHardwareAcceleration(LibVLC.HW_ACCELERATION_DISABLED);
+            Log.d(TAG,"Secondary Display : Hardware Acceleration disabled");
+        }
+        Log.d(TAG,"Hardware Acceleration mode : " + Integer.toString(mLibVLC.getHardwareAcceleration() ));
+
         /* Only show the subtitles surface when using "Full Acceleration" mode */
-        if (mLibVLC.getHardwareAcceleration() == 2)
+        if (mLibVLC.getHardwareAcceleration() == LibVLC.HW_ACCELERATION_FULL)
             mSubtitlesSurface.setVisibility(View.VISIBLE);
         // Signal to LibVLC that the videoPlayerActivity was created, thus the
         // SurfaceView is now available for MediaCodec direct rendering.
@@ -1139,11 +1149,18 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mTouchAction = TOUCH_NONE;
             // Seek
             mTouchX = event.getRawX();
+            // Click DVD menus
+            int[] offset = new int[2];
+            mSurface.getLocationOnScreen(offset);
+            LibVLC.sendMouseEvent(0,
+                    Math.round((mTouchX - offset[0]) * mVideoWidth / mSurface.getWidth()),
+                    Math.round((mTouchY - offset[1]) * mVideoHeight / mSurface.getHeight()));
             break;
 
         case MotionEvent.ACTION_MOVE:
-            // No volume/brightness action if coef < 2
-            if (coef > 2) {
+            // No volume/brightness action if coef < 2 or a secondary display is connected
+            //TODO : Volume action when a secondary display is connected
+            if (coef > 2 && mPresentation == null) {
                 // Volume (Up or Down - Right side)
                 if (!mEnableBrightnessGesture || mTouchX > (screen.widthPixels / 2)){
                     doVolumeTouch(y_changed);
@@ -1732,6 +1749,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         int itemPosition = -1; // Index in the media list as passed by AudioServer (used only for vout transition internally)
         long intentPosition = -1; // position passed in by intent (ms)
 
+        Log.d(TAG, "loadMedia.dataString:"+getIntent().getDataString());
+        Log.d(TAG, "loadMedia.uri:"+getIntent().getData());
         if (getIntent().getAction() != null
                 && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
             /* Started from external application 'content' */
@@ -1749,6 +1768,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
                             if (cursor.moveToFirst())
                                 mLocation = LibVLC.PathToURI(cursor.getString(column_index));
+                            Log.d(TAG, "loadMedia.cursor:"+mLocation+" column:"+cursor.getString(column_index));
                             cursor.close();
                         }
                     } catch (Exception e) {
@@ -1806,6 +1826,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                         e.printStackTrace();
                     }
                 }
+                Log.d(TAG, "loadMedia.location:"+mLocation);
             } else {
                 Log.e(TAG, "Couldn't understand the intent");
                 encounteredError();
@@ -1992,7 +2013,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private void createPresentation() {
-        if (mMediaRouter == null || !mEnableDualDisplay)
+        if (mMediaRouter == null || mEnableCloneMode)
             return;
 
         // Get the current route and its presentation display.
@@ -2013,7 +2034,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                         + "the meantime.", ex);
                 mPresentation = null;
             }
-        }
+        } else
+            Log.i(TAG, "No secondary display detected");
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -2104,8 +2126,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mSubtitlesSurfaceHolder.addCallback(activity.mSubtitlesSurfaceCallback);
 
             /* Only show the subtitles surface when using "Full Acceleration" mode */
-            if (mLibVLC != null && mLibVLC.getHardwareAcceleration() == 2)
+            if (mLibVLC != null && mLibVLC.getHardwareAcceleration() == LibVLC.HW_ACCELERATION_FULL)
                 mSubtitlesSurface.setVisibility(View.VISIBLE);
+            Log.i(TAG, "Secondary display created");
         }
     }
 

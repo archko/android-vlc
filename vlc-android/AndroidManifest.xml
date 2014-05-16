@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.videolan.vlc"
     android:installLocation="auto"
-    android:versionCode="9199"
-    android:versionName="0.9.2-git" >
+    android:versionCode="9399"
+    android:versionName="0.9.4-git" >
 
     <uses-sdk
         android:minSdkVersion="7"
@@ -23,7 +23,7 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:logo="@drawable/icon"
+        android:logo="@drawable/ic_logo_w"
         android:theme="@style/Theme.VLC.NoTitleBar" >
         <activity
             android:name=".gui.MainActivity"
@@ -56,6 +56,11 @@
             android:label="@string/mediafiles"
             android:theme="@style/Theme.VLC.NoTitleBar" />
         <activity android:name=".gui.DebugLogActivity" />
+        <activity
+            android:name=".gui.NativeCrashActivity"
+            android:process=":NativeCrashActivity"
+            android:stateNotNeeded="true"
+            android:theme="@style/Theme.VLC" />
         <activity
             android:name=".gui.video.VideoPlayerActivity"
             android:configChanges="orientation|screenSize"
@@ -292,6 +297,7 @@
                 <data android:pathPattern=".*\\.flac" />
                 <data android:pathPattern=".*\\.it" />
                 <data android:pathPattern=".*\\.m4a" />
+                <data android:pathPattern=".*\\.m4b" />
                 <data android:pathPattern=".*\\.m4p" />
                 <data android:pathPattern=".*\\.mid" />
                 <data android:pathPattern=".*\\.mka" />
@@ -339,6 +345,7 @@
                 <data android:pathPattern=".*\\.FLAC" />
                 <data android:pathPattern=".*\\.IT" />
                 <data android:pathPattern=".*\\.M4A" />
+                <data android:pathPattern=".*\\.M4B" />
                 <data android:pathPattern=".*\\.M4P" />
                 <data android:pathPattern=".*\\.MID" />
                 <data android:pathPattern=".*\\.MKA" />

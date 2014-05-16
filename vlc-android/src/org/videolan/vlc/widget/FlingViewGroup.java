@@ -136,6 +136,8 @@ public class FlingViewGroup extends ViewGroup {
             case MotionEvent.ACTION_DOWN:
                 mLastX = x;
                 mLastInterceptDownY = ev.getY();
+                mInitialMotionX = x;
+                mInitialMotionY = y;
                 mTouchState = mScroller.isFinished() ?
                         TOUCH_STATE_REST : TOUCH_STATE_MOVE;
                 mInterceptTouchState = TOUCH_STATE_REST;
@@ -172,8 +174,6 @@ public class FlingViewGroup extends ViewGroup {
 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                mInitialMotionX = x;
-                mInitialMotionY = y;
                 if (!mScroller.isFinished())
                     mScroller.abortAnimation();
                 mLastX = x;
@@ -201,8 +201,13 @@ public class FlingViewGroup extends ViewGroup {
                 final VelocityTracker velocityTracker = mVelocityTracker;
                 velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                 int velocityX = (int) velocityTracker.getXVelocity();
+                final float dx = x - mInitialMotionX;
+                final float dy = y - mInitialMotionY;
 
-                if (velocityX > 1000 && mCurrentView > 0) {
+                if (dx > 0 && mCurrentView == 0 && dx > mTouchSlop) {
+                    if (mViewSwitchListener != null)
+                        mViewSwitchListener.onBackSwitched();
+                } else if (velocityX > 1000 && mCurrentView > 0) {
                     snapToScreen(mCurrentView - 1);
                 } else if (velocityX < -1000
                         && mCurrentView < getChildCount() - 1) {
@@ -218,11 +223,7 @@ public class FlingViewGroup extends ViewGroup {
 
                 if (mViewSwitchListener != null) {
                     mViewSwitchListener.onTouchUp();
-                    final float dx = x - mInitialMotionX;
-                    final float dy = y - mInitialMotionY;
-                    ViewConfiguration config = ViewConfiguration.get(getContext());
-                    final int slop = config.getScaledTouchSlop();
-                    if (dx * dx + dy * dy < slop * slop)
+                    if (dx * dx + dy * dy < mTouchSlop * mTouchSlop)
                         mViewSwitchListener.onTouchClick();
                 }
 
@@ -285,6 +286,8 @@ public class FlingViewGroup extends ViewGroup {
         void onTouchUp();
 
         void onTouchClick();
+
+        void onBackSwitched();
     }
 
 }

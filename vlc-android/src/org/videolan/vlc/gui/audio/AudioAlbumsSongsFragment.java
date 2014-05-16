@@ -32,6 +32,7 @@ import org.videolan.vlc.R;
 import org.videolan.vlc.Util;
 import org.videolan.vlc.VlcRunnable;
 import org.videolan.vlc.gui.CommonDialogs;
+import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.widget.FlingViewGroup;
 
 import android.annotation.TargetApi;
@@ -131,8 +132,8 @@ public class AudioAlbumsSongsFragment extends SherlockFragment {
 
         mTabHost.setup();
 
-        addNewTab(mTabHost, "albums", "Albums");
-        addNewTab(mTabHost, "songs", "Songs");
+        addNewTab(mTabHost, "albums", v.getResources().getString(R.string.albums));
+        addNewTab(mTabHost, "songs", v.getResources().getString(R.string.songs));
 
         mTabHost.setCurrentTab(mCurrentTab);
         mFlingViewGroup.snapToScreen(mCurrentTab);
@@ -158,6 +159,11 @@ public class AudioAlbumsSongsFragment extends SherlockFragment {
             public void onTouchUp() {}
             @Override
             public void onTouchClick() {}
+            @Override
+            public void onBackSwitched() {
+                VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+                activity.popSecondaryFragment();
+            }
         });
 
         return v;
