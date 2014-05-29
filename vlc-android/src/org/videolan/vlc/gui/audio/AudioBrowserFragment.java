@@ -185,7 +185,9 @@ public class AudioBrowserFragment extends SherlockFragment {
             ArrayList<Media> mediaList = mArtistsAdapter.getMedia(p);
             VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
-            frag.setMediaList(mediaList, mediaList.get(0).getArtist());
+            if (frag != null) {
+                frag.setMediaList(mediaList, mediaList.get(0).getArtist());
+            }
         }
     };
 
@@ -203,7 +205,9 @@ public class AudioBrowserFragment extends SherlockFragment {
             ArrayList<Media> mediaList = mGenresAdapter.getMedia(p);
             VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
-            frag.setMediaList(mediaList, mediaList.get(0).getGenre());
+            if (frag != null) {
+                frag.setMediaList(mediaList, mediaList.get(0).getGenre());
+            }
         }
     };
 

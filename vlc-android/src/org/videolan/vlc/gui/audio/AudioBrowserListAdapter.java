@@ -23,10 +23,11 @@ package org.videolan.vlc.gui.audio;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import org.videolan.vlc.BitmapCache;
 import org.videolan.libvlc.Media;
+import org.videolan.vlc.BitmapCache;
 import org.videolan.vlc.R;
 
 import android.content.Context;
@@ -44,6 +45,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
 
     // Key: the item title, value: ListItem of only media item (no separator).
     private Map<String, ListItem> mMediaItemMap;
+    private Map<String, ListItem> mSeparatorItemMap;
     // A list of all the list items: media items and separators.
     private ArrayList<ListItem> mItems;
 
@@ -67,30 +69,19 @@ public class AudioBrowserListAdapter extends BaseAdapter {
         public ArrayList<Media> mMediaList;
         public boolean mIsSeparator;
 
-        public ListItem(String title, String subTitle,
-                Media media, boolean isSeparator) {
-            if (!isSeparator) {
-                mMediaList = new ArrayList<Media>();
+        public ListItem(String title, String subTitle, Media media, boolean isSeparator) {
+            mMediaList = new ArrayList<Media>();
+            if (media != null)
                 mMediaList.add(media);
-            }
             mTitle = title;
             mSubTitle = subTitle;
             mIsSeparator = isSeparator;
-        }
-
-        @Override
-        public String toString() {
-            return "ListItem{"+
-                "mTitle='"+mTitle+'\''+
-                ", mSubTitle='"+mSubTitle+'\''+
-                ", mMediaList="+mMediaList+
-                ", mIsSeparator="+mIsSeparator+
-                '}';
         }
     }
 
     public AudioBrowserListAdapter(Context context, int itemType) {
         mMediaItemMap = new HashMap<String, ListItem>();
+        mSeparatorItemMap = new HashMap<String, ListItem>();
         mItems = new ArrayList<ListItem>();
         mContext = context;
         if (itemType != ITEM_WITHOUT_COVER && itemType != ITEM_WITH_COVER)
@@ -99,6 +90,9 @@ public class AudioBrowserListAdapter extends BaseAdapter {
     }
 
     public void add(String title, String subTitle, Media media) {
+        if(title == null) return;
+        title = title.trim();
+        if(subTitle != null) subTitle = subTitle.trim();
         if (mMediaItemMap.containsKey(title))
             mMediaItemMap.get(title).mMediaList.add(media);
         else {
@@ -115,7 +109,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
 
         for (int i = 0; i < mItems.size(); ++i) {
             String title = mItems.get(i).mTitle;
-            char firstChar = title.toUpperCase().charAt(0);
+            char firstChar = title.toUpperCase(Locale.ENGLISH).charAt(0);
 
             if (Character.isLetter(firstChar)) {
                 if (firstSeparator || firstChar != prevFirstChar) {
@@ -137,9 +131,16 @@ public class AudioBrowserListAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void addSeparator(String title) {
-        ListItem item = new ListItem(title, null, null, true);
-        mItems.add(item);
+    public void addSeparator(String title, Media media) {
+        if(title == null) return;
+        title = title.trim();
+        if (mSeparatorItemMap.containsKey(title))
+            mSeparatorItemMap.get(title).mMediaList.add(media);
+        else {
+            ListItem item = new ListItem(title, null, media, true);
+            mSeparatorItemMap.put(title, item);
+            mItems.add(item);
+        }
         notifyDataSetChanged();
     }
 
@@ -168,6 +169,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
 
     public void clear() {
         mMediaItemMap.clear();
+        mSeparatorItemMap.clear();
         mItems.clear();
         notifyDataSetChanged();
     }
@@ -300,9 +302,9 @@ public class AudioBrowserListAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        int viewType = 0;
+        int viewType = VIEW_MEDIA;
         if (mItems.get(position).mIsSeparator)
-            viewType = 1;
+            viewType = VIEW_SEPARATOR;
         return viewType;
     }
 
@@ -328,7 +330,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
 
     @Override
     public boolean isEnabled(int position) {
-        return !mItems.get(position).mIsSeparator;
+        return position < mItems.size() && mItems.get(position).mMediaList.size() > 0;
     }
 
     public ArrayList<Media> getMedia(int position) {
@@ -342,7 +344,7 @@ public class AudioBrowserListAdapter extends BaseAdapter {
     public ArrayList<String> getLocations(int position) {
         // Return all the media locations of a list item list.
         ArrayList<String> locations = new ArrayList<String>();
-        if (position < mItems.size() && !mItems.get(position).mIsSeparator) {
+        if (isEnabled(position)) {
             ArrayList<Media> mediaList = mItems.get(position).mMediaList;
             for (int i = 0; i < mediaList.size(); ++i)
                 locations.add(mediaList.get(i).getLocation());
