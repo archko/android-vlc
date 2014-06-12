@@ -81,7 +81,6 @@
         <View
             android:layout_width="10dp"
             android:layout_height="match_parent" />
-
     </LinearLayout>
 
     <ViewSwitcher
@@ -96,14 +95,14 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:clipToPadding="false"
-            android:paddingBottom="@dimen/listview_bottom_padding"/>
+            android:paddingBottom="@dimen/listview_bottom_padding" />
 
         <org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher
             android:id="@+id/cover_media_switcher"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1" />
-	</ViewSwitcher>
+    </ViewSwitcher>
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -151,7 +150,7 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0">
+        android:layout_weight="0" >
 
         <ImageButton
             android:id="@+id/shuffle"
@@ -212,7 +211,6 @@
             android:focusable="true"
             android:scaleType="fitXY"
             android:src="?attr/ic_previous" />
-
     </RelativeLayout>
 
 </LinearLayout>

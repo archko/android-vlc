@@ -80,6 +80,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -110,6 +111,7 @@ public class MainActivity extends SherlockFragmentActivity {
     private AudioPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
     private SlidingPaneLayout mSlidingPane;
+    private RelativeLayout mRootContainer;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -211,6 +213,7 @@ public class MainActivity extends SherlockFragmentActivity {
         mInfoProgress = (ProgressBar) v_main.findViewById(R.id.info_progress);
         mInfoText = (TextView) v_main.findViewById(R.id.info_text);
         mAudioPlayerFilling = v_main.findViewById(R.id.audio_player_filling);
+        mRootContainer = (RelativeLayout) v_main.findViewById(R.id.root_container);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -908,6 +911,8 @@ public class MainActivity extends SherlockFragmentActivity {
                     mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
                 mMenu.setSlidingEnabled(true);
+                removeTipViewIfDisplayed();
+                mAudioPlayer.showAudioPlayerTips();
             }
 
             @Override
@@ -920,7 +925,50 @@ public class MainActivity extends SherlockFragmentActivity {
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
                 mMenu.setSlidingEnabled(false);
+                mAudioPlayer.showPlaylistTips();
             }
 
     };
+
+    /**
+     * Show a tip view.
+     * @param layoutId the layout of the tip view
+     * @param settingKey the setting key to check if the view must be displayed or not.
+     */
+    public void showTipViewIfNeeded(final int layoutId, final String settingKey) {
+        if (!mSettings.getBoolean(settingKey, false)) {
+            removeTipViewIfDisplayed();
+            View v = LayoutInflater.from(this).inflate(layoutId, null);
+            mRootContainer.addView(v,
+                    new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+                            RelativeLayout.LayoutParams.MATCH_PARENT));
+
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeTipViewIfDisplayed();
+                }
+            });
+
+            TextView okGotIt = (TextView) v.findViewById(R.id.okgotit_button);
+            okGotIt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeTipViewIfDisplayed();
+                    SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+                    Editor editor = settings.edit();
+                    editor.putBoolean(settingKey, true);
+                    editor.commit();
+                }
+            });
+        }
+    }
+
+    /**
+     * Remove the current tip view if there is one displayed.
+     */
+    public void removeTipViewIfDisplayed() {
+        if (mRootContainer.getChildCount() > 1)
+            mRootContainer.removeViewAt(1);
+    }
 }

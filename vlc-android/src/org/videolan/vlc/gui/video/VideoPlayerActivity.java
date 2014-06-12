@@ -254,8 +254,11 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             Log.d(TAG, "MediaRouter information : " + mMediaRouter  .toString());
         }
 
-
         mSettings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        /* Services and miscellaneous */
+        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        mAudioMax = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
         mEnableCloneMode = mSettings.getBoolean("enable_clone_mode", false);
         createPresentation();
@@ -349,17 +352,12 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mLoadingText = (TextView) findViewById(R.id.player_overlay_loading_text);
         startLoadingAnimation();
 
-        /* Services and miscellaneous */
-        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        mAudioMax = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-
         mSwitchingView = false;
         mEndReached = false;
 
         // Clear the resume time, since it is only used for resumes in external
         // videos.
-        SharedPreferences preferences = getSharedPreferences(PreferencesActivity.NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
+        SharedPreferences.Editor editor = mSettings.edit();
         editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
         // Also clear the subs list, because it is supposed to be per session
         // only (like desktop VLC). We don't want the customs subtitle file
@@ -454,8 +452,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         mSurface.setKeepScreenOn(false);
 
-        SharedPreferences preferences = getSharedPreferences(PreferencesActivity.NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
+        SharedPreferences.Editor editor = mSettings.edit();
         // Save position
         if (time >= 0 && mCanSeek) {
             if(MediaDatabase.getInstance(this).mediaItemExists(mLocation)) {
@@ -494,6 +491,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             Log.i(TAG, "Dismissing presentation because the activity is no longer visible.");
             mPresentation.dismiss();
             mPresentation = null;
+            mAudioManager.setParameters("bgm_state=false");
         }
     }
 
@@ -1627,14 +1625,13 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         if (mShowing) {
             mHandler.removeMessages(SHOW_PROGRESS);
             Log.i(TAG, "remove View!");
-            mOverlayTips.setVisibility(View.INVISIBLE);
+            if (mOverlayTips != null) mOverlayTips.setVisibility(View.INVISIBLE);
             if (!fromUser && !mIsLocked) {
                 mOverlayHeader.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mOverlayOption.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mOverlayProgress.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mPlayPause.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mMenu.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
-                //mOverlayTips.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
             }
             if (mPresentation != null) {
                 mOverlayBackground.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
@@ -1907,7 +1904,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         if (mLocation != null && mLocation.length() > 0 && !dontParse) {
             // restore last position
-            SharedPreferences preferences = getSharedPreferences(PreferencesActivity.NAME, MODE_PRIVATE);
             Media media = MediaDatabase.getInstance(this).getMedia(mLocation);
             if(media != null) {
                 // in media library
@@ -1918,8 +1914,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 mLastSpuTrack = media.getSpuTrack();
             } else {
                 // not in media library
-                long rTime = preferences.getLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
-                SharedPreferences.Editor editor = preferences.edit();
+                long rTime = mSettings.getLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
+                Editor editor = mSettings.edit();
                 editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
                 editor.commit();
                 if(rTime > 0)
@@ -1930,7 +1926,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             }
 
             // Get possible subtitles
-            String subtitleList_serialized = preferences.getString(PreferencesActivity.VIDEO_SUBTITLE_FILES, null);
+            String subtitleList_serialized = mSettings.getString(PreferencesActivity.VIDEO_SUBTITLE_FILES, null);
             ArrayList<String> prefsList = new ArrayList<String>();
             if(subtitleList_serialized != null) {
                 ByteArrayInputStream bis = new ByteArrayInputStream(subtitleList_serialized.getBytes());
@@ -2058,6 +2054,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mPresentation.setOnDismissListener(mOnDismissListener);
             try {
                 mPresentation.show();
+                mAudioManager.setParameters("bgm_state=true");
             } catch (WindowManager.InvalidDisplayException ex) {
                 Log.w(TAG, "Couldn't show presentation!  Display was removed in "
                         + "the meantime.", ex);
@@ -2079,6 +2076,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         finish(); //TODO restore the video on the new display instead of closing
         if (mPresentation != null) mPresentation.dismiss();
         mPresentation = null;
+        mAudioManager.setParameters("bgm_state=false");
     }
 
     /**
@@ -2095,7 +2093,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     };
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private final static class SecondaryDisplay extends Presentation {
+    private final class SecondaryDisplay extends Presentation {
         public final static String TAG = "VLC/SecondaryDisplay";
 
         private Context mContext;
@@ -2126,12 +2124,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.player_remote);
 
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
-
             mSurface = (SurfaceView) findViewById(R.id.remote_player_surface);
             mSurfaceHolder = mSurface.getHolder();
             mSurfaceFrame = (FrameLayout) findViewById(R.id.remote_player_surface_frame);
-            String chroma = pref.getString("chroma_format", "");
+            String chroma = mSettings.getString("chroma_format", "");
             if(LibVlcUtil.isGingerbreadOrLater() && chroma.equals("YV12")) {
                 mSurfaceHolder.setFormat(ImageFormat.YV12);
             } else if (chroma.equals("RV16")) {

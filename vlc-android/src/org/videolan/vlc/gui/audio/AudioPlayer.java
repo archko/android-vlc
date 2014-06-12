@@ -1,7 +1,7 @@
 /*****************************************************************************
- * AudioMiniPlayer.java
+ * AudioPlayer.java
  *****************************************************************************
- * Copyright © 2011-2012 VLC authors and VideoLAN
+ * Copyright © 2011-2014 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -50,6 +52,7 @@ import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -65,7 +68,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class AudioPlayer extends Fragment implements IAudioPlayer {
-    public static final String TAG = "VLC/AudioMiniPlayer";
+    public static final String TAG = "VLC/AudioPlayer";
 
     private ProgressBar mProgressBar;
     private HeaderMediaSwitcher mHeaderMediaSwitcher;
@@ -88,6 +91,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
     private AudioServiceController mAudioController;
     private boolean mShowRemainingTime = false;
+    private boolean mPreviewingSeek = false;
 
     private AudioPlaylistAdapter mSongsListAdapter;
 
@@ -96,6 +100,10 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     private boolean mHeaderPlayPauseVisible;
     private boolean mProgressBarVisible;
     private boolean mHeaderTimeVisible;
+
+    // Tips
+    private static final String PREF_PLAYLIST_TIPS_SHOWN = "playlist_tips_shown";
+    private static final String PREF_AUDIOPLAYER_TIPS_SHOWN = "audioplayer_tips_shown";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -176,18 +184,18 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
                 return true;
             }
         });
-        mNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onNextClick(v);
-            }
-        });
-        mPrevious.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onPreviousClick(v);
-            }
-        });
+        boolean blackTheme = PreferenceManager.getDefaultSharedPreferences(
+                getActivity()).getBoolean("enable_black_theme", false);
+        mNext.setOnTouchListener(new LongSeekListener(true,
+                blackTheme ? R.drawable.ic_next_normal_w
+                        : R.drawable.ic_next_normal,
+                blackTheme ? R.drawable.ic_next_pressed_w
+                        : R.drawable.ic_next_pressed));
+        mPrevious.setOnTouchListener(new LongSeekListener(false,
+                blackTheme ? R.drawable.ic_previous_normal_w
+                        : R.drawable.ic_previous_normal,
+                blackTheme ? R.drawable.ic_previous_pressed_w
+                        : R.drawable.ic_previous_pressed));
         mShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -362,13 +370,17 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     public synchronized void updateProgress() {
         int time = mAudioController.getTime();
         int length = mAudioController.getLength();
-        mTime.setText(Util.millisToString(mShowRemainingTime ? time-length : time));
+
         mHeaderTime.setText(Util.millisToString(time));
         mLength.setText(Util.millisToString(length));
         mTimeline.setMax(length);
-        mTimeline.setProgress(time);
         mProgressBar.setMax(length);
-        mProgressBar.setProgress(time);
+
+        if(!mPreviewingSeek) {
+            mTime.setText(Util.millisToString(mShowRemainingTime ? time-length : time));
+            mTimeline.setProgress(time);
+            mProgressBar.setProgress(time);
+        }
     }
 
     private void updateList() {
@@ -472,24 +484,14 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
     public void show() {
         Activity activity = getActivity();
-        if (activity instanceof MainActivity) {
-            MainActivity mainActivity=(MainActivity) activity;
-            mainActivity.showAudioPlayer();
-        } else if (activity instanceof VLCDrawerActivity) {
-            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-            drawerActivity.showAudioPlayer();
-        }
+        VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+        drawerActivity.showAudioPlayer();
     }
 
     public void hide() {
         Activity activity = getActivity();
-        if (activity instanceof MainActivity) {
-            MainActivity mainActivity=(MainActivity) activity;
-            mainActivity.hideAudioPlayer();
-        } else if (activity instanceof VLCDrawerActivity) {
-            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-            drawerActivity.hideAudioPlayer();
-        }
+        VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+        drawerActivity.hideAudioPlayer();
     }
 
     /**
@@ -550,13 +552,8 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         @Override
         public void onTouchClick() {
             Activity activity = getActivity();
-            if (activity instanceof MainActivity) {
-                MainActivity mainActivity=(MainActivity) activity;
-                mainActivity.slideUpOrDownAudioPlayer();
-            } else if (activity instanceof VLCDrawerActivity) {
-                VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-                drawerActivity.slideUpOrDownAudioPlayer();
-            }
+            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
+            drawerActivity.slideUpOrDownAudioPlayer();
         }
     };
 
@@ -583,4 +580,94 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         public void onTouchClick() {}
     };
 
+    class LongSeekListener implements View.OnTouchListener {
+        boolean forward;
+        int normal, pressed;
+
+        public LongSeekListener(boolean forwards, int normalRes, int pressedRes) {
+            this.forward = forwards;
+            this.normal = normalRes;
+            this.pressed = pressedRes;
+        }
+
+        int possibleSeek;
+        boolean vibrated;
+        Runnable seekRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if(!vibrated) {
+                    ((android.os.Vibrator) AudioPlayer.this.getActivity()
+                            .getSystemService(Context.VIBRATOR_SERVICE))
+                            .vibrate(80);
+                    ;
+                    vibrated = true;
+                }
+
+                if(forward)
+                    possibleSeek += 4000;
+                else {
+                    if(possibleSeek > 4000)
+                        possibleSeek -= 4000;
+                    else if(possibleSeek <= 4000)
+                        possibleSeek = 0;
+                }
+
+                mTime.setText(Util.millisToString(mShowRemainingTime ? possibleSeek-mAudioController.getLength() : possibleSeek));
+                mTimeline.setProgress(possibleSeek);
+                mProgressBar.setProgress(possibleSeek);
+                h.postDelayed(seekRunnable, 50);
+            }
+        };
+        Handler h = new Handler();
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            switch(event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                (forward ? mNext : mPrevious).setImageResource(this.pressed);
+
+                possibleSeek = mAudioController.getTime();
+                mPreviewingSeek = true;
+                vibrated = false;
+
+                h.postDelayed(seekRunnable, 1000);
+                return true;
+
+            case MotionEvent.ACTION_UP:
+                (forward ? mNext : mPrevious).setImageResource(this.normal);
+                h.removeCallbacks(seekRunnable);
+                mPreviewingSeek = false;
+
+                if(event.getEventTime()-event.getDownTime() < 1000) {
+                    if(forward)
+                        onNextClick(v);
+                    else
+                        onPreviousClick(v);
+                } else {
+                    if(forward) {
+                        if(possibleSeek < mAudioController.getLength())
+                            mAudioController.setTime(possibleSeek);
+                        else
+                            onNextClick(v);
+                    } else {
+                        if(possibleSeek > 0)
+                            mAudioController.setTime(possibleSeek);
+                        else
+                            onPreviousClick(v);
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public void showPlaylistTips() {
+        VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+        activity.showTipViewIfNeeded(R.layout.audio_playlist_tips, PREF_PLAYLIST_TIPS_SHOWN);
+    }
+
+    public void showAudioPlayerTips() {
+        VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+        activity.showTipViewIfNeeded(R.layout.audio_player_tips, PREF_AUDIOPLAYER_TIPS_SHOWN);
+    }
 }

@@ -10,7 +10,7 @@
 
     <style name="Theme.VLC" parent="Theme.VLC.Apearance">
         <item name="actionBarStyle">@style/ActionBar</item>
-        <item name="actionBarSize">50dp</item>
+        <!--<item name="actionBarSize">50dp</item>-->
         <item name="windowActionBarOverlay">true</item>
         <item name="actionOverflowButtonStyle">@style/ActionBar.OverflowButton</item>
     </style>

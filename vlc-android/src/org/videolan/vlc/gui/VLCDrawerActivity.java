@@ -20,6 +20,30 @@
 
 package org.videolan.vlc.gui;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import org.videolan.libvlc.LibVlcException;
+import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.vlc.AudioService;
+import org.videolan.vlc.AudioServiceController;
+import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.R;
+import org.videolan.vlc.Util;
+import org.videolan.vlc.VLCCallbackTask;
+import org.videolan.vlc.WeakHandler;
+import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
+import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
+import org.videolan.vlc.gui.audio.AudioPlayer;
+import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.video.MediaInfoFragment;
+import org.videolan.vlc.gui.video.VideoGridFragment;
+import org.videolan.vlc.gui.video.VideoListAdapter;
+import org.videolan.vlc.interfaces.ISortable;
+import org.videolan.vlc.widget.SlidingPaneLayout;
+
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -59,36 +83,15 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
-import org.videolan.libvlc.LibVlcException;
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.vlc.AudioService;
-import org.videolan.vlc.AudioServiceController;
-import org.videolan.vlc.MediaDatabase;
-import org.videolan.vlc.MediaLibrary;
-import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
-import org.videolan.vlc.VLCCallbackTask;
-import org.videolan.vlc.WeakHandler;
-import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
-import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
-import org.videolan.vlc.gui.audio.AudioPlayer;
-import org.videolan.vlc.gui.audio.EqualizerFragment;
-import org.videolan.vlc.gui.video.MediaInfoFragment;
-import org.videolan.vlc.gui.video.VideoGridFragment;
-import org.videolan.vlc.gui.video.VideoListAdapter;
-import org.videolan.vlc.interfaces.ISortable;
-import org.videolan.vlc.widget.SlidingPaneLayout;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 public class VLCDrawerActivity extends SherlockFragmentActivity {
     public final static String TAG = "VLC/MainActivity";
@@ -111,6 +114,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
     private AudioPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
     private SlidingPaneLayout mSlidingPane;
+    private RelativeLayout mRootContainer;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -209,6 +213,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         mInfoProgress = (ProgressBar) findViewById(R.id.info_progress);
         mInfoText = (TextView) findViewById(R.id.info_text);
         mAudioPlayerFilling = findViewById(R.id.audio_player_filling);
+        mRootContainer = (RelativeLayout) findViewById(R.id.root_container);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -396,7 +401,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         /* Stop scanning for files */
         MediaLibrary.getInstance(this).stop();
         /* Save the tab status in pref */
-        Editor editor = getSharedPreferences("MainActivity", MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor = getSharedPreferences("MainActivity", MODE_PRIVATE).edit();
         editor.putString("fragment", mCurrentFragment);
         editor.commit();
 
@@ -432,19 +437,21 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         if (slideDownAudioPlayer())
             return;
 
-        // If it's the directory view, a "backpressed" action shows a parent.
-        if (mCurrentFragment.equals("directories")) {
-            DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
-            if (!directoryView.isRootDirectory()) {
-                directoryView.showParentDirectory();
+        if (mCurrentFragment!= null) {
+            // If it's the directory view, a "backpressed" action shows a parent.
+            if (mCurrentFragment.equals("directories")) {
+                DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
+                if (!directoryView.isRootDirectory()) {
+                    directoryView.showParentDirectory();
+                    return;
+                }
+            }
+
+            // If it's the albums songs fragment, we leave it.
+            if (secondaryFragments.contains(mCurrentFragment)) {
+                popSecondaryFragment();
                 return;
             }
-        }
-
-        // If it's the albums songs fragment, we leave it.
-        if (secondaryFragments.contains(mCurrentFragment)) {
-            popSecondaryFragment();
-            return;
         }
 
         super.onBackPressed();
@@ -519,12 +526,14 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         // Slide down the audio player if needed.
         slideDownAudioPlayer();
 
-        // Do not show the new fragment if the requested fragment is already shown.
-        if (mCurrentFragment.equals(fragmentTag))
-            return null;
+        if (mCurrentFragment != null) {
+            // Do not show the new fragment if the requested fragment is already shown.
+            if (mCurrentFragment.equals(fragmentTag))
+                return null;
 
-        if (!secondaryFragments.contains(mCurrentFragment))
-            mPreviousFragment = mCurrentFragment;
+            if (!secondaryFragments.contains(mCurrentFragment))
+                mPreviousFragment = mCurrentFragment;
+        }
 
         mCurrentFragment = fragmentTag;
         Fragment frag = fetchSecondaryFragment(mCurrentFragment);
@@ -566,7 +575,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
             menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
         // Enable the clear search history function for the search fragment.
-        if (mCurrentFragment.equals("search"))
+        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             menu.findItem(R.id.search_clear_history).setVisible(true);
         return true;
     }
@@ -579,7 +588,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
 
     @Override
     public boolean onSearchRequested() {
-        if (mCurrentFragment.equals("search"))
+        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             ((SearchFragment)fetchSecondaryFragment("search")).onSearchKeyPressed();
         showSecondaryFragment("search");
         return true;
@@ -621,11 +630,11 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
             // Refresh
             case R.id.ml_menu_refresh:
                 // TODO: factor this into each fragment
-                if(mCurrentFragment.equals("directories")) {
+                if(mCurrentFragment != null && mCurrentFragment.equals("directories")) {
                     DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
                     directoryView.refresh();
                 }
-                else if(mCurrentFragment.equals("history"))
+                else if(mCurrentFragment != null && mCurrentFragment.equals("history"))
                     ((HistoryFragment) getFragment(mCurrentFragment)).refresh();
                 else
                     MediaLibrary.getInstance(this).loadMediaItems(this, true);
@@ -901,6 +910,8 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
                     mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
                 //mMenu.setSlidingEnabled(true);
+                removeTipViewIfDisplayed();
+                mAudioPlayer.showAudioPlayerTips();
             }
 
             @Override
@@ -913,7 +924,50 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
                 //mMenu.setSlidingEnabled(false);
+                mAudioPlayer.showPlaylistTips();
             }
 
     };
+
+    /**
+     * Show a tip view.
+     * @param layoutId the layout of the tip view
+     * @param settingKey the setting key to check if the view must be displayed or not.
+     */
+    public void showTipViewIfNeeded(final int layoutId, final String settingKey) {
+        if (!mSettings.getBoolean(settingKey, false)) {
+            removeTipViewIfDisplayed();
+            View v = LayoutInflater.from(this).inflate(layoutId, null);
+            mRootContainer.addView(v,
+                    new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+                            RelativeLayout.LayoutParams.MATCH_PARENT));
+
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeTipViewIfDisplayed();
+                }
+            });
+
+            TextView okGotIt = (TextView) v.findViewById(R.id.okgotit_button);
+            okGotIt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeTipViewIfDisplayed();
+                    SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(VLCDrawerActivity.this);
+                    Editor editor = settings.edit();
+                    editor.putBoolean(settingKey, true);
+                    editor.commit();
+                }
+            });
+        }
+    }
+
+    /**
+     * Remove the current tip view if there is one displayed.
+     */
+    public void removeTipViewIfDisplayed() {
+        if (mRootContainer.getChildCount() > 1)
+            mRootContainer.removeViewAt(1);
+    }
 }

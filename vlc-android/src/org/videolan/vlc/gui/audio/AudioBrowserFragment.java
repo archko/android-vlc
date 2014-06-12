@@ -393,32 +393,42 @@ public class AudioBrowserFragment extends SherlockFragment {
             Media media = audioList.get(i);
             mSongsAdapter.add(media.getTitle(), media.getArtist(), media);
         }
+        mSongsAdapter.addScrollSections();
 
         Collections.sort(audioList, MediaComparators.byArtist);
         for (int i = 0; i < audioList.size(); i++) {
             Media media = audioList.get(i);
             mArtistsAdapter.add(media.getArtist(), null, media);
         }
-        mArtistsAdapter.addLeterSeparators();
+        mArtistsAdapter.addLetterSeparators();
 
         Collections.sort(audioList, MediaComparators.byAlbum);
         for (int i = 0; i < audioList.size(); i++) {
             Media media = audioList.get(i);
             mAlbumsAdapter.add(media.getAlbum(), media.getArtist(), media);
         }
-        mAlbumsAdapter.addLeterSeparators();
+        mAlbumsAdapter.addLetterSeparators();
 
         Collections.sort(audioList, MediaComparators.byGenre);
         for (int i = 0; i < audioList.size(); i++) {
             Media media = audioList.get(i);
             mGenresAdapter.add(media.getGenre(), null, media);
         }
-        mGenresAdapter.addLeterSeparators();
+        mGenresAdapter.addLetterSeparators();
 
         mSongsAdapter.notifyDataSetChanged();
         mArtistsAdapter.notifyDataSetChanged();
         mAlbumsAdapter.notifyDataSetChanged();
         mGenresAdapter.notifyDataSetChanged();
+        // Refresh the fast scroll data, since SectionIndexer doesn't respect notifyDataSetChanged
+        int[] lists = { R.id.songs_list, R.id.artists_list, R.id.albums_list, R.id.genres_list };
+        if(getView() != null) {
+            for(int r : lists) {
+                ListView l = (ListView)getView().findViewById(r);
+                l.setFastScrollEnabled(false);
+                l.setFastScrollEnabled(true);
+            }
+        }
     }
 
     AudioBrowserListAdapter.ContextPopupMenuListener mContextPopupMenuListener
