@@ -28,10 +28,9 @@ import android.content.Intent;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.R;
-import org.videolan.vlc.RepeatType;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.audio.RepeatType;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
@@ -39,6 +38,7 @@ import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
 import org.videolan.vlc.interfaces.IAudioPlayer;
+import org.videolan.vlc.util.Util;
 import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 
 import android.media.AudioManager;
@@ -242,7 +242,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         });
         mSongsList.setOnItemDraggedListener(new AudioPlaylistView.OnItemDraggedListener() {
             @Override
-            public void OnItemDradded(int positionStart, int positionEnd) {
+            public void onItemDragged(int positionStart, int positionEnd) {
                 mAudioController.moveItem(positionStart, positionEnd);
             }
         });

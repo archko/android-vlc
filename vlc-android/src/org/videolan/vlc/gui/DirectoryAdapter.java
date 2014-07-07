@@ -34,7 +34,7 @@ import android.preference.PreferenceManager;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.util.Util;
 import org.videolan.vlc.VLCApplication;
 
 import android.content.Context;
@@ -183,6 +183,30 @@ public class DirectoryAdapter extends BaseAdapter {
                 return -1;
             else
                 return String.CASE_INSENSITIVE_ORDER.compare(this.name, arg0.name);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this==o) return true;
+            if (o==null||getClass()!=o.getClass()) return false;
+
+            Node node=(Node) o;
+
+            if (isFile!=null ? !isFile.equals(node.isFile) : node.isFile!=null) return false;
+            if (name!=null ? !name.equals(node.name) : node.name!=null) return false;
+            if (parent!=null ? !parent.equals(node.parent) : node.parent!=null) return false;
+            if (visibleName!=null ? !visibleName.equals(node.visibleName) : node.visibleName!=null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result=parent!=null ? parent.hashCode() : 0;
+            result=31*result+(name!=null ? name.hashCode() : 0);
+            result=31*result+(visibleName!=null ? visibleName.hashCode() : 0);
+            result=31*result+(isFile!=null ? isFile.hashCode() : 0);
+            return result;
         }
     }
 

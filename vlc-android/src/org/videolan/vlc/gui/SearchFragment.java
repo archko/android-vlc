@@ -20,21 +20,20 @@
 
 package org.videolan.vlc.gui;
 
-import java.lang.Override;
 import java.util.ArrayList;
 import java.util.Locale;
 
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
+import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
-
-import com.actionbarsherlock.app.SherlockListFragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.ListFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -48,7 +47,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-public class SearchFragment extends SherlockListFragment {
+public class SearchFragment extends ListFragment {
 
     public final static String TAG = "VLC/SearchActivity";
 
@@ -59,7 +58,7 @@ public class SearchFragment extends SherlockListFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        getSherlockActivity().getSupportActionBar().setTitle(R.string.search);
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(R.string.search);
 
         View v = inflater.inflate(R.layout.search, container, false);
 
@@ -105,7 +104,7 @@ public class SearchFragment extends SherlockListFragment {
         // set result adapter to the list
         mResultAdapter.clear();
         String[] keys = key.toString().split("\\s+");
-        ArrayList<Media> allItems = MediaLibrary.getInstance(getActivity()).getMediaItems();
+        ArrayList<Media> allItems = MediaLibrary.getInstance().getMediaItems();
         int results = 0;
         for (int i = 0; i < allItems.size(); i++) {
             Media item = allItems.get(i);
@@ -156,7 +155,7 @@ public class SearchFragment extends SherlockListFragment {
         String headerText = getString(R.string.search_history);
         showListHeader(headerText);
 
-        MediaDatabase db = MediaDatabase.getInstance(getActivity());
+        MediaDatabase db = MediaDatabase.getInstance();
         mHistoryAdapter.clear();
         ArrayList<String> history = db.getSearchhistory(20);
         for (String s : history)
@@ -206,7 +205,7 @@ public class SearchFragment extends SherlockListFragment {
             mSearchText.requestFocus();
         } else if (getListAdapter() == mResultAdapter) {
             // add search text to the database (history)
-            MediaDatabase db = MediaDatabase.getInstance(getActivity());
+            MediaDatabase db = MediaDatabase.getInstance();
             db.addSearchhistoryItem(mSearchText.getText().toString());
 
             // open media in the player

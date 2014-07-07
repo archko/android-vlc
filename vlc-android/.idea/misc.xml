@@ -8,9 +8,6 @@
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
   </component>
-  <component name="ProjectDictionaryState">
-    <dictionary name="archko" />
-  </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
       <profile-state>
@@ -35,6 +32,5 @@
     <option name="COMPILER_LIBRARY_LEVEL" value="Global" />
     <option name="VM_PARAMETERS" value="-Xms768m -Xss2m -server" />
   </component>
-  <component name="SpellCheckerSettings" BundledDictionaries="2" BundledDictionary0="jetbrains.dic" BundledDictionary1="english.dic" Folders="0" Dictionaries="0" />
 </project>
 

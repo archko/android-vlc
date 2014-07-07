@@ -57,7 +57,7 @@ public class LibVLC {
     private StringBuffer mDebugLogBuffer;
     private boolean mIsBufferingLog = false;
 
-    private Aout mAout;
+    private AudioOutput mAout;
 
     /** Keep screen bright */
     //private WakeLock mWakeLock;
@@ -74,6 +74,9 @@ public class LibVLC {
     private float[] equalizer = null;
     private boolean frameSkip = false;
     private int networkCaching = 0;
+
+    /** Path of application-specific cache */
+    private String mCachePath = "";
 
     /** Native crash handler */
     private OnNativeCrashListener mOnNativeCrashListener;
@@ -149,7 +152,7 @@ public class LibVLC {
      * It is private because this class is a singleton.
      */
     private LibVLC() {
-        mAout = new Aout();
+        mAout = new AudioOutput();
     }
 
     /**
@@ -374,6 +377,8 @@ public class LibVLC {
                 Log.e(TAG, LibVlcUtil.getErrorMsg());
                 throw new LibVlcException();
             }
+
+            mCachePath = context.getCacheDir().getAbsolutePath();
             nativeInit();
             mMediaList = mPrimaryList = new MediaList(this);
             setEventHandler(EventHandler.getInstance());
@@ -701,4 +706,14 @@ public class LibVLC {
         if (mOnNativeCrashListener != null)
             mOnNativeCrashListener.onNativeCrash();
     }
+
+    public String getCachePath() {
+        return mCachePath;
+    }
+
+    public native int getTitle();
+    public native void setTitle(int title);
+    public native int getChapterCountForTitle(int title);
+    public native int getTitleCount();
+
 }

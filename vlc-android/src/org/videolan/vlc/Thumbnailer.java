@@ -35,6 +35,7 @@ import org.videolan.libvlc.Media;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.video.VideoGridFragment;
+import org.videolan.vlc.util.Util;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -136,8 +137,8 @@ public class Thumbnailer implements Runnable {
             boolean interrupted = false;
             while (mItems.size() == 0) {
                 try {
-                    VLCDrawerActivity.hideProgressBar(mContext);
-                    VLCDrawerActivity.clearTextInfo(mContext);
+                    VLCDrawerActivity.hideProgressBar();
+                    VLCDrawerActivity.clearTextInfo();
                     totalCount = 0;
                     notEmpty.await();
                 } catch (InterruptedException e) {
@@ -154,9 +155,9 @@ public class Thumbnailer implements Runnable {
             Media item = mItems.poll();
             lock.unlock();
 
-            VLCDrawerActivity.showProgressBar(mContext);
+            VLCDrawerActivity.showProgressBar();
 
-            VLCDrawerActivity.sendTextInfo(mContext, String.format("%s %s", mPrefix, item.getFileName()), count, total);
+            VLCDrawerActivity.sendTextInfo(String.format("%s %s", mPrefix, item.getFileName()), count, total);
             count++;
 
             int width = (int) (120 * mDensity);
@@ -193,8 +194,8 @@ public class Thumbnailer implements Runnable {
             }
         }
         /* cleanup */
-        VLCDrawerActivity.hideProgressBar(mContext);
-        VLCDrawerActivity.clearTextInfo(mContext);
+        VLCDrawerActivity.hideProgressBar();
+        VLCDrawerActivity.clearTextInfo();
         mVideoGridFragment = null;
         Log.d(TAG, "Thumbnailer stopped");
     }

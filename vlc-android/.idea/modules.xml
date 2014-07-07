@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../java-libs/ActionBarSherlock/ActionBarSherlock.iml" filepath="$PROJECT_DIR$/../java-libs/ActionBarSherlock/ActionBarSherlock.iml" />
       <module fileurl="file://$PROJECT_DIR$/../java-libs/SlidingMenu/SlidingMenu.iml" filepath="$PROJECT_DIR$/../java-libs/SlidingMenu/SlidingMenu.iml" />
       <module fileurl="file://$PROJECT_DIR$/VLC.iml" filepath="$PROJECT_DIR$/VLC.iml" />
       <module fileurl="file://$PROJECT_DIR$/../java-libs/WheelView/WheelView.iml" filepath="$PROJECT_DIR$/../java-libs/WheelView/WheelView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../java-libs/appcompat/appcompat.iml" filepath="$PROJECT_DIR$/../java-libs/appcompat/appcompat.iml" />
     </modules>
   </component>
 </project>

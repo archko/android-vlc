@@ -39,7 +39,7 @@ public class Media implements Comparable<Media> {
 
     static {
         String[] video_extensions = {
-                ".3g2", ".3gp", ".3gp2", ".3gpp", ".amv", ".asf", ".avi", ".divx", "drc", ".dv",
+                ".3g2", ".3gp", ".3gp2", ".3gpp", ".amv", ".asf", ".avi", ".divx", ".drc", ".dv",
                 ".f4v", ".flv", ".gvi", ".gxf", ".ismv", ".iso", ".m1v", ".m2v", ".m2t", ".m2ts",
                 ".m4v", ".mkv", ".mov", ".mp2", ".mp2v", ".mp4", ".mp4v", ".mpe", ".mpeg",
                 ".mpeg1", ".mpeg2", ".mpeg4", ".mpg", ".mpv2", ".mts", ".mtv", ".mxf", ".mxg",
@@ -207,7 +207,7 @@ public class Media implements Comparable<Media> {
      * hard-coded dependency gracefully for 3rd party libvlc apps while still
      * maintaining good l10n in VLC for Android.
      *
-     * @see org.videolan.vlc.Util#getValue(String, int)
+     * @see org.videolan.vlc.util.Util#getValue(String, int)
      *
      * @param string The default string
      * @param type Alias for R.string.xxx
@@ -326,7 +326,7 @@ public class Media implements Comparable<Media> {
      * Returns the raw picture object. Likely to be NULL in VLC for Android
      * due to lazy-loading.
      *
-     * Use {@link org.videolan.vlc.Util#getPictureFromCache(Media)} instead.
+     * Use {@link org.videolan.vlc.util.Util#getPictureFromCache(Media)} instead.
      *
      * @return The raw picture or NULL
      */
@@ -337,7 +337,7 @@ public class Media implements Comparable<Media> {
     /**
      * Sets the raw picture object.
      *
-     * In VLC for Android, use {@link org.videolan.vlc.Util#setPicture(Context, Media, Bitmap)} instead.
+     * In VLC for Android, use {@link org.videolan.vlc.util.Util#setPicture(Context, Media, Bitmap)} instead.
      *
      * @param p
      */

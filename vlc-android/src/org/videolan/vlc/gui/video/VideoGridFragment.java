@@ -28,19 +28,19 @@ import java.util.concurrent.CyclicBarrier;
 import org.videolan.android.ui.SherlockGridFragment;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaGroup;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Thumbnailer;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.VlcRunnable;
-import org.videolan.vlc.WeakHandler;
+import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
-import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.interfaces.ISortable;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.WeakHandler;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -55,6 +55,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -117,7 +118,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         mAudioController = AudioServiceController.getInstance();
 
         mVideoAdapter = new VideoListAdapter(getActivity(), this);
-        mMediaLibrary = MediaLibrary.getInstance(getActivity());
+        mMediaLibrary = MediaLibrary.getInstance();
         setListAdapter(mVideoAdapter);
 
         /* Load the thumbnailer */
@@ -129,7 +130,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        getSherlockActivity().getSupportActionBar().setTitle(R.string.video);
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(R.string.video);
 
         View v = inflater.inflate(R.layout.video_grid, container, false);
 
@@ -153,7 +154,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         getActivity().registerReceiver(messageReceiverVideoListFragment, filter);
         Log.i(TAG,"mMediaLibrary.isWorking() " + Boolean.toString(mMediaLibrary.isWorking()));
         if (mMediaLibrary.isWorking()) {
-            actionScanStart(getActivity().getApplicationContext());
+            actionScanStart();
         }
 
         mAnimator = new VideoGridAnimator(getGridView());
@@ -174,7 +175,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     public void onResume() {
         super.onResume();
         //Get & set times
-        HashMap<String, Long> times = MediaDatabase.getInstance(getActivity()).getVideoTimes(getActivity());
+        HashMap<String, Long> times = MediaDatabase.getInstance().getVideoTimes(getActivity());
         mVideoAdapter.setTimes(times);
         mVideoAdapter.notifyDataSetChanged();
         updateList();
@@ -479,19 +480,15 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         }
     };
 
-    public static void actionScanStart(Context context) {
-        if (context == null)
-            return;
+    public static void actionScanStart() {
         Intent intent = new Intent();
         intent.setAction(ACTION_SCAN_START);
-        context.getApplicationContext().sendBroadcast(intent);
+        VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
-    public static void actionScanStop(Context context) {
-        if (context == null)
-            return;
+    public static void actionScanStop() {
         Intent intent = new Intent();
         intent.setAction(ACTION_SCAN_STOP);
-        context.getApplicationContext().sendBroadcast(intent);
+        VLCApplication.getAppContext().sendBroadcast(intent);
     }
 }

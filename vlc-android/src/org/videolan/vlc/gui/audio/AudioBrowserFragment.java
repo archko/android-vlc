@@ -26,12 +26,12 @@ import java.util.List;
 
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.VlcRunnable;
-import org.videolan.vlc.WeakHandler;
+import org.videolan.vlc.util.WeakHandler;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.VLCDrawerActivity;
@@ -45,6 +45,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -64,9 +66,7 @@ import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
-import com.actionbarsherlock.app.SherlockFragment;
-
-public class AudioBrowserFragment extends SherlockFragment {
+public class AudioBrowserFragment extends Fragment {
     public final static String TAG = "VLC/AudioBrowserFragment";
 
     private FlingViewGroup mFlingViewGroup;
@@ -98,7 +98,7 @@ public class AudioBrowserFragment extends SherlockFragment {
 
         mAudioController = AudioServiceController.getInstance();
 
-        mMediaLibrary = MediaLibrary.getInstance(getActivity());
+        mMediaLibrary = MediaLibrary.getInstance();
 
         mSongsAdapter = new AudioBrowserListAdapter(getActivity(), AudioBrowserListAdapter.ITEM_WITH_COVER);
         mArtistsAdapter = new AudioBrowserListAdapter(getActivity(), AudioBrowserListAdapter.ITEM_WITH_COVER);
@@ -114,7 +114,7 @@ public class AudioBrowserFragment extends SherlockFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        getSherlockActivity().getSupportActionBar().setTitle(R.string.audio);
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(R.string.audio);
 
         View v = inflater.inflate(R.layout.audio_browser, container, false);
 
@@ -376,7 +376,7 @@ public class AudioBrowserFragment extends SherlockFragment {
     };
 
     private void updateLists() {
-        List<Media> audioList = MediaLibrary.getInstance(getActivity()).getAudioItems();
+        List<Media> audioList = MediaLibrary.getInstance().getAudioItems();
 
         if (audioList.isEmpty())
             mEmptyView.setVisibility(View.VISIBLE);

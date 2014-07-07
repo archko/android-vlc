@@ -73,6 +73,11 @@ public class LibVlcUtil {
         return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
     }
 
+    public static boolean isKitKatOrLater()
+    {
+        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT;
+    }
+
     private static String errorMsg = null;
     private static boolean isCompatible = false;
     public static String getErrorMsg() {
@@ -115,7 +120,8 @@ public class LibVlcUtil {
         float bogoMIPS = -1;
         int processors = 0;
 
-        if(CPU_ABI.equals("x86")) {
+        if(CPU_ABI.equals("x86") ||
+           CPU_ABI2.equals("x86")) {
             hasX86 = true;
         } else if(CPU_ABI.equals("armeabi-v7a") ||
                   CPU_ABI2.equals("armeabi-v7a")) {
@@ -140,6 +146,8 @@ public class LibVlcUtil {
                 // "clflush size" is a x86-specific cpuinfo tag.
                 // (see kernel sources arch/x86/kernel/cpu/proc.c)
                 if(line.contains("clflush size"))
+                    hasX86 = true;
+                if(line.contains("GenuineIntel"))
                     hasX86 = true;
                 // "microsecond timers" is specific to MIPS.
                 // see arch/mips/kernel/proc.c

@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.videolan.vlc"
     android:installLocation="auto"
-    android:versionCode="9399"
-    android:versionName="0.9.4-git" >
+    android:versionCode="9799"
+    android:versionName="0.9.8-git" >
 
     <uses-sdk
         android:minSdkVersion="7"
@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_LOGS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -132,6 +133,7 @@
                 <data android:mimeType="application/vnd.dvd*" />
                 <data android:mimeType="application/vnd.dolby*" />
                 <data android:mimeType="application/vnd.rn-realmedia*" />
+                <data android:mimeType="application/x-iso9660-image" />
                 <data android:mimeType="application/x-extension-mp4" />
                 <data android:mimeType="application/x-flac" />
                 <data android:mimeType="application/x-matroska" />
@@ -378,7 +380,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".AudioService" />
+        <service android:name="org.videolan.vlc.audio.AudioService" />
 
         <receiver android:name=".PhoneStateReceiver" >
             <intent-filter>

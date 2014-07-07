@@ -27,8 +27,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.BitmapCache;
 import org.videolan.vlc.R;
+import org.videolan.vlc.util.BitmapCache;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -370,9 +370,9 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
         int index;
         if(mSections.size() == 0)
             index = 0;
-        else if(sectionIndex > mSections.size())
+        else if(sectionIndex >= mSections.size())
             index = mSections.size() - 1;
-        else if(sectionIndex < 0)
+        else if(sectionIndex <= 0)
             index = 0;
         else
             index = sectionIndex;

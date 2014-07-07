@@ -30,7 +30,7 @@ import java.util.Stack;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.util.Util;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -124,7 +124,7 @@ public class BrowserActivity extends ListActivity {
             @Override
             public boolean onMenuItemClick(MenuItem arg0) {
                 // remove any checkmarks of the custom item
-                final MediaDatabase dbManager = MediaDatabase.getInstance(BrowserActivity.this);
+                final MediaDatabase dbManager = MediaDatabase.getInstance();
                 for(File f : dbManager.getMediaDirs()) {
                     if(f.getPath().startsWith(item.getPath()))
                         dbManager.removeDir(f.getPath());

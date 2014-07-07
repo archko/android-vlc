@@ -26,14 +26,13 @@ import java.util.List;
 
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.vlc.AudioService;
-import org.videolan.vlc.AudioServiceController;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
+import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.VLCCallbackTask;
-import org.videolan.vlc.WeakHandler;
+import org.videolan.vlc.audio.AudioService;
+import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
 import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.AudioPlayer;
@@ -42,6 +41,8 @@ import org.videolan.vlc.gui.video.MediaInfoFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.ISortable;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.WeakHandler;
 import org.videolan.vlc.widget.SlidingPaneLayout;
 
 import android.annotation.TargetApi;
@@ -66,14 +67,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -86,14 +93,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
 
-public class VLCDrawerActivity extends SherlockFragmentActivity {
+public class VLCDrawerActivity extends ActionBarActivity {
     public final static String TAG = "VLC/MainActivity";
 
     protected static final String ACTION_SHOW_PROGRESSBAR = "org.videolan.vlc.gui.ShowProgressBar";
@@ -330,7 +331,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
 
         /* Load media items from database and storage */
         if (mScanNeeded)
-            MediaLibrary.getInstance(this).loadMediaItems(this);
+            MediaLibrary.getInstance().loadMediaItems();
     }
 
     @Override
@@ -397,9 +398,9 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         super.onPause();
 
         /* Check for an ongoing scan that needs to be resumed during onResume */
-        mScanNeeded = MediaLibrary.getInstance(this).isWorking();
+        mScanNeeded = MediaLibrary.getInstance().isWorking();
         /* Stop scanning for files */
-        MediaLibrary.getInstance(this).stop();
+        MediaLibrary.getInstance().stop();
         /* Save the tab status in pref */
         SharedPreferences.Editor editor = getSharedPreferences("MainActivity", MODE_PRIVATE).edit();
         editor.putString("fragment", mCurrentFragment);
@@ -558,7 +559,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
          * is called while the view is created. This can happen
          * any time after onCreate.
          */
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.media_library, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -637,7 +638,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
                 else if(mCurrentFragment != null && mCurrentFragment.equals("history"))
                     ((HistoryFragment) getFragment(mCurrentFragment)).refresh();
                 else
-                    MediaLibrary.getInstance(this).loadMediaItems(this, true);
+                    MediaLibrary.getInstance().loadMediaItems(this, true);
                 break;
             // Restore last playlist
             case R.id.ml_menu_last_playlist:
@@ -668,7 +669,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
                     mDrawerLayout.closeDrawer(mDrawer);
                 break;
             case R.id.search_clear_history:
-                MediaDatabase.getInstance(this).clearSearchHistory();
+                MediaDatabase.getInstance().clearSearchHistory();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -679,7 +680,7 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ACTIVITY_RESULT_PREFERENCES) {
             if (resultCode == PreferencesActivity.RESULT_RESCAN)
-                MediaLibrary.getInstance(this).loadMediaItems(this, true);
+                MediaLibrary.getInstance().loadMediaItems(this, true);
             else if (resultCode == PreferencesActivity.RESULT_RESTART) {
                 Intent intent = getIntent();
                 finish();
@@ -781,35 +782,29 @@ public class VLCDrawerActivity extends SherlockFragmentActivity {
         }
     };
 
-    public static void showProgressBar(Context context) {
-        if (context == null)
-            return;
+    public static void showProgressBar() {
         Intent intent = new Intent();
         intent.setAction(ACTION_SHOW_PROGRESSBAR);
-        context.getApplicationContext().sendBroadcast(intent);
+        VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
-    public static void hideProgressBar(Context context) {
-        if (context == null)
-            return;
+    public static void hideProgressBar() {
         Intent intent = new Intent();
         intent.setAction(ACTION_HIDE_PROGRESSBAR);
-        context.getApplicationContext().sendBroadcast(intent);
+        VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
-    public static void sendTextInfo(Context context, String info, int progress, int max) {
-        if (context == null)
-            return;
+    public static void sendTextInfo(String info, int progress, int max) {
         Intent intent = new Intent();
         intent.setAction(ACTION_SHOW_TEXTINFO);
         intent.putExtra("info", info);
         intent.putExtra("progress", progress);
         intent.putExtra("max", max);
-        context.getApplicationContext().sendBroadcast(intent);
+        VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
-    public static void clearTextInfo(Context context) {
-        sendTextInfo(context, null, 0, 100);
+    public static void clearTextInfo() {
+        sendTextInfo(null, 0, 100);
     }
 
     private void onOpenMRL() {

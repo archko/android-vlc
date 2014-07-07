@@ -22,16 +22,17 @@ package org.videolan.vlc.gui;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.vlc.AudioService;
-import org.videolan.vlc.AudioServiceController;
-import org.videolan.vlc.BitmapCache;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
 import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.audio.AudioService;
+import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.audio.AudioUtil;
+import org.videolan.vlc.util.BitmapCache;
+import org.videolan.vlc.util.Util;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -49,6 +50,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.text.format.DateFormat;
+import android.view.Window;
 import android.widget.Toast;
 
 @SuppressWarnings("deprecation")
@@ -146,7 +148,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                MediaDatabase db = MediaDatabase.getInstance(getApplicationContext());
+                                MediaDatabase db = MediaDatabase.getInstance();
                                 db.clearSearchHistory();
                             }
                         })
@@ -162,9 +164,9 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 .setOnPreferenceClickListener(new OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        MediaDatabase.getInstance(getBaseContext()).emptyDatabase();
+                        MediaDatabase.getInstance().emptyDatabase();
                         BitmapCache.getInstance().clear();
-                        AudioUtil.clearCacheFolder();
+                        AudioUtil.clearCacheFolders();
                         Toast.makeText(getBaseContext(), R.string.media_db_cleared, Toast.LENGTH_SHORT).show();
                         return true;
                     }
@@ -299,12 +301,18 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference)
     {
         super.onPreferenceTreeClick(preferenceScreen, preference);
-        if (preference!=null)
-            if (preference instanceof PreferenceScreen)
-                if (((PreferenceScreen)preference).getDialog()!=null)
-                    ((PreferenceScreen)preference).getDialog().getWindow().getDecorView()
-                    .setBackgroundDrawable(this.getWindow().getDecorView().getBackground()
-                            .getConstantState().newDrawable());
+        try {
+            if (preference!=null && preference instanceof PreferenceScreen) {
+                Dialog dialog = ((PreferenceScreen)preference).getDialog();
+                if (dialog!=null) {
+                    Window window = dialog.getWindow();
+                    if(window != null)
+                        window.getDecorView().setBackgroundDrawable(
+                                this.getWindow().getDecorView().getBackground()
+                                .getConstantState().newDrawable());
+                }
+            }
+        } catch(Exception e){}
         return false;
     }
 

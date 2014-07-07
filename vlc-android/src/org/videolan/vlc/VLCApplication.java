@@ -22,6 +22,7 @@ package org.videolan.vlc;
 import java.util.Locale;
 
 import org.videolan.vlc.gui.audio.AudioUtil;
+import org.videolan.vlc.util.BitmapCache;
 
 import android.app.Application;
 import android.content.Context;
@@ -75,7 +76,7 @@ public class VLCApplication extends Application {
         instance = this;
 
         // Initialize the database soon enough to avoid any race condition and crash
-        MediaDatabase.getInstance(this);
+        MediaDatabase.getInstance();
         // Prepare cache folder constants
         AudioUtil.prepareCacheFolder(this);
     }

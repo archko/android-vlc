@@ -27,17 +27,9 @@
     <orderEntry type="jdk" jdkName="Android API 19 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="WheelView" />
-    <orderEntry type="module" module-name="ActionBarSherlock" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../java-libs/ActionBarSherlock/libs/android-support-v4.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="SlidingMenu" />
+    <orderEntry type="module" module-name="appcompat" />
+    <orderEntry type="library" name="android-support-v4" level="project" />
   </component>
 </module>
 

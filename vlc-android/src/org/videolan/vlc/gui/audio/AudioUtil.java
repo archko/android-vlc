@@ -32,11 +32,11 @@ import java.util.Arrays;
 
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.BitmapCache;
-import org.videolan.vlc.MurmurHash;
 import org.videolan.vlc.R;
-import org.videolan.vlc.Util;
 import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.util.BitmapCache;
+import org.videolan.vlc.util.MurmurHash;
+import org.videolan.vlc.util.Util;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -56,9 +56,21 @@ import android.widget.Toast;
 public class AudioUtil {
     public final static String TAG = "VLC/AudioUtil";
 
+    /**
+     * Cache directory (/sdcard/Android/data/...)
+     */
     public static String CACHE_DIR = null;
+    /**
+     * VLC embedded art storage location
+     */
     public static String ART_DIR = null;
+    /**
+     * Cover caching directory
+     */
     public static String COVER_DIR = null;
+    /**
+     * User-defined playlist storage directory
+     */
     public static String PLAYLIST_DIR = null;
 
     public static void setRingtone(Media song, Context context){
@@ -113,15 +125,15 @@ public class AudioUtil {
         COVER_DIR = CACHE_DIR + "/covers/";
         PLAYLIST_DIR = CACHE_DIR + "/playlists/";
 
-        for(String path : Arrays.asList(ART_DIR, COVER_DIR, PLAYLIST_DIR)) {
+        for(String path : Arrays.asList(ART_DIR, COVER_DIR)) {
             File file = new File(path);
             if (!file.exists())
                 file.mkdirs();
         }
     }
 
-    public static void clearCacheFolder() {
-        for(String path : Arrays.asList(ART_DIR, COVER_DIR, PLAYLIST_DIR)) {
+    public static void clearCacheFolders() {
+        for(String path : Arrays.asList(ART_DIR, COVER_DIR)) {
             File file = new File(path);
             if (file.exists())
                 deleteContent(file, false);
@@ -185,10 +197,10 @@ public class AudioUtil {
                     titleHash = "0" + titleHash;
                 }
                 /* Use generated hash to find art */
-                artworkURL = CACHE_DIR + "/art/arturl/" + titleHash + "/art.png";
+                artworkURL = ART_DIR + "/arturl/" + titleHash + "/art.png";
             } else {
                 /* Otherwise, it was cached by artist and album */
-                artworkURL = CACHE_DIR + "/art/artistalbum/" + mArtist + "/" + mAlbum + "/art.png";
+                artworkURL = ART_DIR + "/artistalbum/" + mArtist + "/" + mAlbum + "/art.png";
             }
 
             return artworkURL;
