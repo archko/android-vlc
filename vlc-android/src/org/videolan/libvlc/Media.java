@@ -3,19 +3,19 @@
  *****************************************************************************
  * Copyright © 2011-2013 VLC authors and VideoLAN
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2.1 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 package org.videolan.libvlc;
@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Locale;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -170,7 +169,7 @@ public class Media implements Comparable<Media> {
         if (mType == TYPE_ALL) {
             int dotIndex = mLocation.lastIndexOf(".");
             if (dotIndex != -1) {
-                String fileExt = mLocation.substring(dotIndex);
+                String fileExt = mLocation.substring(dotIndex).toLowerCase(Locale.ENGLISH);
                 if( Media.VIDEO_EXTENSIONS.contains(fileExt) ) {
                     mType = TYPE_VIDEO;
                 } else if (Media.AUDIO_EXTENSIONS.contains(fileExt)) {
@@ -326,7 +325,7 @@ public class Media implements Comparable<Media> {
      * Returns the raw picture object. Likely to be NULL in VLC for Android
      * due to lazy-loading.
      *
-     * Use {@link org.videolan.vlc.util.Util#getPictureFromCache(Media)} instead.
+     * Use {@link org.videolan.vlc.util.Bitmap#getPictureFromCache(Media)} instead.
      *
      * @return The raw picture or NULL
      */
@@ -337,7 +336,7 @@ public class Media implements Comparable<Media> {
     /**
      * Sets the raw picture object.
      *
-     * In VLC for Android, use {@link org.videolan.vlc.util.Util#setPicture(Context, Media, Bitmap)} instead.
+     * In VLC for Android, use {@link org.videolan.vlc.MediaDatabase#setPicture(Media, Bitmap)} instead.
      *
      * @param p
      */

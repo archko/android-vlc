@@ -35,7 +35,8 @@ import org.videolan.libvlc.Media;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.video.VideoGridFragment;
-import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.BitmapUtil;
+import org.videolan.vlc.util.VLCInstance;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -57,23 +58,21 @@ public class Thumbnailer implements Runnable {
 
     protected Thread mThread;
     private LibVLC mLibVlc;
-    private final Context mContext;
     private int totalCount;
     private final float mDensity;
     private final String mPrefix;
 
     public Thumbnailer(Context context, Display display) {
-        mContext = context;
         DisplayMetrics metrics = new DisplayMetrics();
         display.getMetrics(metrics);
         mDensity = metrics.density;
-        mPrefix = mContext.getResources().getString(R.string.thumbnail);
+        mPrefix = context.getResources().getString(R.string.thumbnail);
     }
 
     public void start(VideoGridFragment videoGridFragment) {
         if (mLibVlc == null) {
             try {
-                mLibVlc = Util.getLibVlcInstance();
+                mLibVlc = VLCInstance.getLibVlcInstance();
             } catch (LibVlcException e) {
                 Log.e(TAG, "Can't obtain libvlc instance");
                 e.printStackTrace();
@@ -110,7 +109,7 @@ public class Thumbnailer implements Runnable {
      * @param id the if of the file browser item.
      */
     public void addJob(Media item) {
-        if(Util.getPictureFromCache(item) != null || item.isPictureParsed())
+        if(BitmapUtil.getPictureFromCache(item) != null || item.isPictureParsed())
             return;
         lock.lock();
         mItems.add(item);
@@ -169,7 +168,7 @@ public class Thumbnailer implements Runnable {
             byte[] b = mLibVlc.getThumbnail(item.getLocation(), width, height);
 
             if (b == null) {// We were not able to create a thumbnail for this item, store a dummy
-                Util.setPicture(mContext, item, Bitmap.createBitmap(1, 1, Config.ARGB_8888));
+                MediaDatabase.setPicture(item, Bitmap.createBitmap(1, 1, Config.ARGB_8888));
                 continue;
             }
 
@@ -177,7 +176,7 @@ public class Thumbnailer implements Runnable {
 
             Log.i(TAG, "Thumbnail created for " + item.getFileName());
 
-            Util.setPicture(mContext, item, thumbnail);
+            MediaDatabase.setPicture(item, thumbnail);
             // Post to the file browser the new item.
             mVideoGridFragment.setItemToUpdate(item);
 

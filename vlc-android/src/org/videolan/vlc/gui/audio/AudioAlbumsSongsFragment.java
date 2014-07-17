@@ -28,11 +28,11 @@ import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.VlcRunnable;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.VLCDrawerActivity;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.VLCRunnable;
 import org.videolan.vlc.widget.FlingViewGroup;
 
 import android.annotation.TargetApi;
@@ -227,7 +227,7 @@ public class AudioAlbumsSongsFragment extends Fragment {
             menu.setGroupVisible(R.id.songs_view_only, false);
             menu.setGroupVisible(R.id.phone_only, false);
         }
-        if (!Util.isPhone())
+        if (!AndroidDevices.isPhone())
             menu.setGroupVisible(R.id.phone_only, false);
     }
 
@@ -264,7 +264,7 @@ public class AudioAlbumsSongsFragment extends Fragment {
             AlertDialog alertDialog = CommonDialogs.deleteMedia(
                     getActivity(),
                     mSongsAdapter.getLocations(groupPosition).get(0),
-                    new VlcRunnable(mSongsAdapter.getItem(groupPosition)) {
+                    new VLCRunnable(mSongsAdapter.getItem(groupPosition)) {
                         @Override
                         public void run(Object o) {
                             AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;

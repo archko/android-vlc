@@ -53,7 +53,8 @@ import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
 import org.videolan.vlc.interfaces.IAudioService;
 import org.videolan.vlc.interfaces.IAudioServiceCallback;
-import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
 import android.annotation.TargetApi;
@@ -114,29 +115,36 @@ public class AudioService extends Service {
     public static final int NEXT_ITEM = 3;
 
     private LibVLC mLibVLC;
-    private Stack<Integer> mPrevious; // Stack of previously played indexes, used in shuffle mode
-    private int mCurrentIndex; // Set to -1 if there is no currently loaded media
-    private int mPrevIndex; // Set to -1 if no previous media
-    private int mNextIndex; // Set to -1 if no next media
     private HashMap<IAudioServiceCallback, Integer> mCallback;
     private EventHandler mEventHandler;
-    private boolean mShuffling = false;
-    private RepeatType mRepeating = RepeatType.None;
-    private boolean mDetectHeadset = true;
     private OnAudioFocusChangeListener audioFocusListener;
-    private ComponentName mRemoteControlClientReceiverComponent;
+    private boolean mDetectHeadset = true;
     private PowerManager.WakeLock mWakeLock;
 
+    // Index management
+    /**
+     * Stack of previously played indexes, used in shuffle mode
+     */
+    private Stack<Integer> mPrevious;
+    private int mCurrentIndex; // Set to -1 if no media is currently loaded
+    private int mPrevIndex; // Set to -1 if no previous media
+    private int mNextIndex; // Set to -1 if no next media
+
+    // Playback management
+    private boolean mShuffling = false;
+    private RepeatType mRepeating = RepeatType.None;
+
+    // RemoteControlClient-related
     /**
      * RemoteControlClient is for lock screen playback control.
      */
     private RemoteControlClient mRemoteControlClient = null;
     private RemoteControlClientReceiver mRemoteControlClientReceiver = null;
-
     /**
      * Last widget position update timestamp
      */
     private long mWidgetPositionTimestamp = Calendar.getInstance().getTimeInMillis();
+    private ComponentName mRemoteControlClientReceiverComponent;
 
     @Override
     public void onCreate() {
@@ -144,7 +152,7 @@ public class AudioService extends Service {
 
         // Get libVLC instance
         try {
-            mLibVLC = Util.getLibVlcInstance();
+            mLibVLC = VLCInstance.getLibVlcInstance();
         } catch (LibVlcException e) {
             e.printStackTrace();
         }
@@ -460,7 +468,7 @@ public class AudioService extends Service {
                     Log.i(TAG, "MediaPlayerEndReached");
                     service.executeUpdate();
                     service.executeUpdateProgress();
-                    service.determinePrevAndNextIndices();
+                    service.determinePrevAndNextIndices(true);
                     service.next();
                     if (service.mWakeLock.isHeld())
                         service.mWakeLock.release();
@@ -791,7 +799,11 @@ public class AudioService extends Service {
     }
 
     private void determinePrevAndNextIndices() {
-        mNextIndex = mLibVLC.expand();
+        determinePrevAndNextIndices(false);
+    }
+
+    private void determinePrevAndNextIndices(boolean expand) {
+        mNextIndex = expand ? mLibVLC.expand() : -1;
         mPrevIndex = -1;
 
         if (mNextIndex == -1) {
@@ -1364,7 +1376,7 @@ public class AudioService extends Service {
     }
 
     private synchronized void loadLastPlaylist() {
-        if (!Util.hasExternalStorage())
+        if (!AndroidDevices.hasExternalStorage())
             return;
 
         String line;
@@ -1407,7 +1419,7 @@ public class AudioService extends Service {
     }
 
     private synchronized void saveCurrentMedia() {
-        if (!Util.hasExternalStorage())
+        if (!AndroidDevices.hasExternalStorage())
             return;
 
         FileOutputStream output;
@@ -1428,7 +1440,7 @@ public class AudioService extends Service {
     }
 
     private synchronized void saveMediaList() {
-        if (!Util.hasExternalStorage())
+        if (!AndroidDevices.hasExternalStorage())
             return;
 
         FileOutputStream output;

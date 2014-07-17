@@ -40,7 +40,8 @@ import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
-import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
 import android.content.Context;
@@ -209,7 +210,7 @@ public class MediaLibrary {
         public void run() {
             LibVLC libVlcInstance;
             try {
-                libVlcInstance = Util.getLibVlcInstance();
+                libVlcInstance = VLCInstance.getLibVlcInstance();
             } catch (LibVlcException e1) {
                 Log.e(TAG, "ERROR: LibVLCException while trying to get instance");
                 return;
@@ -224,7 +225,7 @@ public class MediaLibrary {
             List<File> mediaDirs = DBManager.getMediaDirs();
             if (mediaDirs.size() == 0) {
                 // Use all available storage directories as our default
-                String storageDirs[] = Util.getMediaDirectories();
+                String storageDirs[] = AndroidDevices.getMediaDirectories();
                 for (String dir: storageDirs) {
                     File f = new File(dir);
                     if (f.exists())

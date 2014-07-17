@@ -51,7 +51,9 @@ import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
 import org.videolan.vlc.gui.PreferencesActivity;
-import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
 import android.annotation.TargetApi;
@@ -236,7 +238,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     // Navigation handling (DVD, Blu-Ray...)
     private ImageButton mNavMenu;
-    private boolean mHasChapters = false;
+    private boolean mHasMenu = false;
     private boolean mIsNavMenu = false;
 
     @Override
@@ -332,7 +334,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mMenu = (ImageButton) findViewById(R.id.player_overlay_adv_function);
 
         try {
-            mLibVLC = Util.getLibVlcInstance();
+            mLibVLC = VLCInstance.getLibVlcInstance();
         } catch (LibVlcException e) {
             Log.d(TAG, "LibVLC initialisation failed");
             return;
@@ -501,7 +503,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             Log.i(TAG, "Dismissing presentation because the activity is no longer visible.");
             mPresentation.dismiss();
             mPresentation = null;
-            mAudioManager.setParameters("bgm_state=false");
         }
     }
 
@@ -772,9 +773,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     @TargetApi(Build.VERSION_CODES.FROYO)
-    private void changeAudioFocus(boolean gain) {
+    private int changeAudioFocus(boolean acquire) {
         if(!LibVlcUtil.isFroyoOrLater()) // NOP if not supported
-            return;
+            return AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 
         if (mAudioFocusListener == null) {
             mAudioFocusListener = new OnAudioFocusChangeListener() {
@@ -802,11 +803,18 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             };
         }
 
-        AudioManager am = (AudioManager)getSystemService(AUDIO_SERVICE);
-        if(gain)
-            am.requestAudioFocus(mAudioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        else
-            am.abandonAudioFocus(mAudioFocusListener);
+        int result;
+        if(acquire) {
+            result = mAudioManager.requestAudioFocus(mAudioFocusListener,
+                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            mAudioManager.setParameters("bgm_state=true");
+        }
+        else {
+            result = mAudioManager.abandonAudioFocus(mAudioFocusListener);
+            mAudioManager.setParameters("bgm_state=false");
+        }
+
+        return result;
     }
 
     /**
@@ -830,7 +838,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 case EventHandler.MediaParsedChanged:
                     Log.i(TAG, "MediaParsedChanged");
                     activity.updateNavStatus();
-                    if (!activity.mHasChapters && activity.mLibVLC.getVideoTracksCount() < 1) {
+                    if (!activity.mHasMenu && activity.mLibVLC.getVideoTracksCount() < 1) {
                         Log.i(TAG, "No video track, open in audio mode");
                         activity.switchToAudioMode();
                     }
@@ -860,7 +868,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     break;
                 case EventHandler.MediaPlayerVout:
                     activity.updateNavStatus();
-                    if (!activity.mHasChapters)
+                    if (!activity.mHasMenu)
                         activity.handleVout(msg);
                     break;
                 case EventHandler.MediaPlayerPositionChanged:
@@ -1209,7 +1217,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 // disappear on the user if more adjustment is needed. This
                 // is because on devices with soft navigation (e.g. Galaxy
                 // Nexus), gestures can't be made without activating the UI.
-                if(Util.hasNavBar())
+                if(AndroidDevices.hasNavBar())
                     showOverlay();
             }
             // Seek (Right or Left move)
@@ -1268,8 +1276,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             //Show the jump's size
             showInfo(String.format("%s%s (%s)",
                     jump >= 0 ? "+" : "",
-                    Util.millisToString(jump),
-                    Util.millisToString(time + jump)), 1000);
+                    Strings.millisToString(jump),
+                    Strings.millisToString(time + jump)), 1000);
         else
             showInfo(R.string.unseekable_stream, 1000);
     }
@@ -1346,8 +1354,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             if (fromUser && mCanSeek) {
                 mLibVLC.setTime(progress);
                 setOverlayProgress();
-                mTime.setText(Util.millisToString(progress));
-                showInfo(Util.millisToString(progress));
+                mTime.setText(Strings.millisToString(progress));
+                showInfo(Strings.millisToString(progress));
             }
 
         }
@@ -1682,12 +1690,12 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void dimStatusBar(boolean dim) {
-        if (!LibVlcUtil.isHoneycombOrLater() || !Util.hasNavBar() || mIsNavMenu)
+        if (!LibVlcUtil.isHoneycombOrLater() || !AndroidDevices.hasNavBar() || mIsNavMenu)
             return;
         int layout = 0;
-        if (!Util.hasCombBar() && LibVlcUtil.isJellyBeanOrLater())
+        if (!AndroidDevices.hasCombBar() && LibVlcUtil.isJellyBeanOrLater())
             layout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-        int visibility =  (dim ? (Util.hasCombBar()
+        int visibility =  (dim ? (AndroidDevices.hasCombBar()
                 ? View.SYSTEM_UI_FLAG_LOW_PROFILE
                         : View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
                         : View.SYSTEM_UI_FLAG_VISIBLE) | layout;
@@ -1729,10 +1737,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mSeekbar.setMax(length);
         mSeekbar.setProgress(time);
         mSysTime.setText(DateFormat.getTimeFormat(this).format(new Date(System.currentTimeMillis())));
-        if (time >= 0) mTime.setText(Util.millisToString(time));
+        if (time >= 0) mTime.setText(Strings.millisToString(time));
         if (length >= 0) mLength.setText(mDisplayRemainingTime && length > 0
-                ? "- " + Util.millisToString(length - time)
-                : Util.millisToString(length));
+                ? "- " + Strings.millisToString(length - time)
+                : Strings.millisToString(length));
 
         return time;
     }
@@ -1904,11 +1912,11 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
         mSurface.setKeepScreenOn(true);
 
-        if( mLibVLC == null)
+        if(mLibVLC == null)
             return;
 
         /* WARNING: hack to avoid a crash in mediacodec on KitKat.
-         * Disable the hardware acceleration the media has a ts extension. */
+         * Disable hardware acceleration if the media has a ts extension. */
         if (mLocation != null && LibVlcUtil.isKitKatOrLater()) {
             String locationLC = mLocation.toLowerCase(Locale.ENGLISH);
             if (locationLC.endsWith(".ts")
@@ -2102,7 +2110,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mPresentation.setOnDismissListener(mOnDismissListener);
             try {
                 mPresentation.show();
-                mAudioManager.setParameters("bgm_state=true");
             } catch (WindowManager.InvalidDisplayException ex) {
                 Log.w(TAG, "Couldn't show presentation!  Display was removed in "
                         + "the meantime.", ex);
@@ -2124,7 +2131,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         finish(); //TODO restore the video on the new display instead of closing
         if (mPresentation != null) mPresentation.dismiss();
         mPresentation = null;
-        mAudioManager.setParameters("bgm_state=false");
     }
 
     /**
@@ -2157,7 +2163,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 setOwnerActivity((Activity) context);
             }
             try {
-                mLibVLC = Util.getLibVlcInstance();
+                mLibVLC = VLCInstance.getLibVlcInstance();
             } catch (LibVlcException e) {
                 Log.d(TAG, "LibVLC initialisation failed");
                 return;
@@ -2237,8 +2243,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     }
 
     private void updateNavStatus() {
-        mHasChapters = mLibVLC.getChapterCountForTitle(0) > 1;
-        mIsNavMenu = mHasChapters && mLibVLC.getTitle() == 0 && mLibVLC.getTitleCount() > 1;
+        mHasMenu = mLibVLC.getChapterCountForTitle(0) > 1 && mLibVLC.getTitleCount() > 1;
+        mIsNavMenu = mHasMenu && mLibVLC.getTitle() == 0;
         /***
          * HACK ALERT: assume that any media with >1 titles = DVD with menus
          * Should be replaced with a more robust title/chapter selection popup
@@ -2255,7 +2261,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
              */
             hideOverlay(false);
         }
-        else if (mHasChapters) {
+        else if (mHasMenu) {
             setESTrackLists(true);
             setESTracks();
 

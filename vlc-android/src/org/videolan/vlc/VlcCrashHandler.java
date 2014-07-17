@@ -29,19 +29,19 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.Thread.UncaughtExceptionHandler;
 
-import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.Logcat;
 
 import android.os.Environment;
 import android.text.format.DateFormat;
 import android.util.Log;
 
-public class VlcCrashHandler implements UncaughtExceptionHandler {
+public class VLCCrashHandler implements UncaughtExceptionHandler {
 
     private static final String TAG = "VLC/VlcCrashHandler";
 
     private UncaughtExceptionHandler defaultUEH;
 
-    public VlcCrashHandler() {
+    public VLCCrashHandler() {
         this.defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
     }
 
@@ -98,7 +98,7 @@ public class VlcCrashHandler implements UncaughtExceptionHandler {
         CharSequence timestamp = DateFormat.format("yyyyMMdd_kkmmss", System.currentTimeMillis());
         String filename = name + "_" + timestamp + ".log";
         try {
-            Util.writeLogcat(filename);
+            Logcat.writeLogcat(filename);
         } catch (IOException e) {
             Log.e(TAG, "Cannot write logcat to disk");
         }
