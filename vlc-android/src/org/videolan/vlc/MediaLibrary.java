@@ -102,7 +102,7 @@ public class MediaLibrary {
         return false;
     }
 
-    public static MediaLibrary getInstance() {
+    public synchronized static MediaLibrary getInstance() {
         if (mInstance == null)
             mInstance = new MediaLibrary();
         return mInstance;
@@ -385,7 +385,7 @@ public class MediaLibrary {
     /**
      * Filters all irrelevant files
      */
-    private class MediaItemFilter implements FileFilter {
+    private static class MediaItemFilter implements FileFilter {
 
         @Override
         public boolean accept(File f) {

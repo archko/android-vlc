@@ -43,6 +43,7 @@ public class VerticalSeekBar extends SeekBar {
         super(context, attrs);
     }
 
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(h, w, oldh, oldw);
     }
@@ -53,6 +54,7 @@ public class VerticalSeekBar extends SeekBar {
         setMeasuredDimension(getMeasuredHeight(), getMeasuredWidth());
     }
 
+    @Override
     protected void onDraw(Canvas c) {
         c.rotate(-90);
         c.translate(-getHeight(), 0);
@@ -97,7 +99,8 @@ public class VerticalSeekBar extends SeekBar {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mIsMovingThumb) {
-                    setProgress(getMax() - (int) (getMax() * event.getY() / getHeight()));
+                    final int max = getMax();
+                    setProgress( max - (int) (max* event.getY() / getHeight()));
                     onSizeChanged(getWidth(), getHeight(), 0, 0);
                     handled = true;
                 }

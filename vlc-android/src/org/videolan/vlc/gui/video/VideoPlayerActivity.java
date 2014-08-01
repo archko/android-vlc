@@ -1206,11 +1206,11 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             //TODO : Volume action when a secondary display is connected
             if (coef > 2 && mPresentation == null) {
                 // Volume (Up or Down - Right side)
-                if (!mEnableBrightnessGesture || mTouchX > (screen.widthPixels / 2)){
+                if (!mEnableBrightnessGesture || (int)mTouchX > (screen.widthPixels / 2)){
                     doVolumeTouch(y_changed);
                 }
                 // Brightness (Up or Down - Left side)
-                if (mEnableBrightnessGesture && mTouchX < (screen.widthPixels / 2)){
+                if (mEnableBrightnessGesture && (int)mTouchX < (screen.widthPixels / 2)){
                     doBrightnessTouch(y_changed);
                 }
                 // Extend the overlay for a little while, so that it doesn't
@@ -1886,10 +1886,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                     try {
                         mLocation = URLDecoder.decode(mLocation,"UTF-8");
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                        Log.w(TAG, "UnsupportedEncodingException while decoding MRL " + mLocation);
                     }
                 }
-                Log.d(TAG, "loadMedia.location:"+mLocation);
             } else {
                 Log.e(TAG, "Couldn't understand the intent");
                 encounteredError();
@@ -1965,6 +1964,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 // in media library
                 if(media.getTime() > 0 && !fromStart)
                     mLibVLC.setTime(media.getTime());
+                // Consume fromStart option after first use to prevent
+                // restarting again when playback is paused.
+                getIntent().putExtra("fromStart", false);
 
                 mLastAudioTrack = media.getAudioTrack();
                 mLastSpuTrack = media.getSpuTrack();

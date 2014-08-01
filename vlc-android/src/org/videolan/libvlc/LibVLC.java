@@ -100,10 +100,16 @@ public class LibVLC {
                 System.loadLibrary("iomx-gingerbread");
             else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB_MR2)
                 System.loadLibrary("iomx-hc");
-            else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2)
+            else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR1)
                 System.loadLibrary("iomx-ics");
+            else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2)
+                System.loadLibrary("iomx-jbmr2");
+            else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
+                System.loadLibrary("iomx-kk");
         } catch (Throwable t) {
-            Log.w(TAG, "Unable to load the iomx library: " + t);
+            // No need to warn if it isn't found, when we intentionally don't build these except for debug
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+                Log.w(TAG, "Unable to load the iomx library: " + t);
         }
         try {
             System.loadLibrary("vlcjni");
@@ -162,7 +168,7 @@ public class LibVLC {
      * destroy() before exiting.
      */
     @Override
-    public void finalize() {
+    protected void finalize() {
         if (mLibVlcInstance != 0) {
             Log.d(TAG, "LibVLC is was destroyed yet before finalize()");
             destroy();
@@ -300,9 +306,12 @@ public class LibVLC {
             LibVlcUtil.MachineSpecs m = LibVlcUtil.getMachineSpecs();
             if( (m.hasArmV6 && !(m.hasArmV7)) || m.hasMips )
                 ret = 4;
-            else if(m.bogoMIPS > 1200 && m.processors > 2)
+            else if(m.frequency >= 1200 && m.processors > 2)
                 ret = 1;
-            else
+            else if(m.bogoMIPS >= 1200 && m.processors > 2) {
+                ret = 1;
+                Log.d(TAG, "Used bogoMIPS due to lack of frequency info");
+            } else
                 ret = 3;
         } else if(deblocking > 4) { // sanity check
             ret = 3;
@@ -550,6 +559,11 @@ public class LibVLC {
     public native void stop();
 
     /**
+     * Get player state.
+     */
+    public native int getPlayerState();
+
+    /**
      * Gets volume as integer
      */
     public native int getVolume();
@@ -627,6 +641,8 @@ public class LibVLC {
     public native int getAudioTracksCount();
 
     public native Map<Integer,String> getAudioTrackDescription();
+
+    public native Map<String, Object> getStats();
 
     public native int getAudioTrack();
 
