@@ -584,11 +584,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     class LongSeekListener implements View.OnTouchListener {
         boolean forward;
         int normal, pressed;
+        long length;
 
         public LongSeekListener(boolean forwards, int normalRes, int pressedRes) {
             this.forward = forwards;
             this.normal = normalRes;
             this.pressed = pressedRes;
+            this.length = -1;
         }
 
         int possibleSeek;
@@ -604,16 +606,17 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
                     vibrated = true;
                 }
 
-                if(forward)
-                    possibleSeek += 4000;
-                else {
+                if(forward) {
+                    if(length <= 0 || possibleSeek < length)
+                        possibleSeek += 4000;
+                } else {
                     if(possibleSeek > 4000)
                         possibleSeek -= 4000;
                     else if(possibleSeek <= 4000)
                         possibleSeek = 0;
                 }
 
-                mTime.setText(Strings.millisToString(mShowRemainingTime ? possibleSeek-mAudioController.getLength() : possibleSeek));
+                mTime.setText(Strings.millisToString(mShowRemainingTime ? possibleSeek-length : possibleSeek));
                 mTimeline.setProgress(possibleSeek);
                 mProgressBar.setProgress(possibleSeek);
                 h.postDelayed(seekRunnable, 50);
@@ -629,6 +632,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
                 possibleSeek = mAudioController.getTime();
                 mPreviewingSeek = true;
                 vibrated = false;
+                length = mAudioController.getLength();
 
                 h.postDelayed(seekRunnable, 1000);
                 return true;
@@ -664,11 +668,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
     public void showPlaylistTips() {
         VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
-        activity.showTipViewIfNeeded(R.layout.audio_playlist_tips, PREF_PLAYLIST_TIPS_SHOWN);
+        if(activity != null)
+            activity.showTipViewIfNeeded(R.layout.audio_playlist_tips, PREF_PLAYLIST_TIPS_SHOWN);
     }
 
     public void showAudioPlayerTips() {
         VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
-        activity.showTipViewIfNeeded(R.layout.audio_player_tips, PREF_AUDIOPLAYER_TIPS_SHOWN);
+        if(activity != null)
+            activity.showTipViewIfNeeded(R.layout.audio_player_tips, PREF_AUDIOPLAYER_TIPS_SHOWN);
     }
 }

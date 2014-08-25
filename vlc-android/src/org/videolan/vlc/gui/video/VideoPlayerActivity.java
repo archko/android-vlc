@@ -810,8 +810,12 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mAudioManager.setParameters("bgm_state=true");
         }
         else {
-            result = mAudioManager.abandonAudioFocus(mAudioFocusListener);
-            mAudioManager.setParameters("bgm_state=false");
+            if (mAudioManager != null) {
+                result = mAudioManager.abandonAudioFocus(mAudioFocusListener);
+                mAudioManager.setParameters("bgm_state=false");
+            }
+            else
+                result = AudioManager.AUDIOFOCUS_REQUEST_FAILED;
         }
 
         return result;
@@ -883,6 +887,9 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
                 case EventHandler.HardwareAccelerationError:
                     Log.i(TAG, "HardwareAccelerationError");
                     activity.handleHardwareAccelerationError();
+                    break;
+                case EventHandler.MediaPlayerTimeChanged:
+                    // avoid useless error logs
                     break;
                 default:
                     Log.e(TAG, String.format("Event not handled (0x%x)", msg.getData().getInt("event")));
