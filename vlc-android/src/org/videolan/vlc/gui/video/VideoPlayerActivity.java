@@ -357,7 +357,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mSubtitlesSurfaceHolder = mSubtitlesSurface.getHolder();
         mSubtitlesSurfaceHolder.setFormat(PixelFormat.RGBA_8888);
         mSubtitlesSurface.setZOrderMediaOverlay(true);
-        mSubtitlesSurfaceHolder.addCallback(mSubtitlesSurfaceCallback);
+        if (mPresentation == null) {
+            mSurfaceHolder.addCallback(mSurfaceCallback);
+            mSubtitlesSurfaceHolder.addCallback(mSubtitlesSurfaceCallback);
+        }
 
         mSeekbar = (SeekBar) findViewById(R.id.player_overlay_seekbar);
         mSeekbar.setOnSeekBarChangeListener(mSeekListener);
@@ -385,12 +388,6 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         filter.addAction(VLCApplication.SLEEP_INTENT);
         registerReceiver(mReceiver, filter);
 
-        if (mPresentation != null && !mSettings.getBoolean("enable_secondary_display_hardware_acceleration", false)) {
-            mDisabledHardwareAcceleration = true;
-            mPreviousHardwareAccelerationMode = mLibVLC.getHardwareAcceleration();
-            mLibVLC.setHardwareAcceleration(LibVLC.HW_ACCELERATION_DISABLED);
-            Log.d(TAG, "Secondary Display: Hardware acceleration disabled");
-        }
         Log.d(TAG,
                 "Hardware acceleration mode: "
                         + Integer.toString(mLibVLC.getHardwareAcceleration()));
@@ -598,13 +595,13 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         }
         if(data.getData() == null) return;
 
-        String uri = data.getData().getPath();
+        String subtitlePath = data.getData().getPath();
         if(requestCode == CommonDialogs.INTENT_SPECIFIC) {
-            Log.d(TAG, "Specific subtitle file: " + uri);
+            Log.d(TAG, "Specific subtitle file: " + subtitlePath);
         } else if(requestCode == CommonDialogs.INTENT_GENERIC) {
-            Log.d(TAG, "Generic subtitle file: " + uri);
+            Log.d(TAG, "Generic subtitle file: " + subtitlePath);
         }
-        mSubtitleSelectedFiles.add(data.getData().getPath());
+        mSubtitleSelectedFiles.add(subtitlePath);
     }
 
     public static void start(Context context, String location) {
@@ -2099,6 +2096,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     public void showAdvancedOptions(View v) {
         CommonDialogs.advancedOptions(this, v, MenuType.Video);
+        //RecordUtil.takeSnapshot(mLibVLC);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
