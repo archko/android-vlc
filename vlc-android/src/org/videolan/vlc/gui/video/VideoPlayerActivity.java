@@ -144,6 +144,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     /** Overlay */
     private View mOverlayHeader;
     private View mOverlayOption;
+    private View mOverlayRecord;
     private View mOverlayProgress;
     private View mOverlayBackground;
     private static final int OVERLAY_TIMEOUT = 4000;
@@ -179,6 +180,8 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
     private ImageButton mLock;
     private ImageButton mSize;
     private ImageButton mMenu;
+    private ImageButton mSnap;
+    private ImageButton mRecord;
     private boolean mIsLocked = false;
     private int mLastAudioTrack = -1;
     private int mLastSpuTrack = -2;
@@ -289,6 +292,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         /** initialize Views an their Events */
         mOverlayHeader = findViewById(R.id.player_overlay_header);
         mOverlayOption = findViewById(R.id.option_overlay);
+        mOverlayRecord = findViewById(R.id.option_overlay_record);
         mOverlayProgress = findViewById(R.id.progress_overlay);
         mOverlayBackground = findViewById(R.id.player_overlay_background);
 
@@ -324,6 +328,11 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         mSubtitle.setVisibility(View.GONE);
         mNavMenu = (ImageButton) findViewById(R.id.player_overlay_navmenu);
         mNavMenu.setVisibility(View.GONE);
+        mSnap = (ImageButton) findViewById(R.id.player_overlay_snap);
+        mRecord =(ImageButton) findViewById(R.id.player_overlay_record);
+
+        mSnap.setOnClickListener(mRecordListener);
+        mRecord.setOnClickListener(mRecordListener);
 
         mLock = (ImageButton) findViewById(R.id.lock_overlay_button);
         mLock.setOnClickListener(mLockListener);
@@ -457,6 +466,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
          * in savedIndexPosition to be able to restore it during onResume().
          */
         mLibVLC.stop();
+        stopRecord();
 
         mSurface.setKeepScreenOn(false);
 
@@ -518,6 +528,10 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             mLibVLC.setHardwareAcceleration(mPreviousHardwareAccelerationMode);
 
         mAudioManager = null;
+
+        if (isRecording||mLibVLC.videoIsRecording()) {
+            RecordUtil.stopRecord(mLibVLC);
+        }
     }
 
     @Override
@@ -981,6 +995,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
 
     private void handleHardwareAccelerationError() {
         mLibVLC.stop();
+        stopRecord();
         AlertDialog dialog = new AlertDialog.Builder(VideoPlayerActivity.this)
         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -1643,6 +1658,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             if (!mIsLocked) {
                 mOverlayHeader.setVisibility(View.VISIBLE);
                 mOverlayOption.setVisibility(View.VISIBLE);
+                mOverlayRecord.setVisibility(View.VISIBLE);
                 mPlayPause.setVisibility(View.VISIBLE);
                 mMenu.setVisibility(View.VISIBLE);
                 dimStatusBar(false);
@@ -1680,6 +1696,7 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
             }
             mOverlayHeader.setVisibility(View.INVISIBLE);
             mOverlayOption.setVisibility(View.INVISIBLE);
+            mOverlayRecord.setVisibility(View.INVISIBLE);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
             mMenu.setVisibility(View.INVISIBLE);
@@ -2279,5 +2296,40 @@ public class VideoPlayerActivity extends Activity implements IVideoPlayer {
         else
             mNavMenu.setVisibility(View.GONE);
 
+    }
+
+    boolean isRecording=false;
+
+    private View.OnClickListener mRecordListener=new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v==mSnap) {
+                if (null!=mLibVLC) {
+                    RecordUtil.takeSnapshot(mLibVLC, mVideoWidth, mVideoHeight);
+                }
+            } else if (v==mRecord) {
+                if (isRecording) {
+                    isRecording=false;
+                    mRecord.setBackgroundResource(R.drawable.ic_play_circle);
+                    stopRecord();
+                } else {
+                    if (!mLibVLC.videoIsRecordable()&&mLibVLC.isPlaying()) {
+                        System.out.println("mLibVLC.video is not Recordable");
+                        return;
+                    }
+                    isRecording=true;
+                    mRecord.setBackgroundResource(R.drawable.ic_pause_circle);
+                    if (null!=mLibVLC) {
+                        RecordUtil.startRecord(mLibVLC);
+                    }
+                }
+            }
+        }
+    };
+
+    private void stopRecord() {
+        if (null!=mLibVLC&&mLibVLC.videoIsRecording()) {
+            RecordUtil.stopRecord(mLibVLC);
+        }
     }
 }

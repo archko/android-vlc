@@ -596,3 +596,76 @@ jint Java_org_videolan_libvlc_LibVLC_getTitleCount(JNIEnv *env, jobject thiz)
         return libvlc_media_player_get_title_count(mp);
     return -1;
 }
+
+
+//take snap and record video
+jboolean Java_org_videolan_libvlc_LibVLC_takeSnapShot(JNIEnv *env, jobject thiz,jint number, jstring path,
+jint width,jint height)
+{
+    jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
+
+    if (mp)
+        if(libvlc_video_take_snapshot(mp, (int)number,psz_path , (int)width,(int)height)==0)
+        	return JNI_TRUE;
+	     return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStart(JNIEnv *env, jobject thiz,jstring path)
+{
+	jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
+    //const char* psz_filename=(*env)->GetStringUTFChars(env, filename, &isCopy);
+    if (mp)
+		if(libvlc_media_player_record_start(mp,psz_path)==0)
+	        return JNI_TRUE;
+    return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStop(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    if (mp)
+	    if(libvlc_media_player_record_stop(mp)==0)
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecording(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp)
+		if(libvlc_media_player_is_recording(mp))
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecordable(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp)
+		if(libvlc_media_player_is_recordable(mp))
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jint Java_org_videolan_libvlc_LibVLC_getState(JNIEnv *env, jobject thiz)
+{
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp){
+		libvlc_state_t state=libvlc_media_player_get_state(mp);
+		return (jint)state;
+	}
+	else
+		return -1;
+}
+
+

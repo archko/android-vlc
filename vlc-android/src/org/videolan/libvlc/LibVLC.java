@@ -734,10 +734,20 @@ public class LibVLC {
     public native int getChapterCountForTitle(int title);
     public native int getTitleCount();
 
-    private native boolean takeSnapShot(int num, String file, int width, int height);
+    public native boolean takeSnapShot(int num, String file, int width, int height);
 
     public boolean takeSnapShot(String file, int width, int height) {
         return takeSnapShot(0, file, width, height);
     }
+
+    public native boolean videoRecordStart(String path);
+
+    public native boolean videoRecordStop();
+
+    public native boolean videoIsRecording();
+
+    public native boolean videoIsRecordable();
+
+    public native int getState();
 
 }

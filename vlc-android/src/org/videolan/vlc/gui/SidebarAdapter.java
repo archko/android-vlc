@@ -55,6 +55,12 @@ public class SidebarAdapter extends BaseAdapter {
             this.name = VLCApplication.getAppContext().getString(_name);
             this.attributeID = _attributeID;
         }
+
+        public SidebarEntry(String _id, String name, int _attributeID) {
+            this.id = _id;
+            this.name = name;
+            this.attributeID = _attributeID;
+        }
     }
 
     private Context mContext;
@@ -72,6 +78,7 @@ public class SidebarAdapter extends BaseAdapter {
             new SidebarEntry( "history", R.string.history, R.attr.ic_menu_history ),
             //new SidebarEntry( "bookmarks", R.string.bookmarks, R.drawable.ic_bookmarks ),
             //new SidebarEntry( "playlists", R.string.playlists, R.drawable.icon ),
+            new SidebarEntry( "tv", "TV", R.attr.ic_menu_history ),
         };
         entries = Arrays.asList(entries2);
 
@@ -148,6 +155,8 @@ public class SidebarAdapter extends BaseAdapter {
             f = new DirectoryViewFragment();
         } else if(id.equals("history")) {
             f = new HistoryFragment();
+        } else if (id.equals("tv")) {
+            f=new VideoListFragment();
         }
         else {
             mCurrentFragmentId = prevFragmentId; // Restore the current fragment id.
