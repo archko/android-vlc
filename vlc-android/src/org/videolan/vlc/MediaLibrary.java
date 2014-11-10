@@ -37,7 +37,6 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.util.AndroidDevices;
@@ -220,7 +219,7 @@ public class MediaLibrary {
             final MediaDatabase DBManager = MediaDatabase.getInstance();
 
             // show progressbar in footer
-            VLCDrawerActivity.showProgressBar();
+            MainActivity.showProgressBar();
 
             List<File> mediaDirs = DBManager.getMediaDirs();
             if (mediaDirs.size() == 0) {
@@ -303,7 +302,7 @@ public class MediaLibrary {
                 // Process the stacked items
                 for (File file : mediaToScan) {
                     String fileURI = LibVLC.PathToURI(file.getPath());
-                    VLCDrawerActivity.sendTextInfo(file.getName(), count,
+                    MainActivity.sendTextInfo(file.getName(), count,
                             mediaToScan.size());
                     count++;
                     if (existingMedias.containsKey(fileURI)) {
@@ -353,8 +352,8 @@ public class MediaLibrary {
                 }
 
                 // hide progressbar in footer
-                VLCDrawerActivity.clearTextInfo();
-                VLCDrawerActivity.hideProgressBar();
+                MainActivity.clearTextInfo();
+                MainActivity.hideProgressBar();
 
                 VideoGridFragment.actionScanStop();
 

@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../java-libs/appcompat/libs/android-support-v4.jar!/" />
       <root url="jar://$PROJECT_DIR$/../java-libs/appcompat/libs/android-support-v7-appcompat.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../java-libs/cardview/libs/android-support-v7-cardview.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

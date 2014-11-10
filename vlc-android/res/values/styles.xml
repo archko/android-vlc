@@ -10,9 +10,10 @@
 
     <style name="Theme.VLC" parent="Theme.VLC.Apearance">
         <item name="actionBarStyle">@style/ActionBar</item>
-        <!--<item name="actionBarSize">50dp</item>-->
+        <item name="actionBarSize">50dp</item>
         <item name="windowActionBarOverlay">true</item>
         <item name="actionOverflowButtonStyle">@style/ActionBar.OverflowButton</item>
+        <item name="drawerArrowStyle">@style/ActionBar.ArrowToggle</item>
     </style>
 
     <style name="Theme.VLC.Apearance" parent="Theme.AppCompat.Light">
@@ -58,6 +59,8 @@
         <item name="ic_audio_player_dots">@drawable/dots_dark</item>
         <item name="ic_play">@drawable/ic_play</item>
         <item name="ic_pause">@drawable/ic_pause</item>
+        <item name="ic_play_for_header_play_pause">@drawable/ic_play_for_header_play_pause</item>
+        <item name="ic_pause_for_header_play_pause">@drawable/ic_pause_for_header_play_pause</item>
         <item name="ic_previous">@drawable/ic_previous</item>
         <item name="ic_next">@drawable/ic_next</item>
         <item name="ic_menu_video">@drawable/ic_menu_video</item>
@@ -119,6 +122,8 @@
         <item name="ic_audio_player_dots">@drawable/dots</item>
         <item name="ic_play">@drawable/ic_play_w</item>
         <item name="ic_pause">@drawable/ic_pause_w</item>
+        <item name="ic_play_for_header_play_pause">@drawable/ic_play_for_header_play_pause_w</item>
+        <item name="ic_pause_for_header_play_pause">@drawable/ic_pause_for_header_play_pause_w</item>
         <item name="ic_previous">@drawable/ic_previous_w</item>
         <item name="ic_next">@drawable/ic_next_w</item>
         <item name="ic_menu_video">@drawable/ic_menu_video_w</item>
@@ -135,7 +140,7 @@
     </style>
 
     <style name="Theme.VLC.NoTitleBar" parent="Theme.AppCompat.Light">
-        <item name="android:windowNoTitle">true</item>
+        <!--<item name="android:windowNoTitle">true</item>-->
         <item name="item_common_pressed">@color/item_common_pressed</item>
         <item name="item_common_selected">@color/item_common_selected</item>
         <item name="item_footer">@color/item_footer</item>
@@ -147,7 +152,7 @@
         <item name="android:windowBackground">@color/background_common</item>
     </style>
 
-    <style name="Theme.VLC.Fullscreen" parent="android:Theme.NoTitleBar.Fullscreen">
+    <style name="Theme.VLC.Player" parent="android:Theme.NoTitleBar.Fullscreen">
         <item name="android:windowBackground">@color/black</item>
         <item name="video_player_overlay">@color/transparent_gray</item>
 
@@ -165,6 +170,11 @@
 
     <style name="ActionBar.OverflowButton">
         <item name="android:src">@drawable/ic_menu_overflow</item>
+        <item name="background">@drawable/abc_item_background_holo_light</item>
+    </style>
+
+    <style name="ActionBar.ArrowToggle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@color/white</item>
     </style>
 
     <!-- Advanced options menu styles -->
@@ -177,9 +187,10 @@
     </style>
 
     <style name="Theme.VLC.AdvancedOptionsLight" parent="Theme.VLC.AdvancedOptions">
-      <item name="android:windowBackground">@drawable/abc_menu_dropdown_panel_holo_light</item>
+      <item name="android:windowBackground">@drawable/abc_item_background_holo_light</item>
       <item name="android:textColor">@color/grey1</item>
       <item name="advanced_options_divider">@color/darkgrey</item>
+      <item name="advanced_options_background">@color/background_menu</item>
       <item name="ic_speed_normal_style">@drawable/ic_speed_normal</item>
       <item name="ic_sleep_normal_style">@drawable/ic_sleep_normal</item>
       <item name="ic_jumpto_normal_style">@drawable/ic_jumpto_normal</item>
@@ -190,9 +201,10 @@
     
 
     <style name="Theme.VLC.AdvancedOptionsBlack" parent="Theme.VLC.AdvancedOptions">
-      <item name="android:windowBackground">@drawable/abc_menu_dropdown_panel_holo_dark</item>
+      <item name="android:windowBackground">@drawable/abc_item_background_holo_dark</item>
       <item name="android:textColor">@color/white</item>
       <item name="advanced_options_divider">@color/grey1</item>
+      <item name="advanced_options_background">@color/black2</item>
       <item name="ic_speed_normal_style">@drawable/ic_speed_normal_w</item>
       <item name="ic_sleep_normal_style">@drawable/ic_sleep_normal_w</item>
       <item name="ic_jumpto_normal_style">@drawable/ic_jumpto_normal_w</item>

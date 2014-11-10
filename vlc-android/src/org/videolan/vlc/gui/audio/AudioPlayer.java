@@ -22,7 +22,6 @@ package org.videolan.vlc.gui.audio;
 
 import java.util.ArrayList;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -34,7 +33,6 @@ import org.videolan.vlc.audio.RepeatType;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
-import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
 import org.videolan.vlc.interfaces.IAudioPlayer;
@@ -329,12 +327,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         if (mAudioController.isPlaying()) {
             mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mPlayPause.setContentDescription(getString(R.string.pause));
-            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause_for_header_play_pause));
             mHeaderPlayPause.setContentDescription(getString(R.string.pause));
         } else {
             mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mPlayPause.setContentDescription(getString(R.string.play));
-            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play_for_header_play_pause));
             mHeaderPlayPause.setContentDescription(getString(R.string.play));
         }
         if (mAudioController.isShuffling()) {
@@ -484,15 +482,15 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     }
 
     public void show() {
-        Activity activity = getActivity();
-        VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-        drawerActivity.showAudioPlayer();
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null)
+            activity.showAudioPlayer();
     }
 
     public void hide() {
-        Activity activity = getActivity();
-        VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-        drawerActivity.hideAudioPlayer();
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null)
+            activity.hideAudioPlayer();
     }
 
     /**
@@ -552,9 +550,8 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
         @Override
         public void onTouchClick() {
-            Activity activity = getActivity();
-            VLCDrawerActivity drawerActivity=(VLCDrawerActivity) activity;
-            drawerActivity.slideUpOrDownAudioPlayer();
+            MainActivity activity = (MainActivity)getActivity();
+            activity.slideUpOrDownAudioPlayer();
         }
     };
 
@@ -667,13 +664,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     }
 
     public void showPlaylistTips() {
-        VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+        MainActivity activity = (MainActivity)getActivity();
         if(activity != null)
             activity.showTipViewIfNeeded(R.layout.audio_playlist_tips, PREF_PLAYLIST_TIPS_SHOWN);
     }
 
     public void showAudioPlayerTips() {
-        VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+        MainActivity activity = (MainActivity)getActivity();
         if(activity != null)
             activity.showTipViewIfNeeded(R.layout.audio_player_tips, PREF_AUDIOPLAYER_TIPS_SHOWN);
     }

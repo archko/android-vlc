@@ -36,7 +36,7 @@ import org.videolan.vlc.Thumbnailer;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
-import org.videolan.vlc.gui.VLCDrawerActivity;
+import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCRunnable;
@@ -50,6 +50,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -81,14 +82,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     protected static final String ACTION_SCAN_STOP = "org.videolan.vlc.gui.ScanStop";
     protected static final int UPDATE_ITEM = 0;
 
-    /* Constants used to switch from Grid to List and vice versa */
-    //FIXME If you know a way to do this in pure XML please do it!
-    private static final int GRID_ITEM_WIDTH_DP = 156;
-    private static final int GRID_HORIZONTAL_SPACING_DP = 20;
-    private static final int GRID_VERTICAL_SPACING_DP = 20;
     private static final int GRID_STRETCH_MODE = GridView.STRETCH_COLUMN_WIDTH;
-    private static final int LIST_HORIZONTAL_SPACING_DP = 0;
-    private static final int LIST_VERTICAL_SPACING_DP = 10;
     private static final int LIST_STRETCH_MODE = GridView.STRETCH_COLUMN_WIDTH;
 
     protected LinearLayout mLayoutFlipperLoading;
@@ -174,15 +168,18 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     @Override
     public void onResume() {
         super.onResume();
+        mMediaLibrary.addUpdateHandler(mHandler);
+        final boolean refresh = mVideoAdapter.isEmpty();
+        if (refresh)
+            updateList();
         //Get & set times
         HashMap<String, Long> times = MediaDatabase.getInstance().getVideoTimes(getActivity());
         mVideoAdapter.setTimes(times);
         mVideoAdapter.notifyDataSetChanged();
-        updateList();
-        mMediaLibrary.addUpdateHandler(mHandler);
         mGridView.setSelection(mGVFirstVisiblePos);
         updateViewMode();
-        mAnimator.animate();
+        if (refresh)
+            mAnimator.animate();
 
         /* Start the thumbnailer */
         if (mThumbnailer != null)
@@ -204,29 +201,13 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         mVideoAdapter.clear();
     }
 
-    private boolean hasSpaceForGrid(View v) {
-        final Activity activity = getActivity();
-        if (activity == null)
-            return true;
-
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
-
-        final int itemWidth = Util.convertDpToPx(GRID_ITEM_WIDTH_DP);
-        final int horizontalspacing = Util.convertDpToPx(GRID_HORIZONTAL_SPACING_DP);
-        final int width = mGridView.getPaddingLeft() + mGridView.getPaddingRight()
-                + horizontalspacing + (itemWidth * 2);
-        if (width < outMetrics.widthPixels)
-            return true;
-        return false;
-    }
-
     private void updateViewMode() {
         if (getView() == null || getActivity() == null) {
             Log.w(TAG, "Unable to setup the view");
             return;
         }
 
+        Resources res = getResources();
         // Compute the left/right padding dynamically
         DisplayMetrics outMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
@@ -236,20 +217,15 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
                 sidePadding, mGridView.getPaddingBottom());
 
         // Select between grid or list
-        if (hasSpaceForGrid(getView())) {
-            Log.d(TAG, "Switching to grid mode");
+            if (!res.getBoolean(R.bool.list_mode)) {
             mGridView.setNumColumns(GridView.AUTO_FIT);
             mGridView.setStretchMode(GRID_STRETCH_MODE);
-            mGridView.setHorizontalSpacing(Util.convertDpToPx(GRID_HORIZONTAL_SPACING_DP));
-            mGridView.setVerticalSpacing(Util.convertDpToPx(GRID_VERTICAL_SPACING_DP));
-            mGridView.setColumnWidth(Util.convertDpToPx(GRID_ITEM_WIDTH_DP));
+            mGridView.setColumnWidth(res.getDimensionPixelSize(R.dimen.grid_card_width));
+            mGridView.setVerticalSpacing(res.getDimensionPixelSize(R.dimen.grid_card_vertical_spacing));
             mVideoAdapter.setListMode(false);
         } else {
-            Log.d(TAG, "Switching to list mode");
             mGridView.setNumColumns(1);
             mGridView.setStretchMode(LIST_STRETCH_MODE);
-            mGridView.setHorizontalSpacing(LIST_HORIZONTAL_SPACING_DP);
-            mGridView.setVerticalSpacing(Util.convertDpToPx(LIST_VERTICAL_SPACING_DP));
             mVideoAdapter.setListMode(true);
         }
     }
@@ -268,7 +244,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     public void onGridItemClick(GridView l, View v, int position, long id) {
         Media media = (Media) getListAdapter().getItem(position);
         if (media instanceof MediaGroup) {
-            VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+            MainActivity activity = (MainActivity)getActivity();
             VideoGridFragment frag = (VideoGridFragment)activity.showSecondaryFragment("videoGroupList");
             if (frag != null) {
                 frag.setGroup(media.getTitle());
@@ -298,7 +274,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
             playAudio(media);
             return true;
         case R.id.video_list_info:
-            VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+            MainActivity activity = (MainActivity)getActivity();
             MediaInfoFragment frag = (MediaInfoFragment)activity.showSecondaryFragment("mediaInfo");
             if (frag != null) {
                 frag.setMediaLocation(media.getLocation());
@@ -411,6 +387,14 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         }
     }
 
+    private void focusHelper(boolean idIsEmpty) {
+        View parent = getView();
+		MainActivity main = (MainActivity)getActivity();
+        main.setMenuFocusDown(idIsEmpty, android.R.id.list);
+        main.setSearchAsFocusDown(idIsEmpty, parent,
+            android.R.id.list);
+    }
+
     private void updateList() {
         List<Media> itemList = mMediaLibrary.getVideoItems();
 
@@ -440,7 +424,12 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
                 }
             }
             mVideoAdapter.sort();
-        }
+            mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
+            mGridView.setSelection(mGVFirstVisiblePos);
+            mGridView.requestFocus();
+            focusHelper(false);
+        } else
+            focusHelper(true);
     }
 
     @Override

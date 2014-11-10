@@ -38,11 +38,14 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.telephony.TelephonyManager;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 
 public class AndroidDevices {
     public final static String TAG = "VLC/Util/AndroidDevices";
 
     final static boolean hasNavBar;
+    final static boolean hasTsp;
 
     static {
         HashSet<String> devicesWithoutNavBar = new HashSet<String>();
@@ -50,8 +53,9 @@ public class AndroidDevices {
         devicesWithoutNavBar.add("HTC One S");
         devicesWithoutNavBar.add("HTC One X");
         devicesWithoutNavBar.add("HTC One XL");
-        hasNavBar = LibVlcUtil.isICSOrLater()
-                && !devicesWithoutNavBar.contains(android.os.Build.MODEL);
+        hasNavBar = LibVlcUtil.isJellyBeanMR1OrLater() || (LibVlcUtil.isICSOrLater()
+                && !devicesWithoutNavBar.contains(android.os.Build.MODEL));
+        hasTsp = VLCApplication.getAppContext().getPackageManager().hasSystemFeature("android.hardware.touchscreen");
     }
 
     public static boolean hasExternalStorage() {
@@ -77,6 +81,10 @@ public class AndroidDevices {
         }else{
             return true;
         }
+    }
+
+    public static boolean hasTsp(){
+        return hasTsp;
     }
 
     public static String[] getStorageDirectories() {
@@ -145,4 +153,24 @@ public class AndroidDevices {
         return list.toArray(new String[list.size()]);
     }
 
+    public static float getCenteredAxis(MotionEvent event,
+            InputDevice device, int axis) {
+        final InputDevice.MotionRange range =
+                device.getMotionRange(axis, event.getSource());
+
+        // A joystick at rest does not always report an absolute position of
+        // (0,0). Use the getFlat() method to determine the range of values
+        // bounding the joystick axis center.
+        if (range != null) {
+            final float flat = range.getFlat();
+            final float value = event.getAxisValue(axis);
+
+            // Ignore axis values that are within the 'flat' region of the
+            // joystick axis center.
+            if (Math.abs(value) > flat) {
+                return value;
+            }
+        }
+        return 0;
+    }
 }

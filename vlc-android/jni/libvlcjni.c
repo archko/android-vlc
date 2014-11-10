@@ -43,10 +43,6 @@
 #define VOUT_ANDROID_SURFACE 0
 #define VOUT_OPENGLES2       1
 
-#define HW_ACCELERATION_DISABLED 0
-#define HW_ACCELERATION_DECODING 1
-#define HW_ACCELERATION_FULL     2
-
 #define LOG_TAG "VLC/JNI/main"
 #include "log.h"
 
@@ -55,6 +51,25 @@
 #else
 #define NO_IOMX_DR ""
 #endif
+
+#define VLC_JNI_VERSION JNI_VERSION_1_2
+
+#define THREAD_NAME "libvlcjni"
+int jni_attach_thread(JNIEnv **env, const char *thread_name);
+void jni_detach_thread();
+int jni_get_env(JNIEnv **env);
+
+static void add_media_options(libvlc_media_t *p_md, JNIEnv *env, jobjectArray mediaOptions)
+{
+    int stringCount = (*env)->GetArrayLength(env, mediaOptions);
+    for(int i = 0; i < stringCount; i++)
+    {
+        jstring option = (jstring)(*env)->GetObjectArrayElement(env, mediaOptions, i);
+        const char* p_st = (*env)->GetStringUTFChars(env, option, 0);
+        libvlc_media_add_option(p_md, p_st); // option
+        (*env)->ReleaseStringUTFChars(env, option, p_st);
+    }
+}
 
 libvlc_media_t *new_media(jlong instance, JNIEnv *env, jobject thiz, jstring fileLocation, bool noOmx, bool noVideo)
 {
@@ -66,26 +81,16 @@ libvlc_media_t *new_media(jlong instance, JNIEnv *env, jobject thiz, jstring fil
     if (!p_md)
         return NULL;
 
-    if (!noOmx) {
-        jclass cls = (*env)->GetObjectClass(env, thiz);
-        jmethodID methodId = (*env)->GetMethodID(env, cls, "getHardwareAcceleration", "()I");
-        int hardwareAcceleration = (*env)->CallIntMethod(env, thiz, methodId);
-        if (hardwareAcceleration == HW_ACCELERATION_DECODING || hardwareAcceleration == HW_ACCELERATION_FULL) {
-            /*
-             * Set higher caching values if using iomx decoding, since some omx
-             * decoders have a very high latency, and if the preroll data isn't
-             * enough to make the decoder output a frame, the playback timing gets
-             * started too soon, and every decoded frame appears to be too late.
-             * On Nexus One, the decoder latency seems to be 25 input packets
-             * for 320x170 H.264, a few packets less on higher resolutions.
-             * On Nexus S, the decoder latency seems to be about 7 packets.
-             */
-            libvlc_media_add_option(p_md, ":file-caching=1500");
-            libvlc_media_add_option(p_md, ":network-caching=1500");
-            libvlc_media_add_option(p_md, ":codec=mediacodec,iomx,all");
+    jclass cls = (*env)->GetObjectClass(env, thiz);
+    jmethodID methodId = (*env)->GetMethodID(env, cls, "getMediaOptions", "(ZZ)[Ljava/lang/String;");
+    if (methodId != NULL)
+    {
+        jobjectArray mediaOptions = (*env)->CallObjectMethod(env, thiz, methodId, noOmx, noVideo);
+        if (mediaOptions != NULL)
+        {
+            add_media_options(p_md, env, mediaOptions);
+            (*env)->DeleteLocalRef(env, mediaOptions);
         }
-        if (noVideo)
-            libvlc_media_add_option(p_md, ":no-video");
     }
     return p_md;
 }
@@ -110,7 +115,7 @@ static void releaseMediaPlayer(JNIEnv *env, jobject thiz)
  * Note: It's okay to use a static variable for the VM pointer since there
  * can only be one instance of this shared library in a single VM
  */
-JavaVM *myVm;
+static JavaVM *myVm;
 
 static jobject eventHandlerInstance = NULL;
 
@@ -123,8 +128,8 @@ static void vlc_event_callback(const libvlc_event_t *ev, void *data)
     if (eventHandlerInstance == NULL)
         return;
 
-    if ((*myVm)->GetEnv(myVm, (void**) &env, JNI_VERSION_1_2) < 0) {
-        if ((*myVm)->AttachCurrentThread(myVm, &env, NULL) < 0)
+    if (jni_get_env(&env) < 0) {
+        if (jni_attach_thread(&env, THREAD_NAME) < 0)
             return;
         isAttached = true;
     }
@@ -199,7 +204,7 @@ static void vlc_event_callback(const libvlc_event_t *ev, void *data)
 end:
     (*env)->DeleteLocalRef(env, bundle);
     if (isAttached)
-        (*myVm)->DetachCurrentThread(myVm);
+        jni_detach_thread();
 }
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -211,12 +216,35 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     pthread_cond_init(&vout_android_surf_attached, NULL);
 
     LOGD("JNI interface loaded.");
-    return JNI_VERSION_1_2;
+    return VLC_JNI_VERSION;
 }
 
 void JNI_OnUnload(JavaVM* vm, void* reserved) {
     pthread_mutex_destroy(&vout_android_lock);
     pthread_cond_destroy(&vout_android_surf_attached);
+}
+
+int jni_attach_thread(JNIEnv **env, const char *thread_name)
+{
+    JavaVMAttachArgs args;
+    jint result;
+
+    args.version = VLC_JNI_VERSION;
+    args.name = thread_name;
+    args.group = NULL;
+
+    result = (*myVm)->AttachCurrentThread(myVm, env, &args);
+    return result == JNI_OK ? 0 : -1;
+}
+
+void jni_detach_thread()
+{
+    (*myVm)->DetachCurrentThread(myVm);
+}
+
+int jni_get_env(JNIEnv **env)
+{
+    return (*myVm)->GetEnv(myVm, (void **)env, VLC_JNI_VERSION) == JNI_OK ? 0 : -1;
 }
 
 // FIXME: use atomics
@@ -252,6 +280,9 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         LOGD("Using network caching of %d ms", networkCaching);
     }
 
+    methodId = (*env)->GetMethodID(env, cls, "getHttpReconnect", "()Z");
+    bool enable_http_reconnect = (*env)->CallBooleanMethod(env, thiz, methodId);
+
     methodId = (*env)->GetMethodID(env, cls, "getChroma", "()Ljava/lang/String;");
     jstring chroma = (*env)->CallObjectMethod(env, thiz, methodId);
     const char *chromastr = (*env)->GetStringUTFChars(env, chroma, 0);
@@ -265,10 +296,10 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
     methodId = (*env)->GetMethodID(env, cls, "isVerboseMode", "()Z");
     verbosity = (*env)->CallBooleanMethod(env, thiz, methodId);
 
-    methodId = (*env)->GetMethodID(env, cls, "getHardwareAcceleration", "()I");
-    int hardwareAcceleration = (*env)->CallIntMethod(env, thiz, methodId);
+    methodId = (*env)->GetMethodID(env, cls, "isDirectRendering", "()Z");
+    bool direct_rendering = (*env)->CallBooleanMethod(env, thiz, methodId);
     /* With the MediaCodec opaque mode we cannot use the OpenGL ES vout. */
-    if (hardwareAcceleration == HW_ACCELERATION_FULL)
+    if (direct_rendering)
         use_opengles2 = false;
 
     methodId = (*env)->GetMethodID(env, cls, "getCachePath", "()Ljava/lang/String;");
@@ -306,8 +337,11 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         use_opengles2 ? "--vout=gles2" : "--vout=androidsurface",
         "--androidsurface-chroma", chromastr != NULL && chromastr[0] != 0 ? chromastr : "RV32",
         /* XXX: we can't recover from direct rendering failure */
-        (hardwareAcceleration == HW_ACCELERATION_FULL) ? "" : "--no-mediacodec-dr",
-        (hardwareAcceleration == HW_ACCELERATION_FULL) ? "" : NO_IOMX_DR,
+        direct_rendering ? "" : "--no-mediacodec-dr",
+        direct_rendering ? "" : NO_IOMX_DR,
+
+        /* Reconnect on lost HTTP streams, e.g. network change */
+        enable_http_reconnect ? "--http-reconnect" : "",
     };
     libvlc_instance_t *instance = libvlc_new(sizeof(argv) / sizeof(*argv), argv);
 
@@ -411,16 +445,7 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
     libvlc_media_t* p_md = libvlc_media_new_location((libvlc_instance_t*)(intptr_t)instance, p_mrl);
     /* media options */
     if (mediaOptions != NULL)
-    {
-        int stringCount = (*env)->GetArrayLength(env, mediaOptions);
-        for(int i = 0; i < stringCount; i++)
-        {
-            jstring option = (jstring)(*env)->GetObjectArrayElement(env, mediaOptions, i);
-            const char* p_st = (*env)->GetStringUTFChars(env, option, 0);
-            libvlc_media_add_option(p_md, p_st); // option
-            (*env)->ReleaseStringUTFChars(env, option, p_st);
-        }
-    }
+        add_media_options(p_md, env, mediaOptions);
 
     (*env)->ReleaseStringUTFChars(env, mrl, p_mrl);
 
@@ -597,75 +622,11 @@ jint Java_org_videolan_libvlc_LibVLC_getTitleCount(JNIEnv *env, jobject thiz)
     return -1;
 }
 
-
-//take snap and record video
-jboolean Java_org_videolan_libvlc_LibVLC_takeSnapShot(JNIEnv *env, jobject thiz,jint number, jstring path,
-jint width,jint height)
+void Java_org_videolan_libvlc_LibVLC_playerNavigate(JNIEnv *env, jobject thiz, jint navigate)
 {
-    jboolean isCopy;
+    unsigned nav = navigate;
     libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-    /* Get C string */
-    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
-
     if (mp)
-        if(libvlc_video_take_snapshot(mp, (int)number,psz_path , (int)width,(int)height)==0)
-        	return JNI_TRUE;
-	     return JNI_FALSE;
+        libvlc_media_player_navigate(mp, (unsigned) nav);
 }
-
-jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStart(JNIEnv *env, jobject thiz,jstring path)
-{
-	jboolean isCopy;
-    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-    /* Get C string */
-    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
-    //const char* psz_filename=(*env)->GetStringUTFChars(env, filename, &isCopy);
-    if (mp)
-		if(libvlc_media_player_record_start(mp,psz_path)==0)
-	        return JNI_TRUE;
-    return JNI_FALSE;
-}
-
-jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStop(JNIEnv *env, jobject thiz)
-{
-	jboolean isCopy;
-    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-    /* Get C string */
-    if (mp)
-	    if(libvlc_media_player_record_stop(mp)==0)
-			return JNI_TRUE;
-		return JNI_FALSE;
-}
-
-jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecording(JNIEnv *env, jobject thiz)
-{
-	jboolean isCopy;
-	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-	if (mp)
-		if(libvlc_media_player_is_recording(mp))
-			return JNI_TRUE;
-		return JNI_FALSE;
-}
-
-jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecordable(JNIEnv *env, jobject thiz)
-{
-	jboolean isCopy;
-	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-	if (mp)
-		if(libvlc_media_player_is_recordable(mp))
-			return JNI_TRUE;
-		return JNI_FALSE;
-}
-
-jint Java_org_videolan_libvlc_LibVLC_getState(JNIEnv *env, jobject thiz)
-{
-	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
-	if (mp){
-		libvlc_state_t state=libvlc_media_player_get_state(mp);
-		return (jint)state;
-	}
-	else
-		return -1;
-}
-
 

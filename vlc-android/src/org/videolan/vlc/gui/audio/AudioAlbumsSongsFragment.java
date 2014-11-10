@@ -30,7 +30,7 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
-import org.videolan.vlc.gui.VLCDrawerActivity;
+import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.VLCRunnable;
 import org.videolan.vlc.widget.FlingViewGroup;
@@ -161,7 +161,7 @@ public class AudioAlbumsSongsFragment extends Fragment {
             public void onTouchClick() {}
             @Override
             public void onBackSwitched() {
-                VLCDrawerActivity activity = (VLCDrawerActivity)getActivity();
+                MainActivity activity = (MainActivity)getActivity();
                 activity.popSecondaryFragment();
             }
         });

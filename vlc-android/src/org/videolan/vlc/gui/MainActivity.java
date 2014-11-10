@@ -42,6 +42,7 @@ import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.interfaces.IRefreshable;
 import org.videolan.vlc.interfaces.ISortable;
+import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
@@ -49,7 +50,6 @@ import org.videolan.vlc.widget.SlidingPaneLayout;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -69,30 +69,27 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.text.InputType;
 import android.util.Log;
-import android.view.Display;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import com.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends ActionBarActivity {
     public final static String TAG = "VLC/MainActivity";
@@ -109,12 +106,13 @@ public class MainActivity extends ActionBarActivity {
     private static final int ACTIVITY_SHOW_INFOLAYOUT = 2;
 
     private ActionBar mActionBar;
-    private SlidingMenu mMenu;
     private SidebarAdapter mSidebarAdapter;
     private AudioPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
     private SlidingPaneLayout mSlidingPane;
-    private RelativeLayout mRootContainer;
+    private DrawerLayout mRootContainer;
+    private ListView mListView;
+    private ActionBarDrawerToggle mDrawerToggle;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -134,9 +132,14 @@ public class MainActivity extends ActionBarActivity {
     private boolean mScanNeeded = true;
 
     private Handler mHandler = new MainActivityHandler(this);
+    private int mFocusedPrior = 0;
+    private int mActionBarIconId = -1;
+    Menu mMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /* Enable the indeterminate progress feature */
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         if (!LibVlcUtil.hasCompatibleCPU(this)) {
             Log.e(TAG, LibVlcUtil.getErrorMsg());
             Intent i = new Intent(this, CompatErrorActivity.class);
@@ -181,16 +184,14 @@ public class MainActivity extends ActionBarActivity {
             return;
         }
 
+        /* Load media items from database and storage */
+        if (mScanNeeded)
+            MediaLibrary.getInstance().loadMediaItems();
+
         super.onCreate(savedInstanceState);
 
         /*** Start initializing the UI ***/
 
-        /* Enable the indeterminate progress feature */
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-
-        // Set up the sliding menu
-        mMenu = (SlidingMenu) LayoutInflater.from(this).inflate(R.layout.sliding_menu, null);
-        changeMenuOffset();
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
@@ -203,35 +204,43 @@ public class MainActivity extends ActionBarActivity {
         mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
         mSlidingPane.setPanelSlideListener(mPanelSlideListener);
 
-        View sidebar = LayoutInflater.from(this).inflate(R.layout.sidebar, null);
-        final ListView listView = (ListView)sidebar.findViewById(android.R.id.list);
-        listView.setFooterDividersEnabled(true);
+        mListView = (ListView)v_main.findViewById(R.id.sidelist);
+        mListView.setFooterDividersEnabled(true);
         mSidebarAdapter = new SidebarAdapter(this);
-        listView.setAdapter(mSidebarAdapter);
-        mMenu.setMenu(sidebar);
-        mMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT, true);
+        mListView.setAdapter(mSidebarAdapter);
+
 
         /* Initialize UI variables */
         mInfoLayout = v_main.findViewById(R.id.info_layout);
         mInfoProgress = (ProgressBar) v_main.findViewById(R.id.info_progress);
         mInfoText = (TextView) v_main.findViewById(R.id.info_text);
         mAudioPlayerFilling = v_main.findViewById(R.id.audio_player_filling);
-        mRootContainer = (RelativeLayout) v_main.findViewById(R.id.root_container);
+        mRootContainer = (DrawerLayout) v_main.findViewById(R.id.root_container);
 
         /* Set up the action bar */
         prepareActionBar();
 
-        /* Set up the sidebar click listener */
-        listView.setOnItemClickListener(new OnItemClickListener() {
+        /* Set up the sidebar click listener
+         * no need to invalidate menu for now */
+        mDrawerToggle = new ActionBarDrawerToggle(this, mRootContainer, R.string.drawer_open, R.string.drawer_close);
+
+        // Set the drawer toggle as the DrawerListener
+        mRootContainer.setDrawerListener(mDrawerToggle);
+        // set a custom shadow that overlays the main content when the drawer opens
+        mRootContainer.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
+        mListView.setOnItemClickListener(new OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                     int position, long id) {
-                SidebarAdapter.SidebarEntry entry = (SidebarEntry) listView.getItemAtPosition(position);
+                SidebarAdapter.SidebarEntry entry = (SidebarEntry) mListView.getItemAtPosition(position);
                 Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder);
 
                 if(current == null || (entry != null && current.getTag().equals(entry.id))) { /* Already selected */
-                    mMenu.showContent();
+                    if (mFocusedPrior != 0)
+                        findViewById(R.id.ml_menu_search).requestFocus();
+                    mRootContainer.closeDrawer(mListView);
                     return;
                 }
 
@@ -265,7 +274,9 @@ public class MainActivity extends ActionBarActivity {
                 if(current.getTag().equals("tracks"))
                     getFragment("audio").setUserVisibleHint(false);
 
-                mMenu.showContent();
+                if (mFocusedPrior != 0)
+                    findViewById(R.id.ml_menu_search).requestFocus();
+                mRootContainer.closeDrawer(mListView);
             }
         });
 
@@ -277,10 +288,7 @@ public class MainActivity extends ActionBarActivity {
             .replace(R.id.audio_player, mAudioPlayer)
             .commit();
 
-        /* Show info/alpha/beta Warning */
-        if (mSettings.getInt(PREF_SHOW_INFO, -1) != mVersionNumber)
-            showInfoDialog();
-        else if (mFirstRun) {
+        if (mFirstRun) {
             /*
              * The sliding menu is automatically opened when the user closes
              * the info dialog. If (for any reason) the dialog is not shown,
@@ -289,7 +297,7 @@ public class MainActivity extends ActionBarActivity {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mMenu.showMenu();
+                    mRootContainer.openDrawer(mListView);
                 }
             }, 500);
         }
@@ -306,19 +314,19 @@ public class MainActivity extends ActionBarActivity {
         reloadPreferences();
     }
 
-    private void changeMenuOffset() {
-        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        @SuppressWarnings("deprecation")
-        int behindOffset_dp = Util.convertPxToDp(display.getWidth()) - 208;
-        mMenu.setBehindOffset(Util.convertDpToPx(behindOffset_dp));
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void prepareActionBar() {
         mActionBar = getSupportActionBar();
-        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         mActionBar.setDisplayHomeAsUpEnabled(true);
+        mActionBar.setHomeButtonEnabled(true);
     }
 
     @Override
@@ -330,11 +338,7 @@ public class MainActivity extends ActionBarActivity {
         /* FIXME: this is used to avoid having MainActivity twice in the backstack */
         if (getIntent().hasExtra(AudioService.START_FROM_NOTIFICATION))
             getIntent().removeExtra(AudioService.START_FROM_NOTIFICATION);
-
-        /* Load media items from database and storage */
-        if (mScanNeeded)
-            MediaLibrary.getInstance().loadMediaItems();
-    }
+   }
 
     @Override
     protected void onResumeFragments() {
@@ -409,6 +413,7 @@ public class MainActivity extends ActionBarActivity {
 
         mAudioController.removeAudioPlayer(mAudioPlayer);
         AudioServiceController.getInstance().unbindAudioService(this);
+        mFocusedPrior = 0;
     }
 
     @Override
@@ -429,9 +434,11 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public void onBackPressed() {
-        if(mMenu.isMenuShowing()) {
+        if(mRootContainer.isDrawerOpen(mListView)) {
             /* Close the menu first */
-            mMenu.showContent();
+            if (mFocusedPrior != 0)
+                findViewById(R.id.ml_menu_search).requestFocus();
+            mRootContainer.closeDrawer(mListView);
             return;
         }
 
@@ -556,6 +563,7 @@ public class MainActivity extends ActionBarActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        mMenu = menu;
         /* Note: on Android 3.0+ with an action bar this method
          * is called while the view is created. This can happen
          * any time after onCreate.
@@ -586,7 +594,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        changeMenuOffset();
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -661,10 +669,9 @@ public class MainActivity extends ActionBarActivity {
                     break;
                 }
                 /* Toggle the sidebar */
-                if(mMenu.isMenuShowing())
-                    mMenu.showContent();
-                else
-                    mMenu.showMenu();
+                if (mDrawerToggle.onOptionsItemSelected(item)) {
+                    return true;
+                }
                 break;
             case R.id.search_clear_history:
                 MediaDatabase.getInstance().clearSearchHistory();
@@ -687,33 +694,102 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    public void setMenuFocusDown(boolean idIsEmpty, int id) {
+        if (mMenu == null)
+            return;
+        //Save menu items ids for focus control
+        final int[] menu_controls = new int[mMenu.size()+1];
+        for (int i = 0 ; i < mMenu.size() ; i++){
+            menu_controls[i] = mMenu.getItem(i).getItemId();
+        }
+        menu_controls[mMenu.size()] = mActionBarIconId;
+        /*menu_controls = new int[]{R.id.ml_menu_search,
+            R.id.ml_menu_open_mrl, R.id.ml_menu_sortby,
+            R.id.ml_menu_last_playlist, R.id.ml_menu_refresh,
+            mActionBarIconId};*/
+		int pane = mSlidingPane.getState();
+        for(int r : menu_controls) {
+            View v = findViewById(r);
+            if (v != null) {
+                if (!idIsEmpty)
+                    v.setNextFocusDownId(id);
+                else {
+                    if (pane ==  mSlidingPane.STATE_CLOSED) {
+                        v.setNextFocusDownId(R.id.play_pause);
+                    } else if (pane == mSlidingPane.STATE_OPENED) {
+                        v.setNextFocusDownId(R.id.header_play_pause);
+                    } else if (pane ==
+                        mSlidingPane.STATE_OPENED_ENTIRELY) {
+                        v.setNextFocusDownId(r);
+                    }
+                }
+            }
+        }
+    }
+
+    public void setSearchAsFocusDown(boolean idIsEmpty, View parentView,
+        int id) {
+        View playPause = findViewById(R.id.header_play_pause);
+        View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
+
+        if (!idIsEmpty) {
+            View list = null;
+            int pane = mSlidingPane.getState();
+
+            if (parentView == null)
+                list = v_main.findViewById(id);
+            else
+			    list = parentView.findViewById(id);
+
+            if (list != null) {
+                if (pane == mSlidingPane.STATE_OPENED_ENTIRELY) {
+                    list.setNextFocusDownId(id);
+                } else if (pane == mSlidingPane.STATE_OPENED) {
+                    list.setNextFocusDownId(R.id.header_play_pause);
+                    playPause.setNextFocusUpId(id);
+                }
+            }
+        } else {
+           playPause.setNextFocusUpId(R.id.ml_menu_search);
+        }
+    }
+
+    // Note. onKeyDown will not occur while moving within a list
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (mFocusedPrior == 0)
+            setMenuFocusDown(true, 0);
+        mFocusedPrior = getCurrentFocus().getId();
+        return super.onKeyDown(keyCode, event);
+    }
+
+    // Note. onKeyDown will not occur while moving within a list
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+		View v = getCurrentFocus();
+        if ((mActionBarIconId == -1) &&
+            (v.getId() == -1)  &&
+            (v.getNextFocusDownId() == -1) &&
+            (v.getNextFocusUpId() == -1) &&
+            (v.getNextFocusLeftId() == -1) &&
+            (v.getNextFocusRightId() == -1)) {
+            mActionBarIconId = Util.generateViewId();
+            v.setId(mActionBarIconId);
+            v.setNextFocusUpId(mActionBarIconId);
+            v.setNextFocusDownId(mActionBarIconId);
+            v.setNextFocusLeftId(mActionBarIconId);
+            v.setNextFocusRightId(R.id.ml_menu_search);
+            if (LibVlcUtil.isHoneycombOrLater())
+                v.setNextFocusForwardId(mActionBarIconId);
+            findViewById(R.id.ml_menu_search).setNextFocusLeftId(
+                mActionBarIconId);
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
     private void reloadPreferences() {
         SharedPreferences sharedPrefs = getSharedPreferences("MainActivity", MODE_PRIVATE);
         mCurrentFragment = sharedPrefs.getString("fragment", "video");
-    }
-
-    private void showInfoDialog() {
-        final Dialog infoDialog = new Dialog(this, R.style.info_dialog);
-        infoDialog.setContentView(R.layout.info_dialog);
-        Button okButton = (Button) infoDialog.findViewById(R.id.ok);
-        okButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                CheckBox notShowAgain =
-                        (CheckBox) infoDialog.findViewById(R.id.not_show_again);
-                if (notShowAgain.isChecked() && mSettings != null) {
-                    Editor editor = mSettings.edit();
-                    editor.putInt(PREF_SHOW_INFO, mVersionNumber);
-                    editor.commit();
-                }
-                /* Close the dialog */
-                infoDialog.dismiss();
-                /* and finally open the sliding menu if first run */
-                if (mFirstRun)
-                    mMenu.showMenu();
-            }
-        });
-        infoDialog.show();
     }
 
     /**
@@ -855,6 +931,10 @@ public class MainActivity extends ActionBarActivity {
         mAudioPlayerFilling.setVisibility(View.VISIBLE);
     }
 
+    public int  getSlidingPaneState() {
+			return mSlidingPane.getState();
+	}
+
     /**
      * Slide down the audio player.
      * @return true on success else false.
@@ -871,10 +951,13 @@ public class MainActivity extends ActionBarActivity {
      * Slide up and down the audio player depending on its current state.
      */
     public void slideUpOrDownAudioPlayer() {
-        if (mSlidingPane.getState() == mSlidingPane.STATE_CLOSED)
+        if (mSlidingPane.getState() == mSlidingPane.STATE_CLOSED){
+            mActionBar.show();
             mSlidingPane.openPane();
-        else if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED)
+        } else if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED){
+            mActionBar.hide();
             mSlidingPane.closePane();
+        }
     }
 
     /**
@@ -887,13 +970,14 @@ public class MainActivity extends ActionBarActivity {
 
     private final SlidingPaneLayout.PanelSlideListener mPanelSlideListener
         = new SlidingPaneLayout.PanelSlideListener() {
-
+        float previousOffset =  1.0f;
             @Override
             public void onPanelSlide(float slideOffset) {
-                if (slideOffset <= 0.1)
-                    getSupportActionBar().hide();
-                else
-                    getSupportActionBar().show();
+                if (slideOffset >= 0.1 && slideOffset > previousOffset && !mActionBar.isShowing())
+                    mActionBar.show();
+                else if (slideOffset <= 0.1 && slideOffset < previousOffset && mActionBar.isShowing())
+                    mActionBar.hide();
+                previousOffset = slideOffset;
             }
 
             @Override
@@ -902,7 +986,7 @@ public class MainActivity extends ActionBarActivity {
                 if (resId != 0)
                     mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
-                mMenu.setSlidingEnabled(true);
+                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                 removeTipViewIfDisplayed();
                 mAudioPlayer.showAudioPlayerTips();
             }
@@ -910,13 +994,13 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
-                mMenu.setSlidingEnabled(true);
+                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
-                mMenu.setSlidingEnabled(false);
+                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                 mAudioPlayer.showPlaylistTips();
             }
 
@@ -928,12 +1012,12 @@ public class MainActivity extends ActionBarActivity {
      * @param settingKey the setting key to check if the view must be displayed or not.
      */
     public void showTipViewIfNeeded(final int layoutId, final String settingKey) {
-        if (!mSettings.getBoolean(settingKey, false)) {
+        if (!mSettings.getBoolean(settingKey, false) && AndroidDevices.hasTsp()) {
             removeTipViewIfDisplayed();
             View v = LayoutInflater.from(this).inflate(layoutId, null);
             mRootContainer.addView(v,
-                    new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
-                            RelativeLayout.LayoutParams.MATCH_PARENT));
+                    new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT,
+                    		DrawerLayout.LayoutParams.MATCH_PARENT));
 
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -960,7 +1044,11 @@ public class MainActivity extends ActionBarActivity {
      * Remove the current tip view if there is one displayed.
      */
     public void removeTipViewIfDisplayed() {
-        if (mRootContainer.getChildCount() > 1)
-            mRootContainer.removeViewAt(1);
+        if (mRootContainer.getChildCount() > 2){
+            for (int i = 0 ; i< mRootContainer.getChildCount() ; ++i){
+            if (mRootContainer.getChildAt(i).getId() == R.id.audio_tips)
+                mRootContainer.removeViewAt(i);
+            }
+        }
     }
 }

@@ -35,8 +35,7 @@
     <string name="ringtone_error">An error occurred while setting the ringtone.</string>
     <string name="pause">Pause</string>
     <string name="not_show_again">Don\'t show this message again.</string>
-    <string name="beta_warning">This is a beta version.\n\nThis version is NOT STABLE!\n\nDo NOT use, unless you know what you are doing.\n\nIt might kill your kitten and destroy your house.\nUse it at your own risk.\n\nHave Fun! :)</string>
-    <string name="info_title">VLC Beta</string>
+    <string name="info_title">VLC</string>
     <string name="unknown_artist">Unknown Artist</string>
     <string name="unknown_album">Unknown Album</string>
     <string name="unknown_genre">Unknown Genre</string>
@@ -114,6 +113,8 @@
     <string name="track_codec_info">Codec: %1$s\n</string>
     <string name="track_language_info">Language: %1$s\n</string>
     <string name="volume">Volume</string>
+    <string name="sound_on">Sound On</string>
+    <string name="sound_off">Sound Off</string>
     <string name="brightness">Brightness</string>
 
     <plurals name="track_channels_info_quantity">
@@ -205,6 +206,12 @@
     <string name="hardware_acceleration_disabled">Disabled</string>
     <string name="hardware_acceleration_decoding">Decoding acceleration</string>
     <string name="hardware_acceleration_full">Full acceleration</string>
+    <string name="dev_hardware_decoder">Advanced hardware decoder</string>
+    <string name="dev_hardware_decoder_summary">Force hardware decoder, for advanced users only</string>
+    <string name="dev_hardware_decoder_omx">iomx</string>
+    <string name="dev_hardware_decoder_omx_dr">iomx-dr</string>
+    <string name="dev_hardware_decoder_mediacodec">mediacodec</string>
+    <string name="dev_hardware_decoder_mediacodec_dr">mediacodec-dr</string>
     <string name="automatic">Automatic</string>
     <string name="screen_orientation">Video screen orientation</string>
     <string name="screen_orientation_sensor">Automatic (sensor)</string>
@@ -222,8 +229,6 @@
     <string name="interface_prefs_screen">Interface</string>
     <string name="interface_secondary_display_category">Interface - Secondary Display</string>
     <string name="interface_secondary_display_category_summary">Settings when secondary displays are connected (HDMI/Miracast).</string>
-    <string name="enable_secondary_display_hardware_acceleration">Keep hardware acceleration setting</string>
-    <string name="enable_secondary_display_hardware_acceleration_summary">Hardware acceleration might not work</string>
     <string name="enable_clone_mode">Prefer clone</string>
     <string name="enable_clone_mode_summary">Clone the device screen without remote control.</string>
     <string name="interface_other_category">Interface - Other</string>
@@ -295,6 +300,9 @@
     <string name="send_log">Send the log</string>
     <string name="sending_log">Sending the log…</string>
 
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
     <string-array name="hardware_acceleration_list">
         <item>@string/automatic</item>
         <item>@string/hardware_acceleration_disabled</item>
@@ -306,6 +314,21 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+
+    <string-array name="dev_hardware_decoder_list">
+        <item>@string/automatic</item>
+        <item>@string/dev_hardware_decoder_omx</item>
+        <item>@string/dev_hardware_decoder_omx_dr</item>
+        <item>@string/dev_hardware_decoder_mediacodec</item>
+        <item>@string/dev_hardware_decoder_mediacodec_dr</item>
+    </string-array>
+    <string-array name="dev_hardware_decoder_values" translatable="false">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string-array name="deblocking_list">

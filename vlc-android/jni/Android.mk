@@ -4,8 +4,11 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := libvlcjni
 
 LOCAL_SRC_FILES := libvlcjni.c libvlcjni-util.c libvlcjni-track.c libvlcjni-medialist.c aout.c vout.c libvlcjni-equalizer.c native_crash_handler.c
-LOCAL_SRC_FILES += thumbnailer.c pthread-condattr.c pthread-rwlocks.c pthread-once.c eventfd.c sem.c
-LOCAL_SRC_FILES += pipe2.c
+LOCAL_SRC_FILES += thumbnailer.c
+ifneq ($(ANDROID_API),android-21)
+# compat functions not needed after android-21
+LOCAL_SRC_FILES += pthread-condattr.c pthread-rwlocks.c pthread-once.c eventfd.c sem.c pipe2.c
+endif
 LOCAL_SRC_FILES += wchar/wcpcpy.c
 LOCAL_SRC_FILES += wchar/wcpncpy.c
 LOCAL_SRC_FILES += wchar/wcscasecmp.c
@@ -54,7 +57,7 @@ endif
 ifeq ($(ARCH), armeabi-v7a)
 	LOCAL_CFLAGS += -DHAVE_ARMEABI_V7A
 endif
-ifneq (,$(wildcard $(LOCAL_PATH)/../$(VLC_SRC_DIR)/modules/codec/omxil/iomx_hwbuffer.c))
+ifneq (,$(wildcard $(LOCAL_PATH)/../$(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c))
 	LOCAL_CFLAGS += -DHAVE_IOMX_DR
 endif
 LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
@@ -65,7 +68,6 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-ldl -lz -lm -llog \
 	-ldvbpsi -lebml -lmatroska -ltag \
 	-logg -lFLAC -ltheora -lvorbis \
-	-lvorbisfile -lvorbisenc \
 	-lmpeg2 -la52 \
 	-lavformat -lavcodec -lswscale -lavutil -lpostproc -lgsm -lopenjpeg \
 	-lliveMedia -lUsageEnvironment -lBasicUsageEnvironment -lgroupsock \
@@ -75,6 +77,7 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-lfreetype -liconv -lass -lfribidi -lopus \
 	-lEGL -lGLESv2 -ljpeg \
 	-ldvdnav -ldvdread -ldvdcss \
+	-lmad \
 	$(CPP_STATIC)
 
 include $(BUILD_SHARED_LIBRARY)
@@ -85,10 +88,10 @@ LIBIOMX_SRC_FILES_COMMON := ../$(VLC_SRC_DIR)/modules/codec/omxil/iomx.cpp
 LIBIOMX_INCLUDES_COMMON := $(VLC_SRC_DIR)/modules/codec/omxil
 LIBIOMX_LDLIBS_COMMON := -L$(ANDROID_LIBS) -lgcc -lstagefright -lmedia -lutils -lbinder -llog -lcutils -lui
 LIBIOMX_CFLAGS_COMMON := -Wno-psabi
-# Once we always build this with a version of vlc that contains iomx_hwbuffer.c,
+# Once we always build this with a version of vlc that contains nativewindowpriv.c,
 # we can remove this condition
-ifneq (,$(wildcard $(LOCAL_PATH)/../$(VLC_SRC_DIR)/modules/codec/omxil/iomx_hwbuffer.c))
-LIBIOMX_SRC_FILES_COMMON += ../$(VLC_SRC_DIR)/modules/codec/omxil/iomx_hwbuffer.c
+ifneq (,$(wildcard $(LOCAL_PATH)/../$(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c))
+LIBIOMX_SRC_FILES_COMMON += ../$(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c
 endif
 
 # no hwbuffer for gingerbread

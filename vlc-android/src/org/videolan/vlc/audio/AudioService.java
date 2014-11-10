@@ -49,7 +49,6 @@ import org.videolan.vlc.R;
 import org.videolan.vlc.RemoteControlClientReceiver;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.gui.VLCDrawerActivity;
 import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
 import org.videolan.vlc.interfaces.IAudioService;
@@ -122,6 +121,8 @@ public class AudioService extends Service {
     private boolean mDetectHeadset = true;
     private PowerManager.WakeLock mWakeLock;
 
+    private static boolean mWasPlayingAudio = false;
+
     // Index management
     /**
      * Stack of previously played indexes, used in shuffle mode
@@ -186,6 +187,8 @@ public class AudioService extends Service {
         filter.addAction(Intent.ACTION_HEADSET_PLUG);
         filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         filter.addAction(VLCApplication.SLEEP_INTENT);
+        filter.addAction(VLCApplication.INCOMING_CALL_INTENT);
+        filter.addAction(VLCApplication.CALL_ENDED_INTENT);
         registerReceiver(serviceReceiver, filter);
 
         final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -201,7 +204,6 @@ public class AudioService extends Service {
             registerReceiver(mRemoteControlClientReceiver, filter);
         }
     }
-
 
     /**
      * Set up the remote control and tell the system we want to be the default receiver for the MEDIA buttons
@@ -264,6 +266,11 @@ public class AudioService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null)
             return START_STICKY;
+        if(ACTION_REMOTE_PLAYPAUSE.equals(intent.getAction())){
+            if (hasCurrentMedia())
+                return START_STICKY;
+            else loadLastPlaylist();
+        }
         updateWidget(this);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -338,6 +345,23 @@ public class AudioService extends Service {
                 return;
             }
 
+            /*
+             * Incoming Call : Pause if VLC is playing audio or video. 
+             */
+            if (action.equalsIgnoreCase(VLCApplication.INCOMING_CALL_INTENT)) {
+                mWasPlayingAudio = mLibVLC.isPlaying() && mLibVLC.getVideoTracksCount() < 1;
+                if (mLibVLC.isPlaying())
+                    pause();
+            }
+
+            /*
+             * Call ended : Play only if VLC was playing audio.
+             */
+            if (action.equalsIgnoreCase(VLCApplication.CALL_ENDED_INTENT)
+                    && mWasPlayingAudio) {
+                play();
+            }
+
             // skip all headsets events if there is a call
             TelephonyManager telManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             if (telManager != null && telManager.getCallState() != TelephonyManager.CALL_STATE_IDLE)
@@ -347,7 +371,7 @@ public class AudioService extends Service {
              * Launch the activity if needed
              */
             if (action.startsWith(ACTION_REMOTE_GENERIC) && !mLibVLC.isPlaying() && !hasCurrentMedia()) {
-                Intent iVlc = new Intent(context, VLCDrawerActivity.class);
+                Intent iVlc = new Intent(context, MainActivity.class);
                 iVlc.putExtra(START_FROM_NOTIFICATION, true);
                 iVlc.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 context.startActivity(iVlc);
@@ -497,8 +521,11 @@ public class AudioService extends Service {
                     if (service.mWakeLock.isHeld())
                         service.mWakeLock.release();
                     break;
+                case EventHandler.MediaPlayerTimeChanged:
+                    // avoid useless error logs
+                    break;
                 default:
-                    Log.e(TAG, "Event not handled");
+                    Log.e(TAG, String.format("Event not handled (0x%x)", msg.getData().getInt("event")));
                     break;
             }
         }
@@ -692,7 +719,7 @@ public class AudioService extends Service {
                 .setAutoCancel(false)
                 .setOngoing(true);
 
-            Intent notificationIntent = new Intent(this, VLCDrawerActivity.class);
+            Intent notificationIntent = new Intent(this, MainActivity.class);
             notificationIntent.setAction(MainActivity.ACTION_SHOW_PLAYER);
             notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
             notificationIntent.putExtra(START_FROM_NOTIFICATION, true);
