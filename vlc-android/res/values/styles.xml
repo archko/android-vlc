@@ -67,6 +67,8 @@
         <item name="ic_menu_audio">@drawable/ic_menu_audio</item>
         <item name="ic_menu_folder">@drawable/ic_menu_folder</item>
         <item name="ic_menu_history">@drawable/ic_menu_history</item>
+        <item name="ic_menu_openmrl">@drawable/ic_menu_goto_wb</item>
+        <item name="ic_menu_preferences">@drawable/ic_menu_preferences_wb</item>
         <item name="ic_move_media">@drawable/ic_move_media</item>
 
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsLight</item>
@@ -77,6 +79,7 @@
         <item name="actionBarSize">50dp</item>
         <item name="windowActionBarOverlay">true</item>
         <item name="actionOverflowButtonStyle">@style/ActionBar.OverflowButton</item>
+        <item name="drawerArrowStyle">@style/ActionBar.ArrowToggle</item>
     </style>
 
     <style name="Theme.VLC.Apearance.Black" parent="Theme.AppCompat">
@@ -105,7 +108,8 @@
         <item name="list_subtitle">@color/list_subtitle</item>
         <item name="list_title_last">@color/list_title_last</item>
         <item name="list_title">@color/bt_list_title</item>
-        <item name="android:windowBackground">@color/black2</item>
+        <item name="android:windowBackground">@color/black3</item>
+        <item name="android:background">@color/black2</item>
 
         <item name="mini_player_top_shadow">@null</item>
         <item name="audio_playlist_shadow">@null</item>
@@ -130,8 +134,9 @@
         <item name="ic_menu_audio">@drawable/ic_menu_audio_w</item>
         <item name="ic_menu_folder">@drawable/ic_menu_folder_w</item>
         <item name="ic_menu_history">@drawable/ic_menu_history_w</item>
+        <item name="ic_menu_openmrl">@drawable/ic_menu_goto_wb</item>
+        <item name="ic_menu_preferences">@drawable/ic_menu_preferences_wb</item>
         <item name="ic_move_media">@drawable/ic_move_media_w</item>
-        
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsBlack</item>
     </style>
 
@@ -140,7 +145,7 @@
     </style>
 
     <style name="Theme.VLC.NoTitleBar" parent="Theme.AppCompat.Light">
-        <!--<item name="android:windowNoTitle">true</item>-->
+        <item name="android:windowNoTitle">true</item>
         <item name="item_common_pressed">@color/item_common_pressed</item>
         <item name="item_common_selected">@color/item_common_selected</item>
         <item name="item_footer">@color/item_footer</item>
@@ -152,8 +157,10 @@
         <item name="android:windowBackground">@color/background_common</item>
     </style>
 
-    <style name="Theme.VLC.Player" parent="android:Theme.NoTitleBar.Fullscreen">
+    <style name="Theme.VLC.Player" parent="Theme.AppCompat">
         <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="windowActionBar">false</item>
         <item name="video_player_overlay">@color/transparent_gray</item>
 
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsBlack</item>

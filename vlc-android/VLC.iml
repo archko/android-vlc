@@ -30,5 +30,6 @@
     <orderEntry type="module" module-name="appcompat" />
     <orderEntry type="library" name="android-support-v4" level="project" />
     <orderEntry type="module" module-name="cardview" />
+    <orderEntry type="module" module-name="libvlc" />
   </component>
 </module>

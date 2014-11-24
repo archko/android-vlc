@@ -60,6 +60,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -99,12 +100,12 @@ public class MainActivity extends ActionBarActivity {
     protected static final String ACTION_SHOW_TEXTINFO = "org.videolan.vlc.gui.ShowTextInfo";
     public static final String ACTION_SHOW_PLAYER = "org.videolan.vlc.gui.ShowPlayer";
 
-    private static final String PREF_SHOW_INFO = "show_info";
     private static final String PREF_FIRST_RUN = "first_run";
 
     private static final int ACTIVITY_RESULT_PREFERENCES = 1;
     private static final int ACTIVITY_SHOW_INFOLAYOUT = 2;
 
+    private Context mContext;
     private ActionBar mActionBar;
     private SidebarAdapter mSidebarAdapter;
     private AudioPlayer mAudioPlayer;
@@ -149,6 +150,7 @@ public class MainActivity extends ActionBarActivity {
             return;
         }
 
+        mContext = this;
         /* Get the current version from package */
         PackageInfo pinfo = null;
         try {
@@ -195,8 +197,13 @@ public class MainActivity extends ActionBarActivity {
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
-        if (enableBlackTheme)
+        if (enableBlackTheme) {
             setTheme(R.style.Theme_VLC_Black);
+            //We need to manually change statusbar color, otherwise, it remains orange.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setStatusBarColor(Color.DKGRAY);
+            }
+        }
 
         View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
         setContentView(v_main);
@@ -248,34 +255,42 @@ public class MainActivity extends ActionBarActivity {
                 if(entry == null || entry.id == null)
                     return;
 
+                if (entry.type == SidebarEntry.TYPE_FRAGMENT) {
                 /*
                  * Clear any backstack before switching tabs. This avoids
                  * activating an old backstack, when a user hits the back button
                  * to quit
                  */
-                getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
                 /* Slide down the audio player */
-                slideDownAudioPlayer();
+                    slideDownAudioPlayer();
 
                 /* Switch the fragment */
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                ft.replace(R.id.fragment_placeholder, getFragment(entry.id), entry.id);
-                ft.commit();
-                mCurrentFragment = entry.id;
+                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    ft.replace(R.id.fragment_placeholder, getFragment(entry.id), entry.id);
+                    ft.commit();
+                    supportInvalidateOptionsMenu();
+                    mCurrentFragment = entry.id;
 
                 /*
                  * Set user visibility hints to work around weird Android
                  * behaviour of duplicate context menu events.
                  */
-                current.setUserVisibleHint(false);
-                getFragment(mCurrentFragment).setUserVisibleHint(true);
-                // HACK ALERT: Set underlying audio browser to be invisible too.
-                if(current.getTag().equals("tracks"))
-                    getFragment("audio").setUserVisibleHint(false);
+                    current.setUserVisibleHint(false);
+                    getFragment(mCurrentFragment).setUserVisibleHint(true);
+                    // HACK ALERT: Set underlying audio browser to be invisible too.
+                    if(current.getTag().equals("tracks"))
+                        getFragment("audio").setUserVisibleHint(false);
 
-                if (mFocusedPrior != 0)
-                    findViewById(R.id.ml_menu_search).requestFocus();
+                    if (mFocusedPrior != 0)
+                        findViewById(R.id.ml_menu_search).requestFocus();
+                    mRootContainer.closeDrawer(mListView);
+                } else if (entry.attributeID == R.attr.ic_menu_openmrl){
+                    onOpenMRL();
+                }else if (entry.attributeID == R.attr.ic_menu_preferences){
+                    startActivityForResult(new Intent(mContext, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
+                }
                 mRootContainer.closeDrawer(mListView);
             }
         });
@@ -588,7 +603,10 @@ public class MainActivity extends ActionBarActivity {
         // Enable the clear search history function for the search fragment.
         if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             menu.findItem(R.id.search_clear_history).setVisible(true);
-        return true;
+
+        menu.findItem(R.id.ml_menu_last_playlist).setVisible(SidebarEntry.ID_AUDIO.equals(mCurrentFragment));
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -611,8 +629,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        // Intent to start a new Activity
-        Intent intent;
         // Current fragment loaded
         Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder);
 
@@ -631,11 +647,6 @@ public class MainActivity extends ActionBarActivity {
             case R.id.ml_menu_about:
                 showSecondaryFragment("about");
                 break;
-            // Preferences
-            case R.id.ml_menu_preferences:
-                intent = new Intent(this, PreferencesActivity.class);
-                startActivityForResult(intent, ACTIVITY_RESULT_PREFERENCES);
-                break;
             case R.id.ml_menu_equalizer:
                 showSecondaryFragment("equalizer");
                 break;
@@ -650,10 +661,6 @@ public class MainActivity extends ActionBarActivity {
             case R.id.ml_menu_last_playlist:
                 Intent i = new Intent(AudioService.ACTION_REMOTE_LAST_PLAYLIST);
                 sendBroadcast(i);
-                break;
-            // Open MRL
-            case R.id.ml_menu_open_mrl:
-                onOpenMRL();
                 break;
             case R.id.ml_menu_search:
                 onSearchRequested();

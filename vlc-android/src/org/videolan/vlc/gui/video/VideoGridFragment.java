@@ -33,17 +33,14 @@ import org.videolan.vlc.MediaGroup;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Thumbnailer;
-import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCRunnable;
-import org.videolan.vlc.util.WeakHandler;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -54,8 +51,9 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -74,7 +72,7 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 
-public class VideoGridFragment extends SherlockGridFragment implements ISortable {
+public class VideoGridFragment extends SherlockGridFragment implements ISortable, VideoBrowserInterface {
 
     public final static String TAG = "VLC/VideoListFragment";
 
@@ -82,6 +80,8 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     protected static final String ACTION_SCAN_STOP = "org.videolan.vlc.gui.ScanStop";
     protected static final int UPDATE_ITEM = 0;
 
+    /* Constants used to switch from Grid to List and vice versa */
+    //FIXME If you know a way to do this in pure XML please do it!
     private static final int GRID_STRETCH_MODE = GridView.STRETCH_COLUMN_WIDTH;
     private static final int LIST_STRETCH_MODE = GridView.STRETCH_COLUMN_WIDTH;
 
@@ -124,7 +124,11 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(R.string.video);
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        if (mGroup == null)
+            actionBar.setTitle(R.string.video);
+        else
+            actionBar.setTitle(mGroup);
 
         View v = inflater.inflate(R.layout.video_grid, container, false);
 
@@ -143,12 +147,12 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
 
         // init the information for the scan (2/2)
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_SCAN_START);
-        filter.addAction(ACTION_SCAN_STOP);
+        filter.addAction(Util.ACTION_SCAN_START);
+        filter.addAction(Util.ACTION_SCAN_STOP);
         getActivity().registerReceiver(messageReceiverVideoListFragment, filter);
         Log.i(TAG,"mMediaLibrary.isWorking() " + Boolean.toString(mMediaLibrary.isWorking()));
         if (mMediaLibrary.isWorking()) {
-            actionScanStart();
+        	Util.actionScanStart();
         }
 
         mAnimator = new VideoGridAnimator(getGridView());
@@ -206,8 +210,10 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
             Log.w(TAG, "Unable to setup the view");
             return;
         }
-
         Resources res = getResources();
+        boolean listMode = res.getBoolean(R.bool.list_mode);
+        listMode |= res.getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT &&
+                PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("force_list_portrait", false);
         // Compute the left/right padding dynamically
         DisplayMetrics outMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
@@ -217,15 +223,19 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
                 sidePadding, mGridView.getPaddingBottom());
 
         // Select between grid or list
-            if (!res.getBoolean(R.bool.list_mode)) {
+            if (!listMode) {
             mGridView.setNumColumns(GridView.AUTO_FIT);
             mGridView.setStretchMode(GRID_STRETCH_MODE);
             mGridView.setColumnWidth(res.getDimensionPixelSize(R.dimen.grid_card_width));
             mGridView.setVerticalSpacing(res.getDimensionPixelSize(R.dimen.grid_card_vertical_spacing));
             mVideoAdapter.setListMode(false);
         } else {
+            int padding = res.getDimensionPixelSize(R.dimen.listview_side_padding);
             mGridView.setNumColumns(1);
             mGridView.setStretchMode(LIST_STRETCH_MODE);
+            mGridView.setVerticalSpacing(0);
+            mGridView.setHorizontalSpacing(0);
+            mGridView.setPadding(padding,0,padding,0);
             mVideoAdapter.setListMode(true);
         }
     }
@@ -353,32 +363,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
      */
     private Handler mHandler = new VideoListHandler(this);
 
-    private static class VideoListHandler extends WeakHandler<VideoGridFragment> {
-        public VideoListHandler(VideoGridFragment owner) {
-            super(owner);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            VideoGridFragment fragment = getOwner();
-            if(fragment == null) return;
-
-            switch (msg.what) {
-            case UPDATE_ITEM:
-                fragment.updateItem();
-                break;
-            case MediaLibrary.MEDIA_ITEMS_UPDATED:
-                // Don't update the adapter while the layout animation is running
-                if (fragment.mAnimator.isAnimationDone())
-                    fragment.updateList();
-                else
-                    sendEmptyMessageDelayed(msg.what, 500);
-                break;
-            }
-        }
-    };
-
-    private void updateItem() {
+    public void updateItem() {
         mVideoAdapter.update(mItemToUpdate);
         try {
             mBarrier.await();
@@ -386,16 +371,15 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         } catch (BrokenBarrierException e) {
         }
     }
-
     private void focusHelper(boolean idIsEmpty) {
         View parent = getView();
-		MainActivity main = (MainActivity)getActivity();
+        MainActivity main = (MainActivity)getActivity();
         main.setMenuFocusDown(idIsEmpty, android.R.id.list);
         main.setSearchAsFocusDown(idIsEmpty, parent,
-            android.R.id.list);
-    }
+                    android.R.id.list);
+        }
 
-    private void updateList() {
+    public void updateList() {
         List<Media> itemList = mMediaLibrary.getVideoItems();
 
         if (mThumbnailer != null)
@@ -439,7 +423,7 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
 
     public void setItemToUpdate(Media item) {
         mItemToUpdate = item;
-        mHandler.sendEmptyMessage(UPDATE_ITEM);
+        mHandler.sendEmptyMessage(VideoListHandler.UPDATE_ITEM);
     }
 
     public void setGroup(String prefix) {
@@ -459,25 +443,13 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (action.equalsIgnoreCase(ACTION_SCAN_START)) {
+            if (action.equalsIgnoreCase(Util.ACTION_SCAN_START)) {
                 mLayoutFlipperLoading.setVisibility(View.VISIBLE);
                 mTextViewNomedia.setVisibility(View.INVISIBLE);
-            } else if (action.equalsIgnoreCase(ACTION_SCAN_STOP)) {
+            } else if (action.equalsIgnoreCase(Util.ACTION_SCAN_STOP)) {
                 mLayoutFlipperLoading.setVisibility(View.INVISIBLE);
                 mTextViewNomedia.setVisibility(View.VISIBLE);
             }
         }
     };
-
-    public static void actionScanStart() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SCAN_START);
-        VLCApplication.getAppContext().sendBroadcast(intent);
-    }
-
-    public static void actionScanStop() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SCAN_STOP);
-        VLCApplication.getAppContext().sendBroadcast(intent);
-    }
 }

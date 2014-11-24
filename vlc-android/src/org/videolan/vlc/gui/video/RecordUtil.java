@@ -14,7 +14,7 @@ public class RecordUtil {
         String path="/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/+File.separator+System.currentTimeMillis()+".png";
         System.out.println("snap:"+videoWidth+" height:"+videoHeight+" path:"+path);
         if (null!=libVLC) {
-            libVLC.takeSnapShot(path, videoWidth, videoHeight);
+            //libVLC.takeSnapShot(path, videoWidth, videoHeight);
         }
     }
 
@@ -22,13 +22,13 @@ public class RecordUtil {
         if (null!=libVLC) {
             String path="/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/+File.separator+System.currentTimeMillis();
             System.out.println("startRecord:"+path);
-            libVLC.videoRecordStart(path);
+            //libVLC.videoRecordStart(path);
         }
     }
 
     public static void stopRecord(LibVLC libVLC) {
         if (null!=libVLC) {
-            libVLC.videoRecordStop();
+            //libVLC.videoRecordStop();
         }
     }
 }

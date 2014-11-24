@@ -622,10 +622,10 @@ public class VLCDrawerActivity extends ActionBarActivity {
                 showSecondaryFragment("about");
                 break;
             // Preferences
-            case R.id.ml_menu_preferences:
+            /*case R.id.ml_menu_preferences:
                 intent = new Intent(this, PreferencesActivity.class);
                 startActivityForResult(intent, ACTIVITY_RESULT_PREFERENCES);
-                break;
+                break;*/
             case R.id.ml_menu_equalizer:
                 showSecondaryFragment("equalizer");
                 break;
@@ -645,10 +645,6 @@ public class VLCDrawerActivity extends ActionBarActivity {
             case R.id.ml_menu_last_playlist:
                 Intent i = new Intent(AudioService.ACTION_REMOTE_LAST_PLAYLIST);
                 sendBroadcast(i);
-                break;
-            // Open MRL
-            case R.id.ml_menu_open_mrl:
-                onOpenMRL();
                 break;
             case R.id.ml_menu_search:
                 onSearchRequested();
