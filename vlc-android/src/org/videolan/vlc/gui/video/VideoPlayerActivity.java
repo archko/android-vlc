@@ -103,6 +103,7 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLayoutChangeListener;
 import android.view.View.OnSystemUiVisibilityChangeListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -156,6 +157,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private boolean mOverlayUseStatusBar;
     private View mOverlayHeader;
     private View mOverlayOption;
+    private View mOverlayRecord;
     private View mOverlayProgress;
     private View mOverlayBackground;
     private static final int OVERLAY_TIMEOUT = 4000;
@@ -266,6 +268,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private boolean mHasMenu = false;
     private boolean mIsNavMenu = false;
 
+    private OnLayoutChangeListener mOnLayoutChangeListener;
+
     @Override
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected void onCreate(Bundle savedInstanceState) {
@@ -304,7 +308,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                         public void onSystemUiVisibilityChange(int visibility) {
                             if (visibility == mUiVisibility)
                                 return;
-                            setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
                             if (visibility == View.SYSTEM_UI_FLAG_VISIBLE && !mShowing && !isFinishing()) {
                                 showOverlay();
                             }
@@ -341,6 +344,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mBattery = (TextView) findViewById(R.id.player_overlay_battery);
         }
         mOverlayOption = findViewById(R.id.option_overlay);
+        mOverlayRecord = findViewById(R.id.option_overlay_record);
         mOverlayProgress = findViewById(R.id.progress_overlay);
         mOverlayBackground = findViewById(R.id.player_overlay_background);
 
@@ -538,6 +542,32 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         AudioServiceController.getInstance().unbindAudioService(this);
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        if (!LibVlcUtil.isHoneycombOrLater())
+            setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onStart() {
+        if (LibVlcUtil.isHoneycombOrLater()) {
+            if (mOnLayoutChangeListener == null) {
+                mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right,
+                            int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom)
+                            setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
+                    }
+                };
+            }
+            mSurfaceFrame.addOnLayoutChangeListener(mOnLayoutChangeListener);
+        }
+        setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
+        super.onStart();
+    }
+
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     protected void onStop() {
@@ -550,6 +580,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mPresentation = null;
         }
         restoreBrightness();
+        if (LibVlcUtil.isHoneycombOrLater() && mOnLayoutChangeListener != null)
+            mSurfaceFrame.removeOnLayoutChangeListener(mOnLayoutChangeListener);
     }
 
     @TargetApi(android.os.Build.VERSION_CODES.FROYO)
@@ -581,9 +613,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         mAudioManager = null;
 
-        /*if (isRecording||mLibVLC.videoIsRecording()) {
+        if (isRecording||mLibVLC.videoIsRecording()) {
             RecordUtil.stopRecord(mLibVLC);
-        }*/
+        }
     }
 
     @Override
@@ -864,12 +896,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             default:
                 return false;
         }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
-        super.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -1292,6 +1318,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             sw = mPresentation.getWindow().getDecorView().getWidth();
             sh = mPresentation.getWindow().getDecorView().getHeight();
         }
+        if (mLibVLC != null)
+            mLibVLC.setWindowSize(sw, sh);
 
         double dw = sw, dh = sh;
         boolean isPortrait;
@@ -1990,6 +2018,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 else if (mOverlayHeader != null)
                     mOverlayHeader.setVisibility(View.VISIBLE);
                 mOverlayOption.setVisibility(View.VISIBLE);
+                mOverlayRecord.setVisibility(View.VISIBLE);
                 mPlayPause.setVisibility(View.VISIBLE);
                 mSnap.setVisibility(View.VISIBLE);
                 mRecord.setVisibility(View.VISIBLE);
@@ -2032,7 +2061,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             else if (mOverlayHeader != null)
                 mOverlayHeader.setVisibility(View.INVISIBLE);
             mOverlayOption.setVisibility(View.INVISIBLE);
-            //mOverlayRecord.setVisibility(View.INVISIBLE);
+            mOverlayRecord.setVisibility(View.INVISIBLE);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
             mSnap.setVisibility(View.GONE);
@@ -2477,7 +2506,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     public void showAdvancedOptions(View v) {
         CommonDialogs.advancedOptions(this, v, MenuType.Video);
-        //RecordUtil.takeSnapshot(mLibVLC);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -2683,8 +2711,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     };
 
     private void stopRecord() {
-        /*if (null!=mLibVLC&&mLibVLC.videoIsRecording()) {
+        if (null!=mLibVLC&&mLibVLC.videoIsRecording()) {
             RecordUtil.stopRecord(mLibVLC);
-        }*/
+        }
     }
 }

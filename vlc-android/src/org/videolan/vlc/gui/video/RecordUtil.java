@@ -11,24 +11,24 @@ import java.io.File;
 public class RecordUtil {
 
     public static void takeSnapshot(LibVLC libVLC, int videoWidth, int videoHeight) {
-        String path="/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/+File.separator+System.currentTimeMillis()+".png";
-        System.out.println("snap:"+videoWidth+" height:"+videoHeight+" path:"+path);
-        if (null!=libVLC) {
-            //libVLC.takeSnapShot(path, videoWidth, videoHeight);
+        String path = "/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/ + File.separator + System.currentTimeMillis() + ".png";
+        System.out.println("snap:" + videoWidth + " height:" + videoHeight + " path:" + path);
+        if (null != libVLC) {
+            libVLC.takeSnapShot(path, videoWidth, videoHeight);
         }
     }
 
     public static void startRecord(LibVLC libVLC) {
-        if (null!=libVLC) {
-            String path="/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/+File.separator+System.currentTimeMillis();
-            System.out.println("startRecord:"+path);
-            //libVLC.videoRecordStart(path);
+        if (null != libVLC) {
+            String path = "/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/ + File.separator + System.currentTimeMillis();
+            System.out.println("startRecord:" + path);
+            libVLC.videoRecordStart(path);
         }
     }
 
     public static void stopRecord(LibVLC libVLC) {
-        if (null!=libVLC) {
-            //libVLC.videoRecordStop();
+        if (null != libVLC) {
+            libVLC.videoRecordStop();
         }
     }
 }
