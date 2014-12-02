@@ -72,9 +72,9 @@ static void add_media_options(libvlc_media_t *p_md, JNIEnv *env, jobjectArray me
     }
 }
 
-libvlc_media_t *new_media(jlong instance, JNIEnv *env, jobject thiz, jstring fileLocation, bool noOmx, bool noVideo)
+libvlc_media_t *new_media(JNIEnv *env, jobject thiz, jstring fileLocation, bool noOmx, bool noVideo)
 {
-    libvlc_instance_t *libvlc = (libvlc_instance_t*)(intptr_t)instance;
+    libvlc_instance_t *libvlc = getLibVlcInstance(env, thiz);
     jboolean isCopy;
     const char *psz_location = (*env)->GetStringUTFChars(env, fileLocation, &isCopy);
     libvlc_media_t *p_md = libvlc_media_new_location(libvlc, psz_location);
@@ -96,10 +96,16 @@ libvlc_media_t *new_media(jlong instance, JNIEnv *env, jobject thiz, jstring fil
     return p_md;
 }
 
+libvlc_instance_t *getLibVlcInstance(JNIEnv *env, jobject thiz)
+{
+    return (libvlc_instance_t*)(intptr_t)getLong(env, thiz, "mLibVlcInstance");
+}
+
 libvlc_media_player_t *getMediaPlayer(JNIEnv *env, jobject thiz)
 {
     return (libvlc_media_player_t*)(intptr_t)getLong(env, thiz, "mInternalMediaPlayerInstance");
 }
+
 
 static void releaseMediaPlayer(JNIEnv *env, jobject thiz)
 {
@@ -399,14 +405,16 @@ void Java_org_videolan_libvlc_LibVLC_setEventHandler(JNIEnv *env, jobject thiz, 
     eventHandlerInstance = getEventHandlerReference(env, thiz, eventHandler);
 }
 
-void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong instance,
+void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz,
                                              jstring mrl, jobjectArray mediaOptions)
 {
     /* Release previous media player, if any */
     releaseMediaPlayer(env, thiz);
 
+    libvlc_instance_t *p_instance = getLibVlcInstance(env, thiz);
+
     /* Create a media player playing environment */
-    libvlc_media_player_t *mp = libvlc_media_player_new((libvlc_instance_t*)(intptr_t)instance);
+    libvlc_media_player_t *mp = libvlc_media_player_new(p_instance);
     libvlc_media_player_set_video_title_display(mp, libvlc_position_disable, 0);
     jobject myJavaLibVLC = (*env)->NewGlobalRef(env, thiz);
 
@@ -444,7 +452,7 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
 
     const char* p_mrl = (*env)->GetStringUTFChars(env, mrl, 0);
 
-    libvlc_media_t* p_md = libvlc_media_new_location((libvlc_instance_t*)(intptr_t)instance, p_mrl);
+    libvlc_media_t* p_md = libvlc_media_new_location(p_instance, p_mrl);
     /* media options */
     if (mediaOptions != NULL)
         add_media_options(p_md, env, mediaOptions);
@@ -454,7 +462,8 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz, jlong in
     /* Connect the media event manager. */
     libvlc_event_manager_t *ev_media = libvlc_media_event_manager(p_md);
     static const libvlc_event_type_t mp_media_events[] = {
-        libvlc_MediaParsedChanged
+        libvlc_MediaParsedChanged,
+        libvlc_MediaMetaChanged,
     };
     for(int i = 0; i < (sizeof(mp_media_events) / sizeof(*mp_media_events)); i++)
         libvlc_event_attach(ev_media, mp_media_events[i], vlc_event_callback, myVm);
@@ -593,6 +602,19 @@ jstring Java_org_videolan_libvlc_LibVLC_changeset(JNIEnv* env, jobject thiz)
     return (*env)->NewStringUTF(env, libvlc_get_changeset());
 }
 
+jstring Java_org_videolan_libvlc_LibVLC_getMeta(JNIEnv *env, jobject thiz, int meta)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (!mp)
+        return NULL;
+
+    libvlc_media_t *p_mp = libvlc_media_player_get_media(mp);
+    if (!p_mp)
+        return NULL;
+
+    return (*env)->NewStringUTF(env, libvlc_media_get_meta(p_mp, meta));
+}
+
 jint Java_org_videolan_libvlc_LibVLC_getTitle(JNIEnv *env, jobject thiz)
 {
     libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
@@ -632,3 +654,93 @@ void Java_org_videolan_libvlc_LibVLC_playerNavigate(JNIEnv *env, jobject thiz, j
         libvlc_media_player_navigate(mp, (unsigned) nav);
 }
 
+// TODO: remove static variables
+static int i_window_width = 0;
+static int i_window_height = 0;
+
+void Java_org_videolan_libvlc_LibVLC_setWindowSize(JNIEnv *env, jobject thiz, jint width, jint height)
+{
+    pthread_mutex_lock(&vout_android_lock);
+    i_window_width = width;
+    i_window_height = height;
+    pthread_mutex_unlock(&vout_android_lock);
+}
+
+int jni_GetWindowSize(int *width, int *height)
+{
+    pthread_mutex_lock(&vout_android_lock);
+    *width = i_window_width;
+    *height = i_window_height;
+    pthread_mutex_unlock(&vout_android_lock);
+    return 0;
+}
+
+//take snap and record video
+jboolean Java_org_videolan_libvlc_LibVLC_takeSnapShot(JNIEnv *env, jobject thiz,jint number, jstring path,
+jint width,jint height)
+{
+    jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
+
+    if (mp)
+        if(libvlc_video_take_snapshot(mp, (int)number,psz_path , (int)width,(int)height)==0)
+        	return JNI_TRUE;
+	     return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStart(JNIEnv *env, jobject thiz,jstring path)
+{
+	jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    const char* psz_path = (*env)->GetStringUTFChars(env, path, &isCopy);
+    //const char* psz_filename=(*env)->GetStringUTFChars(env, filename, &isCopy);
+    if (mp)
+		if(libvlc_media_player_record_start(mp,psz_path)==0)
+	        return JNI_TRUE;
+    return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoRecordStop(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    /* Get C string */
+    if (mp)
+	    if(libvlc_media_player_record_stop(mp)==0)
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecording(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp)
+		if(libvlc_media_player_is_recording(mp))
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jboolean Java_org_videolan_libvlc_LibVLC_videoIsRecordable(JNIEnv *env, jobject thiz)
+{
+	jboolean isCopy;
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp)
+		if(libvlc_media_player_is_recordable(mp))
+			return JNI_TRUE;
+		return JNI_FALSE;
+}
+
+jint Java_org_videolan_libvlc_LibVLC_getState(JNIEnv *env, jobject thiz)
+{
+	libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+	if (mp){
+		libvlc_state_t state=libvlc_media_player_get_state(mp);
+		return (jint)state;
+	}
+	else
+		return -1;
+}

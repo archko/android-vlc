@@ -24,12 +24,13 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.interfaces.IRefreshable;
 
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -37,13 +38,16 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
-public class HistoryFragment extends ListFragment implements IRefreshable {
+public class HistoryFragment extends ListFragment implements IBrowser, IRefreshable, SwipeRefreshLayout.OnRefreshListener {
     public final static String TAG = "VLC/HistoryFragment";
 
     private HistoryAdapter mHistoryAdapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private boolean mReady = true;
 
     /* All subclasses of Fragment must include a public empty constructor. */
     public HistoryFragment() { }
@@ -53,7 +57,6 @@ public class HistoryFragment extends ListFragment implements IRefreshable {
         super.onCreate(savedInstanceState);
 
         mHistoryAdapter = new HistoryAdapter(getActivity());
-        Log.d(TAG, "HistoryFragment()");
     }
 
     private void focusHelper(boolean idIsEmpty) {
@@ -81,6 +84,20 @@ public class HistoryFragment extends ListFragment implements IRefreshable {
         focusHelper(mHistoryAdapter.getCount() == 0);
         listView.requestFocus();
         registerForContextMenu(listView);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
+
+        mSwipeRefreshLayout.setColorSchemeColors(R.color.darkerorange/*, R.attr.colorPrimary, R.attr.colorPrimaryDark*/);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {}
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                mSwipeRefreshLayout.setEnabled(firstVisibleItem == 0);
+            }
+        });
         return v;
     }
 
@@ -124,11 +141,30 @@ public class HistoryFragment extends ListFragment implements IRefreshable {
 
     @Override
     public void refresh() {
-        Log.d(TAG, "Refreshing view!");
         if( mHistoryAdapter != null ) {
             mHistoryAdapter.refresh();
             focusHelper(mHistoryAdapter.getCount() == 0);
         } else
             focusHelper(true);
+        mSwipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onRefresh() {
+        refresh();
+    }
+
+    @Override
+    public void setReadyToDisplay(boolean ready) {
+        if (ready && !mReady)
+            display();
+        else
+            mReady = ready;
+    }
+
+    @Override
+    public void display() {
+        mReady = true;
+        refresh();
     }
 }

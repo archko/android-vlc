@@ -45,10 +45,10 @@ static void length_changed_callback(const libvlc_event_t *ev, void *data)
 }
 
 jboolean Java_org_videolan_libvlc_LibVLC_hasVideoTrack(JNIEnv *env, jobject thiz,
-                                                       jlong i_instance, jstring fileLocation)
+                                                       jstring fileLocation)
 {
     /* Create a new item and assign it to the media player. */
-    libvlc_media_t *p_m = new_media(i_instance, env, thiz, fileLocation, false, false);
+    libvlc_media_t *p_m = new_media(env, thiz, fileLocation, false, false);
     if (p_m == NULL)
     {
         LOGE("Could not create the media!");
@@ -154,6 +154,7 @@ jobjectArray read_track_info_internal(JNIEnv *env, jobject thiz, libvlc_media_t*
                 setString(env, item, "Album", libvlc_media_get_meta(p_m, libvlc_meta_Album));
                 setString(env, item, "Genre", libvlc_media_get_meta(p_m, libvlc_meta_Genre));
                 setString(env, item, "ArtworkURL", libvlc_media_get_meta(p_m, libvlc_meta_ArtworkURL));
+                setString(env, item, "NowPlaying", libvlc_media_get_meta(p_m, libvlc_meta_NowPlaying));
                 continue;
             }
 
@@ -182,10 +183,10 @@ jobjectArray read_track_info_internal(JNIEnv *env, jobject thiz, libvlc_media_t*
 }
 
 jobjectArray Java_org_videolan_libvlc_LibVLC_readTracksInfo(JNIEnv *env, jobject thiz,
-                                                            jlong instance, jstring mrl)
+                                                            jstring mrl)
 {
     /* Create a new item and assign it to the media player. */
-    libvlc_media_t *p_m = new_media(instance, env, thiz, mrl, false, false);
+    libvlc_media_t *p_m = new_media(env, thiz, mrl, false, false);
     if (p_m == NULL)
     {
         LOGE("Could not create the media!");

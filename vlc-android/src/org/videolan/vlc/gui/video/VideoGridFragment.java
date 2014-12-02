@@ -34,6 +34,7 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Thumbnailer;
 import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.interfaces.ISortable;
@@ -53,6 +54,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
@@ -65,6 +67,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -72,7 +75,7 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 
-public class VideoGridFragment extends SherlockGridFragment implements ISortable, VideoBrowserInterface {
+public class VideoGridFragment extends SherlockGridFragment implements IBrowser, ISortable, VideoBrowserInterface, SwipeRefreshLayout.OnRefreshListener {
 
     public final static String TAG = "VLC/VideoListFragment";
 
@@ -96,8 +99,10 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
     private MediaLibrary mMediaLibrary;
     private Thumbnailer mThumbnailer;
     private VideoGridAnimator mAnimator;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private AudioServiceController mAudioController;
+    private boolean mReady = true;
 
     // Gridview position saved in onPause()
     private int mGVFirstVisiblePos;
@@ -136,7 +141,19 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         mLayoutFlipperLoading = (LinearLayout) v.findViewById(R.id.layout_flipper_loading);
         mTextViewNomedia = (TextView) v.findViewById(R.id.textview_nomedia);
         mGridView = (GridView) v.findViewById(android.R.id.list);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
 
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.darkerorange);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {}
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                mSwipeRefreshLayout.setEnabled(firstVisibleItem == 0);
+            }
+        });
         return v;
     }
 
@@ -380,40 +397,48 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
         }
 
     public void updateList() {
-        List<Media> itemList = mMediaLibrary.getVideoItems();
+        if (!mSwipeRefreshLayout.isRefreshing())
+            mSwipeRefreshLayout.setRefreshing(true);
+        final List<Media> itemList = mMediaLibrary.getVideoItems();
 
         if (mThumbnailer != null)
             mThumbnailer.clearJobs();
         else
             Log.w(TAG, "Can't generate thumbnails, the thumbnailer is missing");
 
+        mVideoAdapter.setNotifyOnChange(false);
         mVideoAdapter.clear();
 
         if (itemList.size() > 0) {
-            if (mGroup != null || itemList.size() <= 10) {
-                for (Media item : itemList) {
-                    if (mGroup == null || item.getTitle().startsWith(mGroup)) {
-                        mVideoAdapter.add(item);
-                        if (mThumbnailer != null)
-                            mThumbnailer.addJob(item);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mGroup != null || itemList.size() <= 10) {
+                        mVideoAdapter.setNotifyOnChange(false);
+                        for (Media item : itemList) {
+                            if (mGroup == null || item.getTitle().startsWith(mGroup)) {
+                                mVideoAdapter.add(item);
+                                if (mThumbnailer != null)
+                                    mThumbnailer.addJob(item);
+                            }
+                        }
                     }
+                    else {
+                        List<MediaGroup> groups = MediaGroup.group(itemList);
+                        mVideoAdapter.setNotifyOnChange(false);
+                        for (MediaGroup item : groups) {
+                            mVideoAdapter.add(item.getMedia());
+                            if (mThumbnailer != null)
+                                mThumbnailer.addJob(item);
+                        }
+                    }
+                    if (mReady)
+                        display();
                 }
-            }
-            else {
-                List<MediaGroup> groups = MediaGroup.group(itemList);
-                for (MediaGroup item : groups) {
-                    mVideoAdapter.add(item.getMedia());
-                    if (mThumbnailer != null)
-                        mThumbnailer.addJob(item);
-                }
-            }
-            mVideoAdapter.sort();
-            mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
-            mGridView.setSelection(mGVFirstVisiblePos);
-            mGridView.requestFocus();
-            focusHelper(false);
+            }).start();
         } else
             focusHelper(true);
+        stopRefresh();
     }
 
     @Override
@@ -452,4 +477,39 @@ public class VideoGridFragment extends SherlockGridFragment implements ISortable
             }
         }
     };
+
+    public void stopRefresh() {
+        mSwipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onRefresh() {
+        if (getActivity()!=null)
+            MediaLibrary.getInstance().loadMediaItems(getActivity(), true);
+    }
+
+    @Override
+    public void setReadyToDisplay(boolean ready) {
+        if (ready && !mReady)
+            display();
+        else
+            mReady = ready;
+    }
+
+    @Override
+    public void display() {
+        if (getActivity() != null)
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mReady = true;
+                    mVideoAdapter.sort();
+                    mVideoAdapter.notifyDataSetChanged();
+                    mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
+                    mGridView.setSelection(mGVFirstVisiblePos);
+                    mGridView.requestFocus();
+                    focusHelper(false);
+                }
+            });
+    }
 }
