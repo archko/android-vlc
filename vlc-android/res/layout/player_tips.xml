@@ -185,6 +185,29 @@
             android:layout_marginTop="-6dp"
             android:paddingLeft="5dp"
             android:text="@string/lock" />
+
+        <!--record-->
+        <LinearLayout
+                android:id="@+id/option_overlay_record"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/player_tips_progress"
+                android:layout_marginBottom="10dp"
+                android:orientation="vertical"
+                android:visibility="visible" >
+
+            <ImageButton
+                    android:id="@+id/player_overlay_snap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/ic_crop_circle" />
+
+            <ImageButton
+                    android:id="@+id/player_overlay_record"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/ic_play_circle" />
+        </LinearLayout>
     </RelativeLayout>
 
 </RelativeLayout>

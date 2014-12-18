@@ -94,7 +94,7 @@ public abstract class ImageWorker {
         mDefaultArtwork.setFilterBitmap(false);
         mDefaultArtwork.setDither(false);
         // Create the transparent layer for the transition drawable
-        mCurrentDrawable = new ColorDrawable(mResources.getColor(R.color.transparent));
+        mCurrentDrawable = new ColorDrawable(mResources.getColor(android.R.color.transparent));
         // A transparent image (layer 0) and the new result (layer 1)
         mArrayDrawable = new Drawable[2];
         mArrayDrawable[0] = mCurrentDrawable;

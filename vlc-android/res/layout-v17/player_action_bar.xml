@@ -5,8 +5,9 @@
 
     <TextView
         android:id="@+id/player_overlay_title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:layout_gravity="top"
         android:background="?attr/status_bar_overlay"
         android:text="@string/title"

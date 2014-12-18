@@ -70,7 +70,7 @@
         <item name="ic_menu_openmrl">@drawable/ic_menu_goto</item>
         <item name="ic_menu_preferences">@drawable/ic_menu_preferences</item>
         <item name="ic_move_media">@drawable/ic_move_media</item>
-
+        <item name="gridview_progressbar">@drawable/gridview_progressbar_w</item>
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsLight</item>
     </style>
 
@@ -137,6 +137,7 @@
         <item name="ic_menu_openmrl">@drawable/ic_menu_goto_w</item>
         <item name="ic_menu_preferences">@drawable/ic_menu_preferences_w</item>
         <item name="ic_move_media">@drawable/ic_move_media_w</item>
+        <item name="gridview_progressbar">@drawable/gridview_progressbar</item>
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsBlack</item>
     </style>
 
@@ -157,11 +158,15 @@
         <item name="android:windowBackground">@color/background_common</item>
     </style>
 
-    <style name="Theme.VLC.Player" parent="Theme.AppCompat">
-        <item name="android:windowBackground">@color/black</item>
+    <style name="Theme.VLC.Player" parent="Theme.VLC.Player.7"/>
+    <style name="Theme.VLC.Player.7" parent="Theme.AppCompat">
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="windowActionBar">false</item>
-        <item name="video_player_overlay">@color/transparent_gray</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="windowActionBarOverlay">true</item>
+        <!-- item name="video_player_overlay">@color/transparent_gray</item-->
+        <item name="video_player_overlay">@android:color/transparent</item>
+        <item name="status_bar_overlay">@android:color/transparent</item>
 
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsBlack</item>
     </style>

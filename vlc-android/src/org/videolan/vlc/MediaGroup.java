@@ -46,11 +46,13 @@ public class MediaGroup extends Media {
                 media.getArtist(),
                 media.getGenre(),
                 media.getAlbum(),
+                media.getAlbumArtist(),
                 media.getWidth(),
                 media.getHeight(),
                 media.getArtworkURL(),
                 media.getAudioTrack(),
-                media.getSpuTrack());
+                media.getSpuTrack(),
+                media.getTrackNumber());
         mMedia = media;
         mMedias = new ArrayList<Media>();
     }

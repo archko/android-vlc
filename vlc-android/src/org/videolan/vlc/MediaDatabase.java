@@ -51,7 +51,7 @@ public class MediaDatabase {
 
     private SQLiteDatabase mDb;
     private final String DB_NAME = "vlc_database";
-    private final int DB_VERSION = 8;
+    private final int DB_VERSION = 10;
     private final int CHUNK_SIZE = 50;
 
     private final String DIR_TABLE_NAME = "directories_table";
@@ -67,11 +67,13 @@ public class MediaDatabase {
     private final String MEDIA_ARTIST = "artist";
     private final String MEDIA_GENRE = "genre";
     private final String MEDIA_ALBUM = "album";
+    private final String MEDIA_ALBUMARTIST = "albumartist";
     private final String MEDIA_WIDTH = "width";
     private final String MEDIA_HEIGHT = "height";
     private final String MEDIA_ARTWORKURL = "artwork_url";
     private final String MEDIA_AUDIOTRACK = "audio_track";
     private final String MEDIA_SPUTRACK = "spu_track";
+    private final String MEDIA_TRACKNUMBER = "track_number";
 
     private final String PLAYLIST_TABLE_NAME = "playlist_table";
     private final String PLAYLIST_NAME = "name";
@@ -79,7 +81,8 @@ public class MediaDatabase {
     private final String PLAYLIST_MEDIA_TABLE_NAME = "playlist_media_table";
     private final String PLAYLIST_MEDIA_ID = "id";
     private final String PLAYLIST_MEDIA_PLAYLISTNAME = "playlist_name";
-    private final String PLAYLIST_MEDIA_MEDIAPATH = "media_path";
+    private final String PLAYLIST_MEDIA_MEDIALOCATION = "media_location";
+    private final String PLAYLIST_MEDIA_ORDER = "playlist_order";
 
     private final String SEARCHHISTORY_TABLE_NAME = "searchhistory_table";
     private final String SEARCHHISTORY_DATE = "date";
@@ -88,7 +91,8 @@ public class MediaDatabase {
     public enum mediaColumn {
         MEDIA_TABLE_NAME, MEDIA_PATH, MEDIA_TIME, MEDIA_LENGTH,
         MEDIA_TYPE, MEDIA_PICTURE, MEDIA_TITLE, MEDIA_ARTIST, MEDIA_GENRE, MEDIA_ALBUM,
-        MEDIA_WIDTH, MEDIA_HEIGHT, MEDIA_ARTWORKURL, MEDIA_AUDIOTRACK, MEDIA_SPUTRACK
+        MEDIA_ALBUMARTIST, MEDIA_WIDTH, MEDIA_HEIGHT, MEDIA_ARTWORKURL, MEDIA_AUDIOTRACK,
+        MEDIA_SPUTRACK, MEDIA_TRACKNUMBER
     }
 
     /**
@@ -159,17 +163,36 @@ public class MediaDatabase {
                     + MEDIA_LENGTH + " INTEGER, "
                     + MEDIA_TYPE + " INTEGER, "
                     + MEDIA_PICTURE + " BLOB, "
-                    + MEDIA_TITLE + " VARCHAR(200), "
-                    + MEDIA_ARTIST + " VARCHAR(200), "
-                    + MEDIA_GENRE + " VARCHAR(200), "
-                    + MEDIA_ALBUM + " VARCHAR(200), "
+                    + MEDIA_TITLE + " TEXT, "
+                    + MEDIA_ARTIST + " TEXT, "
+                    + MEDIA_GENRE + " TEXT, "
+                    + MEDIA_ALBUM + " TEXT, "
+                    + MEDIA_ALBUMARTIST + " TEXT, "
                     + MEDIA_WIDTH + " INTEGER, "
                     + MEDIA_HEIGHT + " INTEGER, "
-                    + MEDIA_ARTWORKURL + " VARCHAR(256), "
+                    + MEDIA_ARTWORKURL + " TEXT, "
                     + MEDIA_AUDIOTRACK + " INTEGER, "
-                    + MEDIA_SPUTRACK + " INTEGER"
+                    + MEDIA_SPUTRACK + " INTEGER, "
+                    + MEDIA_TRACKNUMBER + " INTEGER"
                     + ");";
             db.execSQL(query);
+        }
+
+        private void createPlaylistTablesQuery(SQLiteDatabase db) {
+            String createPlaylistTableQuery = "CREATE TABLE IF NOT EXISTS " +
+                    PLAYLIST_TABLE_NAME + " (" +
+                    PLAYLIST_NAME + " VARCHAR(200) PRIMARY KEY NOT NULL);";
+
+            db.execSQL(createPlaylistTableQuery);
+
+            String createPlaylistMediaTableQuery = "CREATE TABLE IF NOT EXISTS " +
+                    PLAYLIST_MEDIA_TABLE_NAME + " (" +
+                    PLAYLIST_MEDIA_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    PLAYLIST_MEDIA_PLAYLISTNAME + " VARCHAR(200) NOT NULL," +
+                    PLAYLIST_MEDIA_MEDIALOCATION + " TEXT NOT NULL," +
+                    PLAYLIST_MEDIA_ORDER + " INTEGER NOT NULL);";
+
+            db.execSQL(createPlaylistMediaTableQuery);
         }
 
         @Override
@@ -186,19 +209,8 @@ public class MediaDatabase {
             // Create the media table
             createMediaTableQuery(db);
 
-            String createPlaylistTableQuery = "CREATE TABLE IF NOT EXISTS " +
-                    PLAYLIST_TABLE_NAME + " (" +
-                    PLAYLIST_NAME + " VARCHAR(200) PRIMARY KEY NOT NULL);";
-
-            db.execSQL(createPlaylistTableQuery);
-
-            String createPlaylistMediaTableQuery = "CREATE TABLE IF NOT EXISTS " +
-                    PLAYLIST_MEDIA_TABLE_NAME + " (" +
-                    PLAYLIST_MEDIA_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    PLAYLIST_MEDIA_PLAYLISTNAME + " VARCHAR(200) NOT NULL," +
-                    PLAYLIST_MEDIA_MEDIAPATH + " TEXT NOT NULL);";
-
-            db.execSQL(createPlaylistMediaTableQuery);
+            // Create playlist tables
+            createPlaylistTablesQuery(db);
 
             String createSearchhistoryTabelQuery = "CREATE TABLE IF NOT EXISTS "
                     + SEARCHHISTORY_TABLE_NAME + " ("
@@ -216,58 +228,214 @@ public class MediaDatabase {
                 dropMediaTableQuery(db);
                 createMediaTableQuery(db);
             }
+            // Upgrade incrementally from oldVersion to newVersion
+            for(int i = oldVersion+1; i <= newVersion; i++) {
+                switch(i) {
+                case 9:
+                    // Remodelled playlist tables: re-create them
+                    db.execSQL("DROP TABLE " + PLAYLIST_MEDIA_TABLE_NAME + ";");
+                    db.execSQL("DROP TABLE " + PLAYLIST_TABLE_NAME + ";");
+                    createPlaylistTablesQuery(db);
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
     /**
      * Get all playlists in the database
-     * @return
+     *
+     * @return An array of all the playlist names
      */
     public String[] getPlaylists() {
         ArrayList<String> playlists = new ArrayList<String>();
-        Cursor cursor;
-
-        cursor = mDb.query(
+        Cursor c = mDb.query(
                 PLAYLIST_TABLE_NAME,
                 new String[] { PLAYLIST_NAME },
                 null, null, null, null, null);
-        cursor.moveToFirst();
-        if (!cursor.isAfterLast()) {
-            do {
-                playlists.add(cursor.getString(10));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
+
+        while(c.moveToNext())
+            playlists.add(c.getString(c.getColumnIndex(PLAYLIST_NAME)));
+        c.close();
         return playlists.toArray(new String[playlists.size()]);
     }
 
     /**
      * Add new playlist
-     * @param name
-     * @return id of the new playlist
+     *
+     * @param name Unique name of the playlist
+     * @return False if invalid name or already exists, true otherwise
      */
-    public void addPlaylist(String name) {
+    public boolean playlistAdd(String name) {
+        // Check length
+        if(name.length() >= 200)
+            return false;
+
+        // Check if already exists
+        if(playlistExists(name))
+            return false;
+
+        // Create new playlist
         ContentValues values = new ContentValues();
         values.put(PLAYLIST_NAME, name);
-        mDb.insert(PLAYLIST_TABLE_NAME, "NULL", values);
+        long res = mDb.insert(PLAYLIST_TABLE_NAME, "NULL", values);
+        return res != -1;
     }
 
-    public void deletePlaylist(String name) {
+    /**
+     * Delete a playlist and all of its entries.
+     *
+     * @param name Unique name of the playlist
+     */
+    public void playlistDelete(String name) {
         mDb.delete(PLAYLIST_TABLE_NAME, PLAYLIST_NAME + "=?",
                 new String[] { name });
+        mDb.delete(PLAYLIST_MEDIA_TABLE_NAME, PLAYLIST_MEDIA_PLAYLISTNAME
+                + "=?", new String[] { name });
     }
 
-    public void addMediaToPlaylist(String playlistName, String mediaPath) {
+    /**
+     * Check if the playlist in question exists.
+     *
+     * @param name Unique name of the playlist
+     * @return true if playlist exists, false otherwise
+     */
+    public boolean playlistExists(String name) {
+        // Check duplicates
+        Cursor c = mDb.query(PLAYLIST_TABLE_NAME,
+                new String[] { PLAYLIST_NAME }, PLAYLIST_NAME + "= ?",
+                new String[] { name }, null, null, "1");
+        int count = c.getCount();
+        c.close();
+        return (count > 0);
+    }
+
+   /**
+     * Get all items in the specified playlist.
+     *
+     * @param playlistName Unique name of the playlist
+     * @return Array containing MRLs of the playlist in order, or null on error
+     */
+    public String[] playlistGetItems(String playlistName) {
+        if(!playlistExists(playlistName))
+            return null;
+
+        Cursor c = mDb.query(
+                PLAYLIST_MEDIA_TABLE_NAME,
+                new String[] { PLAYLIST_MEDIA_MEDIALOCATION },
+                PLAYLIST_MEDIA_PLAYLISTNAME + "= ?",
+                new String[] { playlistName }, null, null,
+                PLAYLIST_MEDIA_ORDER + " ASC");
+
+        int count = c.getCount();
+        String ret[] = new String[count]; int i = 0;
+        while(c.moveToNext()) {
+            ret[i] = c.getString(c.getColumnIndex(PLAYLIST_MEDIA_MEDIALOCATION));
+            i++;
+        }
+        c.close();
+        return ret;
+    }
+
+    /**
+     * Insert an item with location into playlistName at the specified position
+     *
+     * @param playlistName Unique name of the playlist
+     * @param position Position to insert into
+     * @param mrl MRL of the media
+     */
+    public void playlistInsertItem(String playlistName, int position, String mrl) {
+        playlistShiftItems(playlistName, position, 1);
+
         ContentValues values = new ContentValues();
         values.put(PLAYLIST_MEDIA_PLAYLISTNAME, playlistName);
-        values.put(PLAYLIST_MEDIA_MEDIAPATH, mediaPath);
+        values.put(PLAYLIST_MEDIA_MEDIALOCATION, mrl);
+        values.put(PLAYLIST_MEDIA_ORDER, position);
+        mDb.insert(PLAYLIST_MEDIA_TABLE_NAME, "NULL", values);
     }
 
-    public void removeMediaFromPlaylist(String playlistName, String mediaPath) {
+    /**
+     * Shifts all items starting at position by the given factor.
+     *
+     * For instance:
+     * Before:
+     * 0 - A
+     * 1 - B
+     * 2 - C
+     * 3 - D
+     *
+     * After playlistShiftItems(playlist, 1, 1):
+     * 0 - A
+     * 2 - B
+     * 3 - C
+     * 4 - D
+     *
+     * @param playlistName Unique name of the playlist
+     * @param position Position to start shifting at
+     * @param factor Factor to shift the order by
+     */
+    private void playlistShiftItems(String playlistName, int position, int factor) {
+        // Increment all media orders by 1 after the insert position
+        Cursor c = mDb.query(
+                PLAYLIST_MEDIA_TABLE_NAME,
+                new String[] { PLAYLIST_MEDIA_ID, PLAYLIST_MEDIA_ORDER },
+                PLAYLIST_MEDIA_PLAYLISTNAME + "=? AND " + PLAYLIST_MEDIA_ORDER + " >= ?",
+                new String[] { playlistName, String.valueOf(position) },
+                null, null,
+                PLAYLIST_MEDIA_ORDER + " ASC");
+        while(c.moveToNext()) {
+            ContentValues cv = new ContentValues();
+            int ii = c.getInt(c.getColumnIndex(PLAYLIST_MEDIA_ORDER)) + factor;
+            Log.d(TAG, "ii = " + ii);
+            cv.put(PLAYLIST_MEDIA_ORDER, ii /* i */);
+            mDb.update(PLAYLIST_MEDIA_TABLE_NAME, cv, PLAYLIST_MEDIA_ID + "=?",
+                    new String[] { c.getString(c.getColumnIndex(PLAYLIST_MEDIA_ID)) });
+        }
+    }
+
+    /**
+     * Removes the item at the given position
+     *
+     * @param playlistName Unique name of the playlist
+     * @param position Position to remove
+     */
+    public void playlistRemoveItem(String playlistName, int position) {
         mDb.delete(PLAYLIST_MEDIA_TABLE_NAME,
-                PLAYLIST_MEDIA_PLAYLISTNAME + "=? "
-                        + PLAYLIST_MEDIA_MEDIAPATH + "=?",
-                new String[] { playlistName, mediaPath });
+                PLAYLIST_MEDIA_PLAYLISTNAME + "=? AND " +
+                PLAYLIST_MEDIA_ORDER + "=?",
+                new String[] { playlistName, Integer.toString(position) });
+
+        playlistShiftItems(playlistName, position+1, -1);
+    }
+
+    /**
+     * Rename the specified playlist.
+     *
+     * @param playlistName Unique name of the playlist
+     * @param newPlaylistName New name of the playlist
+     * @return false on error, if playlist doesn't exist or if the new name
+     * already exists, true otherwise
+     */
+    public boolean playlistRename(String playlistName, String newPlaylistName) {
+        if(!playlistExists(playlistName) || playlistExists(newPlaylistName))
+            return false;
+
+        // Update playlist table
+        ContentValues values = new ContentValues();
+        values.put(PLAYLIST_NAME, newPlaylistName);
+        mDb.update(PLAYLIST_TABLE_NAME, values, PLAYLIST_NAME + " =?",
+                new String[] { playlistName });
+
+        // Update playlist media table
+        values = new ContentValues();
+        values.put(PLAYLIST_MEDIA_PLAYLISTNAME, newPlaylistName);
+        mDb.update(PLAYLIST_MEDIA_TABLE_NAME, values,
+                PLAYLIST_MEDIA_PLAYLISTNAME + " =?",
+                new String[] { playlistName });
+
+        return true;
     }
 
     /**
@@ -286,11 +454,13 @@ public class MediaDatabase {
         values.put(MEDIA_ARTIST, media.getArtist());
         values.put(MEDIA_GENRE, media.getGenre());
         values.put(MEDIA_ALBUM, media.getAlbum());
+        values.put(MEDIA_ALBUMARTIST, media.getAlbumArtist());
         values.put(MEDIA_WIDTH, media.getWidth());
         values.put(MEDIA_HEIGHT, media.getHeight());
         values.put(MEDIA_ARTWORKURL, media.getArtworkURL());
         values.put(MEDIA_AUDIOTRACK, media.getAudioTrack());
         values.put(MEDIA_SPUTRACK, media.getSpuTrack());
+        values.put(MEDIA_TRACKNUMBER, media.getTrackNumber());
 
         mDb.replace(MEDIA_TABLE_NAME, "NULL", values);
 
@@ -377,7 +547,7 @@ public class MediaDatabase {
         do {
             count = 0;
             cursor = mDb.rawQuery(String.format(Locale.US,
-                    "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s FROM %s LIMIT %d OFFSET %d",
+                    "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s FROM %s LIMIT %d OFFSET %d",
                     MEDIA_TIME, //0 long
                     MEDIA_LENGTH, //1 long
                     MEDIA_TYPE, //2 int
@@ -385,19 +555,21 @@ public class MediaDatabase {
                     MEDIA_ARTIST, //4 string
                     MEDIA_GENRE, //5 string
                     MEDIA_ALBUM, //6 string
-                    MEDIA_WIDTH, //7 int
-                    MEDIA_HEIGHT, //8 int
-                    MEDIA_ARTWORKURL, //9 string
-                    MEDIA_AUDIOTRACK, //10 string
-                    MEDIA_SPUTRACK, //11 string
-                    MEDIA_LOCATION, //12 string
+                    MEDIA_ALBUMARTIST, //7 string
+                    MEDIA_WIDTH, //8 int
+                    MEDIA_HEIGHT, //9 int
+                    MEDIA_ARTWORKURL, //10 string
+                    MEDIA_AUDIOTRACK, //11 int
+                    MEDIA_SPUTRACK, //12 int
+                    MEDIA_TRACKNUMBER, // 13 int
+                    MEDIA_LOCATION, //14 string
                     MEDIA_TABLE_NAME,
                     CHUNK_SIZE,
                     chunk_count * CHUNK_SIZE), null);
 
             if (cursor.moveToFirst()) {
                 do {
-                    String location = cursor.getString(12);
+                    String location = cursor.getString(14);
                     Media media = new Media(location,
                             cursor.getLong(0),      // MEDIA_TIME
                             cursor.getLong(1),      // MEDIA_LENGTH
@@ -407,11 +579,13 @@ public class MediaDatabase {
                             cursor.getString(4),    // MEDIA_ARTIST
                             cursor.getString(5),    // MEDIA_GENRE
                             cursor.getString(6),    // MEDIA_ALBUM
-                            cursor.getInt(7),       // MEDIA_WIDTH
-                            cursor.getInt(8),       // MEDIA_HEIGHT
-                            cursor.getString(9),    // MEDIA_ARTWORKURL
-                            cursor.getInt(10),      // MEDIA_AUDIOTRACK
-                            cursor.getInt(11));     // MEDIA_SPUTRACK
+                            cursor.getString(7),    // MEDIA_ALBUMARTIST
+                            cursor.getInt(8),       // MEDIA_WIDTH
+                            cursor.getInt(9),       // MEDIA_HEIGHT
+                            cursor.getString(10),   // MEDIA_ARTWORKURL
+                            cursor.getInt(11),      // MEDIA_AUDIOTRACK
+                            cursor.getInt(12),      // MEDIA_SPUTRACK
+                            cursor.getInt(13));     // MEDIA_TRACKNUMBER
                     medias.put(media.getLocation(), media);
 
                     count++;
@@ -476,11 +650,13 @@ public class MediaDatabase {
                         MEDIA_ARTIST, //4 string
                         MEDIA_GENRE, //5 string
                         MEDIA_ALBUM, //6 string
-                        MEDIA_WIDTH, //7 int
-                        MEDIA_HEIGHT, //8 int
-                        MEDIA_ARTWORKURL, //9 string
-                        MEDIA_AUDIOTRACK, //10 string
-                        MEDIA_SPUTRACK //11 string
+                        MEDIA_ALBUMARTIST, //7 string
+                        MEDIA_WIDTH, //8 int
+                        MEDIA_HEIGHT, //9 int
+                        MEDIA_ARTWORKURL, //10 string
+                        MEDIA_AUDIOTRACK, //11 int
+                        MEDIA_SPUTRACK, //12 int
+                        MEDIA_TRACKNUMBER, //13 int
                 },
                 MEDIA_LOCATION + "=?",
                 new String[] { location },
@@ -499,11 +675,13 @@ public class MediaDatabase {
                     cursor.getString(4),
                     cursor.getString(5),
                     cursor.getString(6),
-                    cursor.getInt(7),
+                    cursor.getString(7),
                     cursor.getInt(8),
-                    cursor.getString(9),
-                    cursor.getInt(10),
-                    cursor.getInt(11));
+                    cursor.getInt(9),
+                    cursor.getString(10),
+                    cursor.getInt(11),
+                    cursor.getInt(12),
+                    cursor.getInt(13));
         }
         cursor.close();
         return media;

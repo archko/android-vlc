@@ -28,11 +28,13 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.TrackInfo;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
+import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.util.BitmapUtil;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.os.Bundle;
@@ -54,7 +56,6 @@ public class MediaInfoFragment extends ListFragment {
     public final static String TAG = "VLC/MediaInfoFragment";
     private Media mItem;
     private Bitmap mImage;
-    private TextView mTitleView;
     private TextView mLengthView;
     private ImageButton mPlayButton;
     private TrackInfo[] mTracks;
@@ -67,7 +68,6 @@ public class MediaInfoFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         View v = inflater.inflate(R.layout.media_info, container, false);
 
-        mTitleView = (TextView) v.findViewById(R.id.title);
         mLengthView = (TextView) v.findViewById(R.id.length);
         mPlayButton = (ImageButton) v.findViewById(R.id.play);
 
@@ -93,7 +93,6 @@ public class MediaInfoFragment extends ListFragment {
             return;
         }
 
-        mTitleView.setText(mItem.getTitle());
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(mItem.getTitle());
         mLengthView.setText(Strings.millisToString(mItem.getLength()));
 
@@ -115,14 +114,23 @@ public class MediaInfoFragment extends ListFragment {
             } catch (LibVlcException e) {
                 return;
             }
+            int videoHeight = mItem.getHeight();
+            int videoWidth = mItem.getWidth();
+            if (videoWidth == 0 || videoHeight == 0)
+                return;
 
             mTracks = mLibVlc.readTracksInfo(mItem.getLocation());
             mHandler.sendEmptyMessage(NEW_TEXT);
 
             DisplayMetrics screen = new DisplayMetrics();
             getActivity().getWindowManager().getDefaultDisplay().getMetrics(screen);
-            int width = Math.min(screen.widthPixels, screen.heightPixels);
-            int height = width * 9 / 16;
+            int width, height;
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                width = Math.min(screen.widthPixels, screen.heightPixels);
+            } else {
+                width = screen.widthPixels /2 ;
+            }
+            height = width * videoHeight/videoWidth;
 
             // Get the thumbnail.
             mImage = Bitmap.createBitmap(width, height, Config.ARGB_8888);
@@ -144,7 +152,13 @@ public class MediaInfoFragment extends ListFragment {
             return;
         ImageView imageView = (ImageView) getView().findViewById(R.id.image);
         imageView.setImageBitmap(mImage);
+        ViewGroup.LayoutParams lp = imageView.getLayoutParams();
+        lp.height = mImage.getHeight();
+        lp.width = mImage.getWidth();
+        imageView.setLayoutParams(lp);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         mPlayButton.setVisibility(View.VISIBLE);
+        mLengthView.setVisibility(View.VISIBLE);
     }
 
     private void updateText() {
@@ -152,6 +166,8 @@ public class MediaInfoFragment extends ListFragment {
             if (track.Type != TrackInfo.TYPE_META)
                 mAdapter.add(track);
         }
+        if (mAdapter.isEmpty())
+            ((MainActivity)getActivity()).popSecondaryFragment();
     }
 
     private Handler mHandler = new MediaInfoHandler(this);

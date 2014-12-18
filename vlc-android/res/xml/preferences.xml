@@ -54,7 +54,9 @@
             android:title="@string/subtitle_text_encoding" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/extra_prefs_category" >
-        <PreferenceScreen android:title="@string/interface_prefs_screen" >
+        <PreferenceScreen
+            android:title="@string/interface_prefs_screen"
+            android:key="ui_category" >
             <PreferenceCategory android:title="@string/interface_secondary_display_category" >
                 <Preference android:summary="@string/interface_secondary_display_category_summary" />
 
@@ -75,11 +77,6 @@
                     android:key="enable_brightness_gesture"
                     android:summary="@string/enable_brightness_gesture_summary"
                     android:title="@string/enable_brightness_gesture" />
-                <CheckBoxPreference
-                    android:defaultValue="false"
-                    android:key="enable_jump_buttons"
-                    android:summary="@string/enable_jump_buttons_summary"
-                    android:title="@string/enable_jump_buttons" />
                 <CheckBoxPreference
                     android:defaultValue="true"
                     android:key="enable_headset_detection"

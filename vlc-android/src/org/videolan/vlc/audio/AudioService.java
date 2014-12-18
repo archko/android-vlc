@@ -67,6 +67,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
@@ -119,6 +120,7 @@ public class AudioService extends Service {
     private EventHandler mEventHandler;
     private OnAudioFocusChangeListener audioFocusListener;
     private boolean mDetectHeadset = true;
+    private boolean mPebbleEnabled;
     private PowerManager.WakeLock mWakeLock;
 
     private static boolean mWasPlayingAudio = false;
@@ -203,6 +205,12 @@ public class AudioService extends Service {
             mRemoteControlClientReceiver = new RemoteControlClientReceiver();
             registerReceiver(mRemoteControlClientReceiver, filter);
         }
+        try {
+            getPackageManager().getPackageInfo("com.getpebble.android", PackageManager.GET_ACTIVITIES);
+            mPebbleEnabled = true;
+        } catch (PackageManager.NameNotFoundException e) {
+            mPebbleEnabled = false;
+        }
     }
 
     /**
@@ -269,7 +277,13 @@ public class AudioService extends Service {
         if(ACTION_REMOTE_PLAYPAUSE.equals(intent.getAction())){
             if (hasCurrentMedia())
                 return START_STICKY;
-            else loadLastPlaylist();
+            else
+                loadLastPlaylist();
+        } else if (ACTION_REMOTE_PLAY.equals(intent.getAction())) {
+            if (hasCurrentMedia())
+                play();
+            else
+                loadLastPlaylist();
         }
         updateWidget(this);
         return super.onStartCommand(intent, flags, startId);
@@ -738,8 +752,6 @@ public class AudioService extends Service {
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             if (LibVlcUtil.isJellyBeanOrLater()) {
-                int pause = LibVlcUtil.isLolliPopOrLater() ? R.drawable.ic_pause : R.drawable.ic_pause_w;
-                int play = LibVlcUtil.isLolliPopOrLater() ? R.drawable.ic_play : R.drawable.ic_play_w;
                 Intent iBackward = new Intent(ACTION_REMOTE_BACKWARD);
                 Intent iPlay = new Intent(ACTION_REMOTE_PLAYPAUSE);
                 Intent iForward = new Intent(ACTION_REMOTE_FORWARD);
@@ -754,7 +766,7 @@ public class AudioService extends Service {
                     view.setImageViewBitmap(R.id.cover, cover);
                 view.setTextViewText(R.id.songName, title);
                 view.setTextViewText(R.id.artist, artist);
-                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? pause : play);
+                view.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause_w : R.drawable.ic_play_w);
                 view.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view.setOnClickPendingIntent(R.id.forward, piForward);
                 view.setOnClickPendingIntent(R.id.stop, piStop);
@@ -766,7 +778,7 @@ public class AudioService extends Service {
                 view_expanded.setTextViewText(R.id.songName, title);
                 view_expanded.setTextViewText(R.id.artist, artist);
                 view_expanded.setTextViewText(R.id.album, album);
-                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? pause : play);
+                view_expanded.setImageViewResource(R.id.play_pause, mLibVLC.isPlaying() ? R.drawable.ic_pause_w : R.drawable.ic_play_w);
                 view_expanded.setOnClickPendingIntent(R.id.backward, piBackward);
                 view_expanded.setOnClickPendingIntent(R.id.play_pause, piPlay);
                 view_expanded.setOnClickPendingIntent(R.id.forward, piForward);
@@ -946,10 +958,17 @@ public class AudioService extends Service {
             editor.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, media.getLength());
             // Copy the cover bitmap because the RemonteControlClient can recycle its artwork bitmap.
             Bitmap cover = getCover();
-            if (null!=cover) {
             editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, ((cover != null) ? cover.copy(cover.getConfig(), false) : null));
-            }
             editor.apply();
+        }
+
+        //Send metadata to Pebble watch
+        if (mPebbleEnabled) {
+            final Intent i = new Intent("com.getpebble.action.NOW_PLAYING");
+            i.putExtra("artist", media.getArtist());
+            i.putExtra("album", media.getAlbum());
+            i.putExtra("track", media.getTitle());
+            sendBroadcast(i);
         }
     }
 

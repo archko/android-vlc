@@ -154,13 +154,6 @@ public class VideoListAdapter extends ArrayAdapter<Media>
             holder.listmode = mListMode;
             v.setTag(holder);
 
-            holder.more.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mFragment != null)
-                    mFragment.onContextPopupMenu(v, position);
-                }
-            });
 
             /* Set the layoutParams based on the values set in the video_grid_item.xml root element */
             v.setLayoutParams(new GridView.LayoutParams(v.getLayoutParams().width, v.getLayoutParams().height));
@@ -168,17 +161,25 @@ public class VideoListAdapter extends ArrayAdapter<Media>
             holder = (ViewHolder) v.getTag();
         }
 
+        holder.more.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mFragment != null)
+                    mFragment.onContextPopupMenu(v, position);
+            }
+        });
+
         Media media = getItem(position);
 
         /* Thumbnail */
         Bitmap thumbnail = BitmapUtil.getPictureFromCache(media);
         if (thumbnail == null) {
             // missing thumbnail
-            thumbnail = BitmapCache.GetFromResource(v, R.drawable.icon_g);
+            thumbnail = BitmapCache.GetFromResource(v, R.drawable.ic_cone_o);
         }
         else if (thumbnail.getWidth() == 1 && thumbnail.getHeight() == 1) {
             // dummy thumbnail
-            thumbnail = BitmapCache.GetFromResource(v, R.drawable.icon);
+            thumbnail = BitmapCache.GetFromResource(v, R.drawable.ic_cone_o);
         }
         //FIXME Warning: the thumbnails are upscaled in the grid view!
         holder.thumbnail.setImageBitmap(thumbnail);

@@ -62,6 +62,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.Presentation;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -70,10 +71,12 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaRouter;
@@ -88,14 +91,18 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.PopupMenu;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.InputDevice;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -119,6 +126,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlayer {
 
@@ -154,12 +162,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     /** Overlay */
     private ActionBar mActionBar;
-    private boolean mOverlayUseStatusBar;
-    private View mOverlayHeader;
-    private View mOverlayOption;
-    private View mOverlayRecord;
     private View mOverlayProgress;
     private View mOverlayBackground;
+    private View mOverlayRecord;
     private static final int OVERLAY_TIMEOUT = 4000;
     private static final int OVERLAY_INFINITE = -1;
     private static final int FADE_OUT = 1;
@@ -180,19 +185,16 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private TextView mInfo;
     private ImageView mLoading;
     private TextView mLoadingText;
-    private ImageButton mPlayPause;
-    private ImageButton mBackward;
-    private ImageButton mForward;
-    private boolean mEnableJumpButtons;
+    private ImageView mPlayPause;
+    private ImageView mTracks;
+    private ImageView mAdvOptions;
     private boolean mEnableBrightnessGesture;
     private boolean mEnableCloneMode;
     private boolean mDisplayRemainingTime = false;
     private int mScreenOrientation;
     private int mScreenOrientationLock;
-    private ImageButton mAudioTrack;
-    private ImageButton mSubtitle;
-    private ImageButton mLock;
-    private ImageButton mSize;
+    private ImageView mLock;
+    private ImageView mSize;
     private ImageButton mMenu;
     private ImageButton mSnap;
     private ImageButton mRecord;
@@ -264,7 +266,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private static final String PREF_TIPS_SHOWN = "video_player_tips_shown";
 
     // Navigation handling (DVD, Blu-Ray...)
-    private ImageButton mNavMenu;
     private boolean mHasMenu = false;
     private boolean mIsNavMenu = false;
 
@@ -286,9 +287,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 }
             };
             Log.d(TAG, "MediaRouter information : " + mMediaRouter  .toString());
-            mOverlayUseStatusBar = true;
-        } else {
-            mOverlayUseStatusBar = false;
         }
 
         mSettings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -317,36 +315,29 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             );
 
         /** initialize Views an their Events */
-        if (mOverlayUseStatusBar) {
-            /*mActionBar = getSupportActionBar();
-            mActionBar.setDisplayShowHomeEnabled(false);
-            mActionBar.setDisplayShowTitleEnabled(false);
-            mActionBar.setBackgroundDrawable(null);
-            mActionBar.setDisplayShowCustomEnabled(true);
-            mActionBar.setCustomView(R.layout.player_action_bar);
+        mActionBar = getSupportActionBar();
+        mActionBar.setDisplayShowHomeEnabled(false);
+        mActionBar.setDisplayShowTitleEnabled(false);
+        mActionBar.setBackgroundDrawable(null);
+        mActionBar.setDisplayShowCustomEnabled(true);
+        mActionBar.setCustomView(R.layout.player_action_bar);
 
-            ViewGroup view = (ViewGroup) mActionBar.getCustomView();
-            *//* Dispatch ActionBar touch events to the Activity *//*
-            view.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    onTouchEvent(event);
-                    return true;
-                }
-            });
-            mTitle = (TextView) view.findViewById(R.id.player_overlay_title);*/
-            mOverlayHeader = mSysTime = mBattery = null;
-        } else {
-            mOverlayHeader = findViewById(R.id.player_overlay_header);
-            /* header */
-            mTitle = (TextView) findViewById(R.id.player_overlay_title);
-            mSysTime = (TextView) findViewById(R.id.player_overlay_systime);
-            mBattery = (TextView) findViewById(R.id.player_overlay_battery);
-        }
-        mOverlayOption = findViewById(R.id.option_overlay);
-        mOverlayRecord = findViewById(R.id.option_overlay_record);
+        ViewGroup view = (ViewGroup) mActionBar.getCustomView();
+        /* Dispatch ActionBar touch events to the Activity */
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                onTouchEvent(event);
+                return true;
+            }
+        });
+        mTitle = (TextView) view.findViewById(R.id.player_overlay_title);
+        mSysTime = (TextView) findViewById(R.id.player_overlay_systime);
+        mBattery = (TextView) findViewById(R.id.player_overlay_battery);
         mOverlayProgress = findViewById(R.id.progress_overlay);
         mOverlayBackground = findViewById(R.id.player_overlay_background);
+
+        mOverlayRecord = findViewById(R.id.option_overlay_record);
 
         // Position and remaining time
         mTime = (TextView) findViewById(R.id.player_overlay_time);
@@ -361,20 +352,14 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mScreenOrientation = Integer.valueOf(
                 mSettings.getString("screen_orientation_value", "4" /*SCREEN_ORIENTATION_SENSOR*/));
 
-        mEnableJumpButtons = mSettings.getBoolean("enable_jump_buttons", false);
-        mPlayPause = (ImageButton) findViewById(R.id.player_overlay_play);
+        mPlayPause = (ImageView) findViewById(R.id.player_overlay_play);
         mPlayPause.setOnClickListener(mPlayPauseListener);
-        mBackward = (ImageButton) findViewById(R.id.player_overlay_backward);
-        mBackward.setOnClickListener(mBackwardListener);
-        mForward = (ImageButton) findViewById(R.id.player_overlay_forward);
-        mForward.setOnClickListener(mForwardListener);
 
-        mAudioTrack = (ImageButton) findViewById(R.id.player_overlay_audio);
-        mAudioTrack.setVisibility(View.GONE);
-        mSubtitle = (ImageButton) findViewById(R.id.player_overlay_subtitle);
-        mSubtitle.setVisibility(View.GONE);
-        mNavMenu = (ImageButton) findViewById(R.id.player_overlay_navmenu);
-        mNavMenu.setVisibility(View.GONE);
+        mTracks = (ImageView) findViewById(R.id.player_overlay_tracks);
+        mAdvOptions = (ImageView) findViewById(R.id.player_overlay_adv_function);
+        mLock = (ImageView) findViewById(R.id.lock_overlay_button);
+        mLock.setOnClickListener(mLockListener);
+		
         mSnap = (ImageButton) findViewById(R.id.player_overlay_snap);
         mRecord =(ImageButton) findViewById(R.id.player_overlay_record);
         mSnap.setVisibility(View.GONE);
@@ -383,13 +368,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSnap.setOnClickListener(mRecordListener);
         mRecord.setOnClickListener(mRecordListener);
 
-        mLock = (ImageButton) findViewById(R.id.lock_overlay_button);
-        mLock.setOnClickListener(mLockListener);
-
-        mSize = (ImageButton) findViewById(R.id.player_overlay_size);
+        mSize = (ImageView) findViewById(R.id.player_overlay_size);
         mSize.setOnClickListener(mSizeListener);
-
-        mMenu = (ImageButton) findViewById(R.id.player_overlay_adv_function);
 
         try {
             mLibVLC = VLCInstance.getLibVlcInstance();
@@ -437,7 +417,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         editor.commit();
 
         IntentFilter filter = new IntentFilter();
-        if (!mOverlayUseStatusBar)
+        if (mBattery != null)
             filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(VLCApplication.SLEEP_INTENT);
         registerReceiver(mReceiver, filter);
@@ -476,6 +456,28 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         updateNavStatus();
     }
 
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.video_player, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onPrepareOptionsMenu(Menu menu){
+        MenuItem item = menu.findItem(R.id.pl_menu_nav);
+        item.setVisible(mLibVLC.getChapterCountForTitle(0) > 1 && mLibVLC.getTitleCount() > 1 && mLibVLC.getTitle() != 0);
+        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()) {
+            case R.id.pl_menu_nav:
+                showNavMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
     @Override
     protected void onPause() {
         super.onPause();
@@ -549,6 +551,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         super.onConfigurationChanged(newConfig);
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     protected void onStart() {
         if (LibVlcUtil.isHoneycombOrLater()) {
@@ -624,16 +627,16 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSwitchingView = false;
         AudioServiceController.getInstance().bindAudioService(this,
                 new AudioServiceController.AudioServiceConnectionListener() {
-            @Override
-            public void onConnectionSuccess() {
-                mHandler.sendEmptyMessage(AUDIO_SERVICE_CONNECTION_SUCCESS);
-            }
+                    @Override
+                    public void onConnectionSuccess() {
+                        mHandler.sendEmptyMessage(AUDIO_SERVICE_CONNECTION_SUCCESS);
+                    }
 
-            @Override
-            public void onConnectionFailed() {
-                mHandler.sendEmptyMessage(AUDIO_SERVICE_CONNECTION_FAILED);
-            }
-        });
+                    @Override
+                    public void onConnectionFailed() {
+                        mHandler.sendEmptyMessage(AUDIO_SERVICE_CONNECTION_FAILED);
+                    }
+                });
 
         if (mMediaRouter != null) {
             // Listen for changes to media routes.
@@ -685,6 +688,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 mLibVLC.addSubtitleTrack(file);
             }
         }
+
     }
 
     @Override
@@ -768,6 +772,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @TargetApi(12) //only active for Android 3.1+
     public boolean dispatchGenericMotionEvent(MotionEvent event){
+        //Check for a joystick event
+        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) !=
+                InputDevice.SOURCE_JOYSTICK ||
+                event.getAction() != MotionEvent.ACTION_MOVE)
+            return false;
 
 		InputDevice mInputDevice = event.getDevice();
 
@@ -842,7 +851,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             showNavMenu();
             return true;
         case KeyEvent.KEYCODE_O:
-            showAdvancedOptions(mMenu);
+            showAdvancedOptions(null);
             return true;
         case KeyEvent.KEYCODE_A:
             resizeVideo();
@@ -964,10 +973,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mScreenOrientationLock = getScreenOrientation();
         }
         showInfo(R.string.locked, 1000);
-        mLock.setBackgroundResource(R.drawable.ic_locked);
+        mLock.setImageResource(R.drawable.ic_locked_circle);
         mTime.setEnabled(false);
         mSeekbar.setEnabled(false);
         mLength.setEnabled(false);
+        mSize.setEnabled(false);
         hideOverlay(true);
     }
 
@@ -978,10 +988,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if(mScreenOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR)
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
         showInfo(R.string.unlocked, 1000);
-        mLock.setBackgroundResource(R.drawable.ic_lock);
+        mLock.setImageResource(R.drawable.ic_lock_circle);
         mTime.setEnabled(true);
         mSeekbar.setEnabled(true);
         mLength.setEnabled(true);
+        mSize.setEnabled(true);
         mShowing = false;
         showOverlay();
     }
@@ -1663,15 +1674,56 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
     };
 
-    /**
-    *
-    */
-    private final OnClickListener mAudioTrackListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            selectAudioTrack();
-        }
-    };
+    public void onAudioSubClick(View anchor){
+        final Context context = this;
+        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        popupMenu.getMenuInflater().inflate(R.menu.audiosub_tracks, popupMenu.getMenu());
+        popupMenu.getMenu().findItem(R.id.video_menu_audio_track).setEnabled(mLibVLC.getAudioTracksCount() > 2);
+        popupMenu.getMenu().findItem(R.id.video_menu_subtitles).setEnabled(mLibVLC.getSpuTracksCount() > 0);
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == R.id.video_menu_audio_track) {
+                    selectAudioTrack();
+                    return true;
+                } else if (item.getItemId() == R.id.video_menu_subtitles) {
+                    selectSubtitles();
+                    return true;
+                } else if (item.getItemId() == R.id.video_menu_subtitles_picker) {
+                    Intent intent = new Intent("org.openintents.action.PICK_FILE");
+
+                    File file = new File(android.os.Environment.getExternalStorageDirectory().getPath());
+                    intent.setData(Uri.fromFile(file));
+
+                    // Set fancy title and button (optional)
+                    intent.putExtra("org.openintents.extra.TITLE", context.getString(R.string.subtitle_select));
+                    intent.putExtra("org.openintents.extra.BUTTON_TEXT", context.getString(R.string.open));
+
+                    if (getPackageManager()
+                            .queryIntentActivities(intent,
+                                    PackageManager.MATCH_DEFAULT_ONLY).size() > 0) {
+                        startActivityForResult(intent, CommonDialogs.INTENT_SPECIFIC);
+                    } else {
+                        // OI intent not found, trying anything
+                        Intent intent2 = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent2.setType("*/*");
+                        intent2.addCategory(Intent.CATEGORY_OPENABLE);
+                        try {
+                            startActivityForResult(intent2, CommonDialogs.INTENT_GENERIC);
+                        } catch(ActivityNotFoundException e) {
+                            Log.i(TAG, "No file picker found on system");
+                            Toast.makeText(context,
+                                    R.string.no_file_picker_found,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+        popupMenu.show();
+    }
 
     private void selectAudioTrack() {
     	if (mAudioTracksList == null) return;
@@ -1693,13 +1745,13 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             public void onClick(DialogInterface dialog, int listPosition) {
                 int trackID = -1;
                 // Reverse map search...
-                for(Map.Entry<Integer, String> entry : mAudioTracksList.entrySet()) {
-                    if(arrList[listPosition].equals(entry.getValue())) {
+                for (Map.Entry<Integer, String> entry : mAudioTracksList.entrySet()) {
+                    if (arrList[listPosition].equals(entry.getValue())) {
                         trackID = entry.getKey();
                         break;
                     }
                 }
-                if(trackID < 0) return;
+                if (trackID < 0) return;
 
                 MediaDatabase.getInstance().updateMedia(
                         mLocation,
@@ -1714,16 +1766,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         dialog.setOwnerActivity(VideoPlayerActivity.this);
         dialog.show();
     }
-
-    /**
-    *
-    */
-    private final OnClickListener mSubtitlesListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            selectSubtitles();
-        }
-    };
 
     private void selectSubtitles() {
         final String[] arrList = new String[mSubtitleTracksList.size()];
@@ -1766,13 +1808,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         dialog.show();
     }
 
-    private final OnClickListener mNavMenuListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showNavMenu();
-        }
-    };
-
     private void showNavMenu() {
         /* Try to return to the menu. */
         /* FIXME: not working correctly in all cases */
@@ -1798,26 +1833,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             showOverlayTimeout(OVERLAY_TIMEOUT);
         }
     }
-
-    /**
-    *
-    */
-    private final OnClickListener mBackwardListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            seek(-10000);
-        }
-    };
-
-    /**
-    *
-    */
-    private final OnClickListener mForwardListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            seek(10000);
-        }
-    };
 
     public void seek(int delta) {
         // unseekable stream
@@ -2013,16 +2028,15 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if (!mShowing) {
             mShowing = true;
             if (!mIsLocked) {
-                if (mOverlayUseStatusBar)
-                    setActionBarVisibility(true);
-                else if (mOverlayHeader != null)
-                    mOverlayHeader.setVisibility(View.VISIBLE);
-                mOverlayOption.setVisibility(View.VISIBLE);
-                mOverlayRecord.setVisibility(View.VISIBLE);
+                setActionBarVisibility(true);
                 mPlayPause.setVisibility(View.VISIBLE);
-                mSnap.setVisibility(View.VISIBLE);
+                if (mTracks != null)
+                    mTracks.setVisibility(View.VISIBLE);
+                if (mAdvOptions !=null)
+                    mAdvOptions.setVisibility(View.VISIBLE);
+                mSize.setVisibility(View.VISIBLE);                
+				mSnap.setVisibility(View.VISIBLE);
                 mRecord.setVisibility(View.VISIBLE);
-                mMenu.setVisibility(View.VISIBLE);
                 dimStatusBar(false);
             }
             mOverlayProgress.setVisibility(View.VISIBLE);
@@ -2045,28 +2059,27 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             Log.i(TAG, "remove View!");
             if (mOverlayTips != null) mOverlayTips.setVisibility(View.INVISIBLE);
             if (!fromUser && !mIsLocked) {
-                if (mOverlayHeader != null)
-                    mOverlayHeader.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
-                mOverlayOption.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mOverlayProgress.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mPlayPause.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
-                mMenu.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
+                if (mTracks != null)
+                    mTracks.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
+                if (mAdvOptions !=null)
+                    mAdvOptions.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
             }
             if (mPresentation != null) {
                 mOverlayBackground.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mOverlayBackground.setVisibility(View.INVISIBLE);
             }
-            if (mOverlayUseStatusBar)
-                setActionBarVisibility(false);
-            else if (mOverlayHeader != null)
-                mOverlayHeader.setVisibility(View.INVISIBLE);
-            mOverlayOption.setVisibility(View.INVISIBLE);
+            setActionBarVisibility(false);
             mOverlayRecord.setVisibility(View.INVISIBLE);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
-            mSnap.setVisibility(View.GONE);
-            mRecord.setVisibility(View.GONE);
-            mMenu.setVisibility(View.INVISIBLE);
+            if (mTracks != null)
+                mTracks.setVisibility(View.INVISIBLE);
+            if (mAdvOptions !=null)
+                mAdvOptions.setVisibility(View.INVISIBLE);
+            mSize.setVisibility(View.INVISIBLE);            
+			mRecord.setVisibility(View.GONE);
             mShowing = false;
             dimStatusBar(true);
         } else if (!fromUser) {
@@ -2094,19 +2107,17 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             visibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
             navbar = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
         }
-        if (mOverlayUseStatusBar)
-            visibility |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-
+        visibility |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
         if (dim) {
             navbar |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
             if (!AndroidDevices.hasCombBar()) {
                 navbar |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
                 if (LibVlcUtil.isKitKatOrLater())
                     visibility |= View.SYSTEM_UI_FLAG_IMMERSIVE;
-                if (mOverlayUseStatusBar)
-                    visibility |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+                visibility |= View.SYSTEM_UI_FLAG_FULLSCREEN;
             }
         } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             visibility |= View.SYSTEM_UI_FLAG_VISIBLE;
         }
 
@@ -2120,11 +2131,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             return;
 
         if (mPresentation == null)
-            mPlayPause.setBackgroundResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
-                            : R.drawable.ic_play_circle);
+            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
+                    : R.drawable.ic_play_circle);
         else
-            mPlayPause.setBackgroundResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
-                            : R.drawable.ic_play_circle_big_o);
+            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
+                    : R.drawable.ic_play_circle_big_o);
     }
 
     /**
@@ -2143,9 +2154,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
 
         // Update all view elements
-        boolean isSeekable = mEnableJumpButtons && length > 0;
-        mBackward.setVisibility(isSeekable ? View.VISIBLE : View.GONE);
-        mForward.setVisibility(isSeekable ? View.VISIBLE : View.GONE);
         mSeekbar.setMax(length);
         mSeekbar.setProgress(time);
         if (mSysTime != null)
@@ -2173,24 +2181,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if(mAudioTracksList == null || force) {
             if (mLibVLC.getAudioTracksCount() > 2) {
                 mAudioTracksList = mLibVLC.getAudioTrackDescription();
-                mAudioTrack.setOnClickListener(mAudioTrackListener);
-                mAudioTrack.setVisibility(View.VISIBLE);
-            }
-            else {
-                mAudioTrack.setVisibility(View.GONE);
-                mAudioTrack.setOnClickListener(null);
             }
         }
         if (mSubtitleTracksList == null || force) {
-            if (mLibVLC.getSpuTracksCount() > 0) {
+            if (mLibVLC.getSpuTracksCount() > 0)
                 mSubtitleTracksList = mLibVLC.getSpuTrackDescription();
-                mSubtitle.setOnClickListener(mSubtitlesListener);
-                mSubtitle.setVisibility(View.VISIBLE);
-            }
-            else {
-                mSubtitle.setVisibility(View.GONE);
-                mSubtitle.setOnClickListener(null);
-            }
         }
     }
 
@@ -2575,8 +2570,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         public SecondaryDisplay(Context context, Display display) {
             super(context, display);
-            if (context instanceof Activity) {
-                setOwnerActivity((Activity) context);
+            if (context instanceof ActionBarActivity) {
+                setOwnerActivity((ActionBarActivity) context);
             }
             try {
                 mLibVLC = VLCInstance.getLibVlcInstance();
@@ -2671,14 +2666,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         else if (mHasMenu) {
             setESTrackLists(true);
             setESTracks();
-
-            /* Show the return to menu button. */
-            mNavMenu.setVisibility(View.VISIBLE);
-            mNavMenu.setOnClickListener(mNavMenuListener);
         }
-        else
-            mNavMenu.setVisibility(View.GONE);
-
+        supportInvalidateOptionsMenu();
     }
 
     boolean isRecording=false;

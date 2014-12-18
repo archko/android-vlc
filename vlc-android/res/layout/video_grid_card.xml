@@ -19,6 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/grid_card_thumb_height"
             android:layout_alignParentTop="true"
+            android:background="@color/grey300"
             android:scaleType="fitCenter" />
 
         <TextView
@@ -83,7 +84,7 @@
             android:indeterminate="false"
             android:maxHeight="3dip"
             android:minHeight="3dip"
-            android:progressDrawable="@drawable/gridview_progressbar" />
+            android:progressDrawable="?attr/gridview_progressbar" />
 
     </RelativeLayout>
 

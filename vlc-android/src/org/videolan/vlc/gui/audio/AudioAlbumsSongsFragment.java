@@ -355,11 +355,11 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
                     public void run() {
                         for (int i = 0; i < mediaList.size(); ++i) {
                             Media media = mediaList.get(i);
-                            mAlbumsAdapter.addSeparator(media.getArtist(), media);
+                            mAlbumsAdapter.addSeparator(media.getReferenceArtist(), media);
                             mAlbumsAdapter.add(media.getAlbum(), null, media);
                             mSongsAdapter.addSeparator(media.getAlbum(), media);
-                            mSongsAdapter.add(media.getTitle(), null, media);
                         }
+                        mSongsAdapter.sortByAlbum();
                         mAlbumsAdapter.notifyDataSetChanged();
                         mSongsAdapter.notifyDataSetChanged();
                         mSwipeRefreshLayout.setRefreshing(false);
@@ -372,7 +372,7 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
     OnItemClickListener albumsListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<String> mediaLocation = mAlbumsAdapter.getLocations(p);
+            ArrayList<String> mediaLocation = mAlbumsAdapter.getLocations(p, true);
             mAudioController.load(mediaLocation, 0);
         }
     };
