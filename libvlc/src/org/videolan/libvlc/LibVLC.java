@@ -872,20 +872,4 @@ public class LibVLC {
     /* MediaList */
     protected native void loadPlaylist(String mrl, ArrayList<String> items);
     protected native int expandMedia(int position, ArrayList<String> children);
-
-    public native boolean takeSnapShot(int num, String file, int width, int height);
-
-    public boolean takeSnapShot(String file, int width, int height) {
-        return takeSnapShot(0, file, width, height);
-    }
-
-    public native boolean videoRecordStart(String path);
-
-    public native boolean videoRecordStop();
-
-    public native boolean videoIsRecording();
-
-    public native boolean videoIsRecordable();
-
-    public native int getState();
 }
