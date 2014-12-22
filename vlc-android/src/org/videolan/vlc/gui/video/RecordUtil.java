@@ -10,8 +10,8 @@ import java.io.File;
  */
 public class RecordUtil {
 
-    public static void takeSnapshot(LibVLC libVLC, int videoWidth, int videoHeight) {
-        String path = "/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/ + File.separator + System.currentTimeMillis() + ".png";
+    /*public static void takeSnapshot(LibVLC libVLC, int videoWidth, int videoHeight) {
+        String path = "/sdcard/Android"*//*Environment.getExternalStorageDirectory().getPath()*//* + File.separator + System.currentTimeMillis() + ".png";
         System.out.println("snap:" + videoWidth + " height:" + videoHeight + " path:" + path);
         if (null != libVLC) {
             libVLC.takeSnapShot(path, videoWidth, videoHeight);
@@ -20,7 +20,7 @@ public class RecordUtil {
 
     public static void startRecord(LibVLC libVLC) {
         if (null != libVLC) {
-            String path = "/sdcard/Android"/*Environment.getExternalStorageDirectory().getPath()*/ + File.separator + System.currentTimeMillis();
+            String path = "/sdcard/Android"*//*Environment.getExternalStorageDirectory().getPath()*//* + File.separator + System.currentTimeMillis();
             System.out.println("startRecord:" + path);
             libVLC.videoRecordStart(path);
         }
@@ -30,5 +30,5 @@ public class RecordUtil {
         if (null != libVLC) {
             libVLC.videoRecordStop();
         }
-    }
+    }*/
 }

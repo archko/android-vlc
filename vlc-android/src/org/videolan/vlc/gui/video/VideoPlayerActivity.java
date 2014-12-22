@@ -121,8 +121,8 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -164,7 +164,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private ActionBar mActionBar;
     private View mOverlayProgress;
     private View mOverlayBackground;
-    private View mOverlayRecord;
     private static final int OVERLAY_TIMEOUT = 4000;
     private static final int OVERLAY_INFINITE = -1;
     private static final int FADE_OUT = 1;
@@ -195,9 +194,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private int mScreenOrientationLock;
     private ImageView mLock;
     private ImageView mSize;
-    private ImageButton mMenu;
-    private ImageButton mSnap;
-    private ImageButton mRecord;
     private boolean mIsLocked = false;
     private int mLastAudioTrack = -1;
     private int mLastSpuTrack = -2;
@@ -335,9 +331,15 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSysTime = (TextView) findViewById(R.id.player_overlay_systime);
         mBattery = (TextView) findViewById(R.id.player_overlay_battery);
         mOverlayProgress = findViewById(R.id.progress_overlay);
+        RelativeLayout.LayoutParams layoutParams =
+                (RelativeLayout.LayoutParams)mOverlayProgress.getLayoutParams();
+        if (AndroidDevices.isPhone() || !AndroidDevices.hasNavBar()) {
+            layoutParams.width = LayoutParams.MATCH_PARENT;
+        } else {
+            layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+        }
+        mOverlayProgress.setLayoutParams(layoutParams);
         mOverlayBackground = findViewById(R.id.player_overlay_background);
-
-        mOverlayRecord = findViewById(R.id.option_overlay_record);
 
         // Position and remaining time
         mTime = (TextView) findViewById(R.id.player_overlay_time);
@@ -359,14 +361,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mAdvOptions = (ImageView) findViewById(R.id.player_overlay_adv_function);
         mLock = (ImageView) findViewById(R.id.lock_overlay_button);
         mLock.setOnClickListener(mLockListener);
-		
-        mSnap = (ImageButton) findViewById(R.id.player_overlay_snap);
-        mRecord =(ImageButton) findViewById(R.id.player_overlay_record);
-        mSnap.setVisibility(View.GONE);
-        mRecord.setVisibility(View.GONE);
-
-        mSnap.setOnClickListener(mRecordListener);
-        mRecord.setOnClickListener(mRecordListener);
 
         mSize = (ImageView) findViewById(R.id.player_overlay_size);
         mSize.setOnClickListener(mSizeListener);
@@ -510,7 +504,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
          * in savedIndexPosition to be able to restore it during onResume().
          */
         mLibVLC.stop();
-        stopRecord();
 
         mSurfaceView.setKeepScreenOn(false);
 
@@ -615,10 +608,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mLibVLC.setHardwareAcceleration(mPreviousHardwareAccelerationMode);
 
         mAudioManager = null;
-
-        if (isRecording||mLibVLC.videoIsRecording()) {
-            RecordUtil.stopRecord(mLibVLC);
-        }
     }
 
     @Override
@@ -1264,7 +1253,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if (mSwitchingView)
             return;
         mLibVLC.stop();
-        stopRecord();
         AlertDialog dialog = new AlertDialog.Builder(VideoPlayerActivity.this)
         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -1440,7 +1428,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouchEvent:"+mIsLocked+" showing:"+mShowing+" event:"+event);
         if (mIsLocked) {
             // locked, only handle show/hide & ignore all actions
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -1532,7 +1519,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void doSeekTouch(float coef, float gesturesize, boolean seek) {
-        Log.d(TAG, "onTouchEvent:doSeekTouch"+mTouchAction+" showing:"+mShowing);
         // No seek action if coef > 0.5 and gesturesize < 1cm
         if (coef > 0.5 || Math.abs(gesturesize) < 1 || !mCanSeek)
             return;
@@ -1624,7 +1610,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void doBrightnessTouch(float y_changed) {
-        Log.d(TAG, "onTouchEvent:doBrightnessTouch"+mTouchAction+" showing:"+mShowing);
         if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_BRIGHTNESS)
             return;
         if (mIsFirstBrightnessGesture) initBrightnessTouch();
@@ -1642,7 +1627,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         lp.screenBrightness =  Math.min(Math.max(lp.screenBrightness + delta, 0.01f), 1);
         // Set Brightness
         getWindow().setAttributes(lp);
-        showInfo(getString(R.string.brightness) + '\u00A0' + Math.round(lp.screenBrightness*15),1000);
+        showInfo(getString(R.string.brightness) + '\u00A0' + Math.round(lp.screenBrightness * 15),1000);
 	}
 
     /**
@@ -2003,9 +1988,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void setActionBarVisibility(boolean show) {
-        if (null==mActionBar){
-            return;
-        }
         if (show)
             mActionBar.show();
         else
@@ -2034,9 +2016,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                     mTracks.setVisibility(View.VISIBLE);
                 if (mAdvOptions !=null)
                     mAdvOptions.setVisibility(View.VISIBLE);
-                mSize.setVisibility(View.VISIBLE);                
-				mSnap.setVisibility(View.VISIBLE);
-                mRecord.setVisibility(View.VISIBLE);
+                mSize.setVisibility(View.VISIBLE);
                 dimStatusBar(false);
             }
             mOverlayProgress.setVisibility(View.VISIBLE);
@@ -2071,15 +2051,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 mOverlayBackground.setVisibility(View.INVISIBLE);
             }
             setActionBarVisibility(false);
-            mOverlayRecord.setVisibility(View.INVISIBLE);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
             if (mTracks != null)
                 mTracks.setVisibility(View.INVISIBLE);
             if (mAdvOptions !=null)
                 mAdvOptions.setVisibility(View.INVISIBLE);
-            mSize.setVisibility(View.INVISIBLE);            
-			mRecord.setVisibility(View.GONE);
             mShowing = false;
             dimStatusBar(true);
         } else if (!fromUser) {
@@ -2131,11 +2108,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             return;
 
         if (mPresentation == null)
-            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
-                    : R.drawable.ic_play_circle);
+            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_normal_o
+                            : R.drawable.ic_play_circle_normal_o);
         else
             mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
-                    : R.drawable.ic_play_circle_big_o);
+                            : R.drawable.ic_play_circle_big_o);
     }
 
     /**
@@ -2221,8 +2198,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         int itemPosition = -1; // Index in the media list as passed by AudioServer (used only for vout transition internally)
         long intentPosition = -1; // position passed in by intent (ms)
 
-        Log.d(TAG, "loadMedia.dataString:"+getIntent().getDataString());
-        Log.d(TAG, "loadMedia.uri:"+getIntent().getData());
         if (getIntent().getAction() != null
                 && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
             /* Started from external application 'content' */
@@ -2424,7 +2399,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         } else if(itemTitle != null) {
             title = itemTitle;
         }
-        //mTitle.setText(title);
+        mTitle.setText(title);
     }
 
     @SuppressWarnings("deprecation")
@@ -2668,40 +2643,5 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             setESTracks();
         }
         supportInvalidateOptionsMenu();
-    }
-
-    boolean isRecording=false;
-
-    private View.OnClickListener mRecordListener=new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (v==mSnap) {
-                if (null!=mLibVLC) {
-                    RecordUtil.takeSnapshot(mLibVLC, mVideoWidth, mVideoHeight);
-                }
-            } else if (v==mRecord) {
-                if (isRecording) {
-                    isRecording=false;
-                    mRecord.setBackgroundResource(R.drawable.ic_play_circle);
-                    stopRecord();
-                } else {
-                    if (/*!mLibVLC.videoIsRecordable()&&*/mLibVLC.isPlaying()) {
-                        System.out.println("mLibVLC.video is not Recordable");
-                        return;
-                    }
-                    isRecording=true;
-                    mRecord.setBackgroundResource(R.drawable.ic_pause_circle);
-                    if (null!=mLibVLC) {
-                        RecordUtil.startRecord(mLibVLC);
-                    }
-                }
-            }
-        }
-    };
-
-    private void stopRecord() {
-        if (null!=mLibVLC&&mLibVLC.videoIsRecording()) {
-            RecordUtil.stopRecord(mLibVLC);
-        }
     }
 }
