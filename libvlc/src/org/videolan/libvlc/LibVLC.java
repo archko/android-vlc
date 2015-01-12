@@ -63,12 +63,8 @@ public class LibVLC {
 
     /** libVLC instance C pointer */
     private long mLibVlcInstance = 0; // Read-only, reserved for JNI
-    /** libvlc_media_player pointer and index */
-    private int mInternalMediaPlayerIndex = 0; // Read-only, reserved for JNI
+    /** libvlc_media_player pointer */
     private long mInternalMediaPlayerInstance = 0; // Read-only, reserved for JNI
-
-    private MediaList mMediaList; // Pointer to media list being followed
-    private MediaList mPrimaryList; // Primary/default media list; see getPrimaryMediaList()
 
     /** Buffer for VLC messages */
     private StringBuffer mDebugLogBuffer;
@@ -213,49 +209,6 @@ public class LibVLC {
     }
 
     /**
-     * Get the media list that LibVLC is following right now.
-     *
-     * @return The media list object being followed
-     */
-    public MediaList getMediaList() {
-        return mMediaList;
-    }
-
-    /**
-     * Set the media list for LibVLC to follow.
-     *
-     * @param mediaList The media list object to follow
-     */
-    public void setMediaList(MediaList mediaList) {
-        mMediaList = mediaList;
-    }
-
-    /**
-     * Sets LibVLC to follow the default media list (see below)
-     */
-    public void setMediaList() {
-        mMediaList = mPrimaryList;
-    }
-
-    /**
-     * Gets the primary media list, or the "currently playing" list.
-     * Not to be confused with the media list pointer from above, which
-     * refers the the MediaList object that libVLC is currently following.
-     * This list is just one out of many lists that it can be pointed towards.
-     *
-     * This list will be used for lists of songs that are not user-defined.
-     * For example: selecting a song from the Songs list, or from the list
-     * displayed after selecting an album.
-     *
-     * It is loaded as the default list.
-     *
-     * @return The primary media list
-     */
-    public MediaList getPrimaryMediaList() {
-        return mPrimaryList;
-    }
-
-    /**
      * Give to LibVLC the surface to draw the video.
      * @param f the surface to draw
      */
@@ -385,6 +338,17 @@ public class LibVLC {
             options.add(":no-video");
 
         return options.toArray(new String[options.size()]);
+    }
+
+    public String[] getMediaOptions(Media media) {
+        boolean noHardwareAcceleration = false;
+        boolean noVideo = false;
+        if (media != null) {
+            final int flags = media.getFlags();
+            noHardwareAcceleration = (flags & Media.FLAG_NO_HWACCEL) != 0;
+            noVideo = (flags & Media.FLAG_NO_VIDEO) != 0;
+        }
+        return getMediaOptions(noHardwareAcceleration, noVideo); 
     }
 
     public String getSubtitlesEncoding() {
@@ -539,7 +503,6 @@ public class LibVLC {
             File cacheDir = context.getCacheDir();
             mCachePath = (cacheDir != null) ? cacheDir.getAbsolutePath() : null;
             nativeInit();
-            mMediaList = mPrimaryList = new MediaList(this);
             setEventHandler(EventHandler.getInstance());
             mIsInitialized = true;
         }
@@ -592,28 +555,13 @@ public class LibVLC {
     }
 
     /**
-     * Play a media from the media list (playlist)
-     *
-     * @param position The index of the media
-     */
-    public void playIndex(int position) {
-        String mrl = mMediaList.getMRL(position);
-        if (mrl == null)
-            return;
-        String[] options = mMediaList.getMediaOptions(position);
-        mInternalMediaPlayerIndex = position;
-        playMRL(mrl, options);
-    }
-
-    /**
      * Play an MRL directly.
      *
      * @param mrl MRL of the media to play.
      */
     public void playMRL(String mrl) {
         // index=-1 will return options from libvlc instance without relying on MediaList
-        String[] options = mMediaList.getMediaOptions(-1);
-        mInternalMediaPlayerIndex = 0;
+        String[] options = getMediaOptions(false, false);
         playMRL(mrl, options);
     }
 
@@ -661,7 +609,7 @@ public class LibVLC {
     /**
      * Play an mrl
      */
-    private native void playMRL(String mrl, String[] mediaOptions);
+    public native void playMRL(String mrl, String[] mediaOptions);
 
     /**
      * Returns true if any media is playing
@@ -812,26 +760,6 @@ public class LibVLC {
 
     public native static boolean nativeIsPathDirectory(String path);
 
-     /**
-      * Expand and continue playing the current media.
-      *
-      * @return the index of the media was expanded, and -1 if no media was expanded
-      */
-    public int expandAndPlay() {
-        int r = mMediaList.expandMedia(mInternalMediaPlayerIndex);
-        if(r == 0)
-            this.playIndex(mInternalMediaPlayerIndex);
-        return r;
-    }
-
-    /**
-     * Expand the current media.
-     * @return the index of the media was expanded, and -1 if no media was expanded
-     */
-    public int expand() {
-        return mMediaList.expandMedia(mInternalMediaPlayerIndex);
-    }
-
     private native void setEventHandler(EventHandler eventHandler);
 
     private native void detachEventHandler();
@@ -871,5 +799,5 @@ public class LibVLC {
 
     /* MediaList */
     protected native void loadPlaylist(String mrl, ArrayList<String> items);
-    protected native int expandMedia(int position, ArrayList<String> children);
+    protected native int expandMedia(ArrayList<String> children);
 }

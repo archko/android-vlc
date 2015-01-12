@@ -44,6 +44,7 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaListPlayer;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
@@ -54,11 +55,11 @@ import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.PreferencesActivity;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.Presentation;
@@ -76,7 +77,6 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaRouter;
@@ -91,6 +91,8 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -99,6 +101,7 @@ import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -128,7 +131,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlayer {
+public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlayer, GestureDetector.OnDoubleTapListener {
 
 	public final static String TAG = "VLC/VideoPlayerActivity";
 
@@ -147,7 +150,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private MediaRouter.SimpleCallback mMediaRouterCallback;
     private SecondaryDisplay mPresentation;
     private LibVLC mLibVLC;
+    private MediaListPlayer mMediaListPlayer;
     private String mLocation;
+    private GestureDetectorCompat mDetector;
 
     private static final int SURFACE_BEST_FIT = 0;
     private static final int SURFACE_FIT_HORIZONTAL = 1;
@@ -371,6 +376,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             Log.d(TAG, "LibVLC initialisation failed");
             return;
         }
+        mMediaListPlayer = new MediaListPlayer(mLibVLC);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.player_surface);
         mSurfaceHolder = mSurfaceView.getHolder();
@@ -405,10 +411,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         SharedPreferences.Editor editor = mSettings.edit();
         editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
         // Also clear the subs list, because it is supposed to be per session
-        // only (like desktop VLC). We don't want the customs subtitle file
+        // only (like desktop VLC). We don't want the custom subtitle files
         // to persist forever with this video.
         editor.putString(PreferencesActivity.VIDEO_SUBTITLE_FILES, null);
-        editor.commit();
+        // Paused flag - per session too, like the subs list.
+        editor.remove(PreferencesActivity.VIDEO_PAUSED);
+        Util.commitPreferences(editor);
 
         IntentFilter filter = new IntentFilter();
         if (mBattery != null)
@@ -448,6 +456,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             setRequestedOrientation(getScreenOrientation());
 
         updateNavStatus();
+        mDetector = new GestureDetectorCompat(this, mGestureListener);
+        mDetector.setOnDoubleTapListener(this);
+
     }
 
     public boolean onCreateOptionsMenu(Menu menu){
@@ -488,6 +499,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             return;
         }
 
+        boolean isPaused = !mLibVLC.isPlaying();
+
         long time = mLibVLC.getTime();
         long length = mLibVLC.getLength();
         //remove saved position if in the last 5 seconds
@@ -520,6 +533,10 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, time);
             }
         }
+        if(isPaused)
+            Log.d(TAG, "Video paused - saving flag");
+        editor.putBoolean(PreferencesActivity.VIDEO_PAUSED, isPaused);
+
         // Save selected subtitles
         String subtitleList_serialized = null;
         if(mSubtitleSelectedFiles.size() > 0) {
@@ -533,7 +550,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
         editor.putString(PreferencesActivity.VIDEO_SUBTITLE_FILES, subtitleList_serialized);
 
-        editor.commit();
+        Util.commitPreferences(editor);
         AudioServiceController.getInstance().unbindAudioService(this);
     }
 
@@ -1092,6 +1109,22 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
      */
     private final Handler eventHandler = new VideoPlayerEventHandler(this);
 
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        doPlayPause();
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        return false;
+    }
+
     private static class VideoPlayerEventHandler extends WeakHandler<VideoPlayerActivity> {
         public VideoPlayerEventHandler(VideoPlayerActivity owner) {
             super(owner);
@@ -1213,7 +1246,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void endReached() {
-        if(mLibVLC.getMediaList().expandMedia(savedIndexPosition) == 0) {
+        if(mMediaListPlayer.expand(savedIndexPosition) == 0) {
             Log.d(TAG, "Found a video playlist, expanding it");
             eventHandler.postDelayed(new Runnable() {
                 @Override
@@ -1428,6 +1461,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mDetector.onTouchEvent(event))
+            return true;
         if (mIsLocked) {
             // locked, only handle show/hide & ignore all actions
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -2053,6 +2088,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             setActionBarVisibility(false);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
+            mSize.setVisibility(View.INVISIBLE);
             if (mTracks != null)
                 mTracks.setVisibility(View.INVISIBLE);
             if (mAdvOptions !=null)
@@ -2320,7 +2356,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             savedIndexPosition = itemPosition;
             if(!mLibVLC.isPlaying()) {
                 // AudioService-transitioned playback for item after sleep and resume
-                mLibVLC.playIndex(savedIndexPosition);
+                mMediaListPlayer.playIndex(savedIndexPosition);
                 dontParse = false;
             }
             else {
@@ -2330,14 +2366,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             updateNavStatus();
         } else if (savedIndexPosition > -1) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
-            mLibVLC.setMediaList();
-            mLibVLC.playIndex(savedIndexPosition);
+            mMediaListPlayer.playIndex(savedIndexPosition);
         } else if (mLocation != null && mLocation.length() > 0 && !dontParse) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
-            mLibVLC.setMediaList();
-            mLibVLC.getMediaList().add(new Media(mLibVLC, mLocation));
-            savedIndexPosition = mLibVLC.getMediaList().size() - 1;
-            mLibVLC.playIndex(savedIndexPosition);
+            mMediaListPlayer.getMediaList().add(new Media(mLibVLC, mLocation));
+            savedIndexPosition = mMediaListPlayer.getMediaList().size() - 1;
+            mMediaListPlayer.playIndex(savedIndexPosition);
         }
         mCanSeek = false;
 
@@ -2359,12 +2393,23 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 long rTime = mSettings.getLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
                 Editor editor = mSettings.edit();
                 editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
-                editor.commit();
+                Util.commitPreferences(editor);
                 if(rTime > 0)
                     mLibVLC.setTime(rTime);
 
                 if(intentPosition > 0)
                     mLibVLC.setTime(intentPosition);
+            }
+
+            // Paused flag
+            boolean wasPaused = mSettings.getBoolean(PreferencesActivity.VIDEO_PAUSED, false);
+            if(wasPaused) {
+                Log.d(TAG, "Video was previously paused, resuming in paused mode");
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLibVLC.pause();
+                    }}, 500);
             }
 
             // Get possible subtitles
@@ -2475,7 +2520,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     public void showAdvancedOptions(View v) {
-        CommonDialogs.advancedOptions(this, v, MenuType.Video);
+        FragmentManager fm = getSupportFragmentManager();
+        AdvOptionsDialog advOptionsDialog = new AdvOptionsDialog();
+        advOptionsDialog.show(fm, "fragment_adv_options");
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -2616,7 +2663,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mOverlayTips.setVisibility(View.GONE);
         Editor editor = mSettings.edit();
         editor.putBoolean(PREF_TIPS_SHOWN, true);
-        editor.commit();
+        Util.commitPreferences(editor);
     }
 
     private void updateNavStatus() {
@@ -2644,4 +2691,32 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
         supportInvalidateOptionsMenu();
     }
+
+    private GestureDetector.OnGestureListener mGestureListener = new GestureDetector.OnGestureListener() {
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return false;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {}
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return false;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {}
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            return false;
+        }
+    };
 }

@@ -69,7 +69,6 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-ldl -lz -lm -llog \
 	-ldvbpsi -lebml -lmatroska -ltag \
 	-logg -lFLAC -ltheora -lvorbis \
-	-lvorbisfile -lvorbisenc \
 	-lmpeg2 -la52 \
 	-lavformat -lavcodec -lswscale -lavutil -lpostproc -lgsm -lopenjpeg \
 	-lliveMedia -lUsageEnvironment -lBasicUsageEnvironment -lgroupsock \
@@ -79,7 +78,9 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-lfreetype -liconv -lass -lfribidi -lopus \
 	-lEGL -lGLESv2 -ljpeg \
 	-ldvdnav -ldvdread -ldvdcss \
+	-ldsm -ltasn1 \
 	-lmad \
+	-lzvbi \
 	$(CPP_STATIC)
 
 include $(BUILD_SHARED_LIBRARY)

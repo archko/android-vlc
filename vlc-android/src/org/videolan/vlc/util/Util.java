@@ -21,21 +21,29 @@
 package org.videolan.vlc.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.VLCCallbackTask;
 import org.videolan.vlc.audio.AudioServiceController;
 
+import android.annotation.TargetApi;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.text.TextUtils.TruncateAt;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -183,5 +191,85 @@ public class Util {
             }
         };
         task.execute();
+    }
+
+    private static String getMediaString(Context ctx, int id) {
+        if (ctx != null)
+            return ctx.getResources().getString(id);
+        else {
+            switch (id) {
+            case R.string.unknown_artist:
+                return "Unknown Artist";
+            case R.string.unknown_album:
+                return "Unknown Album";
+            case R.string.unknown_genre:
+                return "Unknown Genre";
+            default:
+                return "";
+            }
+        }
+    }
+
+    public static String getMediaArtist(Context ctx, Media media) {
+        final String artist = media.getArtist();
+        return artist != null ? artist : getMediaString(ctx, R.string.unknown_artist);
+    }
+
+    public static String getMediaReferenceArtist(Context ctx, Media media) {
+        final String artist = media.getReferenceArtist();
+        return artist != null ? artist : getMediaString(ctx, R.string.unknown_artist);
+    }
+
+    public static String getMediaAlbumArtist(Context ctx, Media media) {
+        final String albumArtist = media.getAlbumArtist();
+        return albumArtist != null ? albumArtist : getMediaString(ctx, R.string.unknown_artist);
+    }
+
+    public static String getMediaAlbum(Context ctx, Media media) {
+        final String album = media.getAlbum();
+        return album != null ? album : getMediaString(ctx, R.string.unknown_album);
+
+    }
+
+    public static String getMediaGenre(Context ctx, Media media) {
+        final String genre = media.getGenre();
+        return genre != null ? genre : getMediaString(ctx, R.string.unknown_genre);
+    }
+
+    public static String getMediaSubtitle(Context ctx, Media media) {
+        if (media.getType() == Media.TYPE_VIDEO)
+            return "";
+        else
+            return media.getNowPlaying() != null
+                        ? media.getNowPlaying()
+                        : getMediaArtist(ctx, media) + " - " + getMediaAlbum(ctx, media);
+    }
+
+    @TargetApi(android.os.Build.VERSION_CODES.GINGERBREAD)
+    public static void commitPreferences(SharedPreferences.Editor editor){
+        if (LibVlcUtil.isGingerbreadOrLater())
+            editor.apply();
+        else
+            editor.commit();
+    }
+
+    public static boolean deleteFile (Context context, String path){
+        boolean deleted = false;
+        if (path.startsWith("file://"))
+            path = path.substring(5);
+        else
+            return deleted;
+        if (LibVlcUtil.isHoneycombOrLater()){
+            ContentResolver cr = context.getContentResolver();
+            String[] selectionArgs = { path };
+            deleted = cr.delete(MediaStore.Files.getContentUri("external"),
+                    MediaStore.MediaColumns.DATA + "=?", selectionArgs) > 0;
+        }
+        if (!deleted){
+            File file = new File(Uri.decode(path));
+            if (file.exists())
+                deleted = file.delete();
+        }
+        return deleted;
     }
 }

@@ -97,7 +97,6 @@ public class SidebarAdapter extends BaseAdapter {
         for(SidebarEntry e : entries) {
             sidebarFragments.add(e.id);
         }
-        entries.add(new SidebarEntry(SidebarEntry.ID_MRL, R.string.open_mrl, R.attr.ic_menu_openmrl, SidebarEntry.TYPE_ACTION));
         entries.add(new SidebarEntry(SidebarEntry.ID_PREFERENCES, R.string.preferences, R.attr.ic_menu_preferences, SidebarEntry.TYPE_ACTION));
     }
 
@@ -180,7 +179,7 @@ public class SidebarAdapter extends BaseAdapter {
         return f;
     }
 
-    private void setCurrentFragment(String id) {
+    public void setCurrentFragment(String id) {
         mCurrentFragmentId = id;
         this.notifyDataSetChanged();
     }

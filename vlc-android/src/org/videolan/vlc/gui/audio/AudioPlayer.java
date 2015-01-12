@@ -20,12 +20,11 @@
 
 package org.videolan.vlc.gui.audio;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.content.Intent;
 
-import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
@@ -249,6 +248,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
             @Override
             public void onItemRemoved(int position) {
                 mAudioController.remove(position);
+                update();
             }
         });
         registerForContextMenu(mSongsList);
@@ -352,6 +352,8 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
             mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_pressed));
             break;
         }
+
+        mShuffle.setVisibility(mSongsListAdapter.getCount() > 2 ? View.VISIBLE : View.INVISIBLE);
         if (mAudioController.hasNext())
             mNext.setVisibility(ImageButton.VISIBLE);
         else
@@ -383,23 +385,20 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     }
 
     private void updateList() {
-        ArrayList<Media> audioList = new ArrayList<Media>();
-        String currentItem = null;
         int currentIndex = -1;
-
-        LibVLC libVLC = LibVLC.getExistingInstance();
-        for (int i = 0; i < libVLC.getMediaList().size(); i++) {
-            audioList.add(libVLC.getMediaList().getMedia(i));
-        }
-        currentItem = mAudioController.getCurrentMediaLocation();
 
         mSongsListAdapter.clear();
 
-        for (int i = 0; i < audioList.size(); i++) {
-            Media media = audioList.get(i);
-            if (currentItem != null && currentItem.equals(media.getLocation()))
-                currentIndex = i;
-            mSongsListAdapter.add(media);
+        final List<Media> audioList = mAudioController.getMedias();
+        final String currentItem = mAudioController.getCurrentMediaLocation();
+
+        if (audioList != null) {
+            for (int i = 0; i < audioList.size(); i++) {
+                final Media media = audioList.get(i);
+                if (currentItem != null && currentItem.equals(media.getLocation()))
+                    currentIndex = i;
+                mSongsListAdapter.add(media);
+            }
         }
         mSongsListAdapter.setCurrentIndex(currentIndex);
         mSongsList.setSelection(currentIndex);

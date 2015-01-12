@@ -153,13 +153,16 @@ public class AudioUtil {
     }
 
     private static String getCoverFromMediaStore(Context context, Media media) {
+        final String album = media.getAlbum();
+        if (album == null)
+            return null;
         ContentResolver contentResolver = context.getContentResolver();
         Uri uri = android.provider.MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
         Cursor cursor = contentResolver.query(uri, new String[] {
                        MediaStore.Audio.Albums.ALBUM,
                        MediaStore.Audio.Albums.ALBUM_ART },
                        MediaStore.Audio.Albums.ALBUM + " LIKE ?",
-                       new String[] { media.getAlbum() }, null);
+                       new String[] { album }, null);
         if (cursor == null) {
             // do nothing
         } else if (!cursor.moveToFirst()) {
@@ -180,8 +183,8 @@ public class AudioUtil {
             return Uri.decode(artworkURL).replace("file://", "");
         } else if(artworkURL != null && artworkURL.startsWith("attachment://")) {
             // Decode if the album art is embedded in the file
-            String mArtist = media.getArtist();
-            String mAlbum = media.getAlbum();
+            String mArtist = Util.getMediaArtist(context, media);
+            String mAlbum = Util.getMediaAlbum(context, media);
 
             /* Parse decoded attachment */
             if( mArtist.length() == 0 || mAlbum.length() == 0 ||
@@ -237,7 +240,7 @@ public class AudioUtil {
 
         try {
             // try to load from cache
-            int hash = MurmurHash.hash32(media.getArtist()+media.getAlbum());
+            int hash = MurmurHash.hash32(Util.getMediaArtist(context, media)+Util.getMediaAlbum(context, media));
             cachePath = COVER_DIR + (hash >= 0 ? "" + hash : "m" + (-hash)) + "_" + width;
 
             // try to get the cover from the LRUCache first

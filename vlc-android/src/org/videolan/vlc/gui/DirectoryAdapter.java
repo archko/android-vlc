@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.ListIterator;
 import java.util.regex.Pattern;
 
-import android.app.Activity;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.R;
@@ -62,7 +61,23 @@ public class DirectoryAdapter extends BaseAdapter {
         if (!showMediaOnly) {
             return true;
         }
-        return Pattern.compile(Media.EXTENSIONS_REGEX, Pattern.CASE_INSENSITIVE).matcher(f).matches();
+        final StringBuilder sb = new StringBuilder();
+        sb.append(".+(\\.)((?i)(");
+        boolean first = true;
+        for (String ext : Media.VIDEO_EXTENSIONS) {
+            if (!first)
+                sb.append('|');
+            else
+                first = false;
+            sb.append(ext.substring(1));
+        }
+        for (String ext : Media.AUDIO_EXTENSIONS) {
+            sb.append('|');
+            sb.append(ext.substring(1));
+        }
+        sb.append("))");
+
+        return Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE).matcher(f).matches();
     }
 
     @Override
@@ -75,7 +90,7 @@ public class DirectoryAdapter extends BaseAdapter {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(VLCApplication.getAppContext());
         boolean media_only = prefs.getBoolean(PreferencesActivity.SHOW_MEDIA_ONLY, false);
         showMediaOnly=media_only;
-        boolean show_hidden=prefs.getBoolean(PreferencesActivity.SHOW_HIDDEN, false);
+        boolean show_hidden = prefs.getBoolean(PreferencesActivity.SHOW_HIDDEN, false);
         showHidden=show_hidden;
         System.out.println("showmedia:"+showMediaOnly+" showhidden:"+showHidden);
     }
@@ -202,7 +217,7 @@ public class DirectoryAdapter extends BaseAdapter {
             if (visibleName!=null ? !visibleName.equals(node.visibleName) : node.visibleName!=null) return false;
 
             return true;
-        }
+    }
 
         @Override
         public int hashCode() {
@@ -274,7 +289,7 @@ public class DirectoryAdapter extends BaseAdapter {
                 sb.setLength(0);
 
                 // Don't try to go beyond depth 10 as a safety measure.
-                if (LibVLC.nativeIsPathDirectory(newPath) && depth < 10) {
+                if (LibVLC.nativeIsPathDirectory(newPath) && depth < 6) {
                     ArrayList<String> files_int = new ArrayList<String>();
                     LibVLC.nativeReadDirectory(newPath, files_int);
                     if(files_int.size() < 4) { /* Optimisation: If there are more than 8
@@ -376,10 +391,9 @@ public class DirectoryAdapter extends BaseAdapter {
         String holderText = "";
         if(selectedNode.isFile()) {
             Log.d(TAG, "Loading media " + selectedNode.name);
-            /*Media m = new Media(LibVLC.getExistingInstance(), getMediaLocation(position));
+            Media m = new Media(LibVLC.getExistingInstance(), getMediaLocation(position));
             holder.title.setText(m.getTitle());
-            holderText = m.getSubtitle();*/
-            holder.title.setText(mCurrentNode.children.get(position).name);
+            holderText = Util.getMediaSubtitle(context, m);
         } else
             holder.title.setText(selectedNode.getVisibleName());
 

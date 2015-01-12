@@ -37,7 +37,6 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
@@ -61,6 +60,25 @@ public class MediaLibrary {
     private boolean isStopping = false;
     private boolean mRestart = false;
     protected Thread mLoadingThread;
+
+    public final static HashSet<String> FOLDER_BLACKLIST;
+    static {
+        final String[] folder_blacklist = {
+                "/alarms",
+                "/notifications",
+                "/ringtones",
+                "/media/alarms",
+                "/media/notifications",
+                "/media/ringtones",
+                "/media/audio/alarms",
+                "/media/audio/notifications",
+                "/media/audio/ringtones",
+                "/Android/data/" };
+
+        FOLDER_BLACKLIST = new HashSet<String>();
+        for (String item : folder_blacklist)
+            FOLDER_BLACKLIST.add(android.os.Environment.getExternalStorageDirectory().getPath() + item);
+    }
 
     private MediaLibrary() {
         mInstance = this;
@@ -146,36 +164,6 @@ public class MediaLibrary {
             Media item = mItemList.get(i);
             if (item.getType() == Media.TYPE_AUDIO) {
                 audioItems.add(item);
-            }
-        }
-        mItemListLock.readLock().unlock();
-        return audioItems;
-    }
-
-    public ArrayList<Media> getAudioItems(String name, String name2, int mode) {
-        ArrayList<Media> audioItems = new ArrayList<Media>();
-        mItemListLock.readLock().lock();
-        for (int i = 0; i < mItemList.size(); i++) {
-            Media item = mItemList.get(i);
-            if (item.getType() == Media.TYPE_AUDIO) {
-
-                boolean valid = false;
-                switch (mode) {
-                    case AudioBrowserFragment.MODE_ARTIST:
-                        valid = name.equals(item.getArtist()) && (name2 == null || name2.equals(item.getAlbum()));
-                        break;
-                    case AudioBrowserFragment.MODE_ALBUM:
-                        valid = name.equals(item.getAlbum());
-                        break;
-                    case AudioBrowserFragment.MODE_GENRE:
-                        valid = name.equals(item.getGenre()) && (name2 == null || name2.equals(item.getAlbum()));
-                        break;
-                    default:
-                        break;
-                }
-                if (valid)
-                    audioItems.add(item);
-
             }
         }
         mItemListLock.readLock().unlock();
@@ -401,7 +389,7 @@ public class MediaLibrary {
         public boolean accept(File f) {
             boolean accepted = false;
             if (!f.isHidden()) {
-                if (f.isDirectory() && !Media.FOLDER_BLACKLIST.contains(f.getPath().toLowerCase(Locale.ENGLISH))) {
+                if (f.isDirectory() && !FOLDER_BLACKLIST.contains(f.getPath().toLowerCase(Locale.ENGLISH))) {
                     accepted = true;
                 } else {
                     String fileName = f.getName().toLowerCase(Locale.ENGLISH);

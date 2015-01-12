@@ -165,7 +165,7 @@ public class MainActivity extends ActionBarActivity {
         if (mFirstRun) {
             Editor editor = mSettings.edit();
             editor.putInt(PREF_FIRST_RUN, mVersionNumber);
-            editor.commit();
+            Util.commitPreferences(editor);
         }
 
         try {
@@ -259,12 +259,6 @@ public class MainActivity extends ActionBarActivity {
                     return;
 
                 if (entry.type == SidebarEntry.TYPE_FRAGMENT) {
-                /*
-                 * Clear any backstack before switching tabs. This avoids
-                 * activating an old backstack, when a user hits the back button
-                 * to quit
-                 */
-                    getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
                 /* Slide down the audio player */
                     slideDownAudioPlayer();
@@ -275,9 +269,11 @@ public class MainActivity extends ActionBarActivity {
                         ((IBrowser)fragment).setReadyToDisplay(false);
                     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.fragment_placeholder, fragment, entry.id);
+                    ft.addToBackStack(mCurrentFragment);
                     ft.commit();
                     supportInvalidateOptionsMenu();
                     mCurrentFragment = entry.id;
+                    mSidebarAdapter.setCurrentFragment(mCurrentFragment);
 
                 /*
                  * Set user visibility hints to work around weird Android
@@ -427,7 +423,7 @@ public class MainActivity extends ActionBarActivity {
         /* Save the tab status in pref */
         SharedPreferences.Editor editor = getSharedPreferences("MainActivity", MODE_PRIVATE).edit();
         editor.putString("fragment", mCurrentFragment);
-        editor.commit();
+        Util.commitPreferences(editor);
 
         mAudioController.removeAudioPlayer(mAudioPlayer);
         AudioServiceController.getInstance().unbindAudioService(this);
@@ -466,7 +462,7 @@ public class MainActivity extends ActionBarActivity {
 
         if (mCurrentFragment!= null) {
             // If it's the directory view, a "backpressed" action shows a parent.
-            if (mCurrentFragment.equals("directories")) {
+            if (mCurrentFragment.equals(SidebarEntry.ID_DIRECTORIES)) {
                 DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
                 if (!directoryView.isRootDirectory()) {
                     directoryView.showParentDirectory();
@@ -480,16 +476,18 @@ public class MainActivity extends ActionBarActivity {
                 return;
             }
         }
-
-        super.onBackPressed();
+        finish();
     }
 
     private Fragment getFragment(String id)
     {
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(id);
+        if (frag != null)
+            return frag;
         return mSidebarAdapter.fetchFragment(id);
     }
 
-    private static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment) {
+    private static void ShowFragment(FragmentActivity activity, String tag, Fragment fragment, String previous) {
         if (fragment == null) {
             Log.e(TAG, "Cannot show a null fragment, ShowFragment("+tag+") aborted.");
             return;
@@ -510,7 +508,7 @@ public class MainActivity extends ActionBarActivity {
         FragmentTransaction ft = fm.beginTransaction();
         ft.setCustomAnimations(R.anim.anim_enter_right, R.anim.anim_leave_left, R.anim.anim_enter_left, R.anim.anim_leave_right);
         ft.replace(R.id.fragment_placeholder, fragment, tag);
-        ft.addToBackStack(tag);
+        ft.addToBackStack(previous);
         ft.commit();
     }
 
@@ -564,7 +562,7 @@ public class MainActivity extends ActionBarActivity {
 
         mCurrentFragment = fragmentTag;
         Fragment frag = fetchSecondaryFragment(mCurrentFragment);
-        ShowFragment(this, mCurrentFragment, frag);
+        ShowFragment(this, mCurrentFragment, frag, mPreviousFragment);
         return frag;
     }
 
@@ -572,8 +570,7 @@ public class MainActivity extends ActionBarActivity {
      * Hide the current secondary fragment.
      */
     public void popSecondaryFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        getSupportFragmentManager().popBackStackImmediate();
         mCurrentFragment = mPreviousFragment;
     }
 
@@ -1007,10 +1004,9 @@ public class MainActivity extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     removeTipViewIfDisplayed();
-                    SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-                    Editor editor = settings.edit();
+                    Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
                     editor.putBoolean(settingKey, true);
-                    editor.commit();
+                    Util.commitPreferences(editor);
                 }
             });
         }

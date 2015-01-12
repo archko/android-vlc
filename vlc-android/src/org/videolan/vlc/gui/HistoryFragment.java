@@ -20,7 +20,6 @@
  *****************************************************************************/
 package org.videolan.vlc.gui;
 
-import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
@@ -102,6 +101,12 @@ public class HistoryFragment extends ListFragment implements IBrowser, IRefresha
     }
 
     @Override
+    public void onDestroy() {
+        mHistoryAdapter.release();
+        super.onDestroy();
+    }
+
+    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         MenuInflater menuInflater = getActivity().getMenuInflater();
         menuInflater.inflate(R.menu.history_view, menu);
@@ -115,7 +120,6 @@ public class HistoryFragment extends ListFragment implements IBrowser, IRefresha
     private void playListIndex(int position) {
         AudioServiceController audioController = AudioServiceController.getInstance();
 
-        LibVLC.getExistingInstance().setMediaList();
         audioController.playIndex(position);
     }
 
@@ -132,8 +136,7 @@ public class HistoryFragment extends ListFragment implements IBrowser, IRefresha
             playListIndex(info.position);
             return true;
         } else if(id == R.id.history_view_delete) {
-            LibVLC.getExistingInstance().getPrimaryMediaList().remove(info.position);
-            mHistoryAdapter.refresh();
+            mHistoryAdapter.remove(info.position);
             return true;
         }
         return super.onContextItemSelected(item);
@@ -142,7 +145,7 @@ public class HistoryFragment extends ListFragment implements IBrowser, IRefresha
     @Override
     public void refresh() {
         if( mHistoryAdapter != null ) {
-            mHistoryAdapter.refresh();
+            mHistoryAdapter.notifyDataSetChanged();
             focusHelper(mHistoryAdapter.getCount() == 0);
         } else
             focusHelper(true);
