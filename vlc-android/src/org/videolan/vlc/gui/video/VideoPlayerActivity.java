@@ -43,9 +43,9 @@ import org.videolan.libvlc.IVideoPlayer;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
-import org.videolan.libvlc.MediaListPlayer;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaWrapperListPlayer;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.audio.AudioServiceController;
@@ -150,7 +150,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private MediaRouter.SimpleCallback mMediaRouterCallback;
     private SecondaryDisplay mPresentation;
     private LibVLC mLibVLC;
-    private MediaListPlayer mMediaListPlayer;
+    private MediaWrapperListPlayer mMediaListPlayer;
     private String mLocation;
     private GestureDetectorCompat mDetector;
 
@@ -376,7 +376,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             Log.d(TAG, "LibVLC initialisation failed");
             return;
         }
-        mMediaListPlayer = new MediaListPlayer(mLibVLC);
+        mMediaListPlayer = new MediaWrapperListPlayer(mLibVLC);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.player_surface);
         mSurfaceHolder = mSurfaceView.getHolder();
@@ -786,6 +786,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
 		InputDevice mInputDevice = event.getDevice();
 
+        float dpadx = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+        float dpady = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+        if (Math.abs(dpadx) == 1.0f || Math.abs(dpady) == 1.0f)
+            return false;
+
 		float x = AndroidDevices.getCenteredAxis(event, mInputDevice,
 				MotionEvent.AXIS_X);
 		float y = AndroidDevices.getCenteredAxis(event, mInputDevice,
@@ -833,31 +838,31 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         case KeyEvent.KEYCODE_BUTTON_L1:
             seek(-10000);
             return true;
+        case KeyEvent.KEYCODE_BUTTON_A:
+            if (mOverlayProgress.getVisibility() == View.VISIBLE)
+                return false;
         case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
         case KeyEvent.KEYCODE_MEDIA_PLAY:
         case KeyEvent.KEYCODE_MEDIA_PAUSE:
         case KeyEvent.KEYCODE_SPACE:
-        case KeyEvent.KEYCODE_BUTTON_A:
             if (mIsNavMenu)
                 return navigateDvdMenu(keyCode);
             else
                 doPlayPause();
             return true;
         case KeyEvent.KEYCODE_V:
+        case KeyEvent.KEYCODE_O:
         case KeyEvent.KEYCODE_BUTTON_Y:
-            selectSubtitles();
+            showAdvancedOptions(mAdvOptions);
             return true;
         case KeyEvent.KEYCODE_B:
         case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
         case KeyEvent.KEYCODE_BUTTON_B:
-            selectAudioTrack();
+            onAudioSubClick(mTracks);
             return true;
         case KeyEvent.KEYCODE_M:
         case KeyEvent.KEYCODE_MENU:
             showNavMenu();
-            return true;
-        case KeyEvent.KEYCODE_O:
-            showAdvancedOptions(null);
             return true;
         case KeyEvent.KEYCODE_A:
             resizeVideo();
@@ -2080,7 +2085,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                     mTracks.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 if (mAdvOptions !=null)
                     mAdvOptions.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
-            }
+            } else
+                mSize.setVisibility(View.INVISIBLE);
             if (mPresentation != null) {
                 mOverlayBackground.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
                 mOverlayBackground.setVisibility(View.INVISIBLE);
@@ -2088,7 +2094,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             setActionBarVisibility(false);
             mOverlayProgress.setVisibility(View.INVISIBLE);
             mPlayPause.setVisibility(View.INVISIBLE);
-            mSize.setVisibility(View.INVISIBLE);
             if (mTracks != null)
                 mTracks.setVisibility(View.INVISIBLE);
             if (mAdvOptions !=null)
@@ -2144,8 +2149,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             return;
 
         if (mPresentation == null)
-            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_normal_o
-                            : R.drawable.ic_play_circle_normal_o);
+            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
+                            : R.drawable.ic_play_circle);
         else
             mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
                             : R.drawable.ic_play_circle_big_o);
@@ -2161,7 +2166,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         int time = (int) mLibVLC.getTime();
         int length = (int) mLibVLC.getLength();
         if (length == 0) {
-            Media media = MediaDatabase.getInstance().getMedia(mLocation);
+            MediaWrapper media = MediaDatabase.getInstance().getMedia(mLocation);
             if (media != null)
                 length = (int) media.getLength();
         }
@@ -2369,7 +2374,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mMediaListPlayer.playIndex(savedIndexPosition);
         } else if (mLocation != null && mLocation.length() > 0 && !dontParse) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
-            mMediaListPlayer.getMediaList().add(new Media(mLibVLC, mLocation));
+            mMediaListPlayer.getMediaList().add(new MediaWrapper(mLibVLC, mLocation));
             savedIndexPosition = mMediaListPlayer.getMediaList().size() - 1;
             mMediaListPlayer.playIndex(savedIndexPosition);
         }
@@ -2377,7 +2382,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         if (mLocation != null && mLocation.length() > 0 && !dontParse) {
             // restore last position
-            Media media = MediaDatabase.getInstance().getMedia(mLocation);
+            MediaWrapper media = MediaDatabase.getInstance().getMedia(mLocation);
             if(media != null) {
                 // in media library
                 if(media.getTime() > 0 && !fromStart)

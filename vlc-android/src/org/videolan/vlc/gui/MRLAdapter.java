@@ -1,7 +1,7 @@
 /*****************************************************************************
  * MRLAdapter.java
  *****************************************************************************
- * Copyright © 2011-2014 VLC authors and VideoLAN
+ * Copyright © 2014-2015 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.videolan.vlc.MediaDatabase;
@@ -36,12 +37,12 @@ public class MRLAdapter extends RecyclerView.Adapter<MRLAdapter.ViewHolder> {
     private ArrayList<String> mDataset;
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView uriTv;
-        public ImageButton deleteButton;
+        public ImageView deleteButton;
 
         public ViewHolder(View v) {
             super(v);
             uriTv = (TextView) v.findViewById(R.id.mrl_item_uri);
-            deleteButton = (ImageButton) v.findViewById(R.id.mrl_item_delete);
+            deleteButton = (ImageView) v.findViewById(R.id.mrl_item_delete);
         }
     }
 

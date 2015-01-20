@@ -39,7 +39,6 @@ import org.videolan.vlc.gui.audio.EqualizerFragment;
 import org.videolan.vlc.gui.video.MediaInfoFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
-import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.interfaces.IRefreshable;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.util.AndroidDevices;
@@ -88,7 +87,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements OnItemClickListener {
     public final static String TAG = "VLC/MainActivity";
 
     protected static final String ACTION_SHOW_PROGRESSBAR = "org.videolan.vlc.gui.ShowProgressBar";
@@ -110,6 +109,7 @@ public class MainActivity extends ActionBarActivity {
     private DrawerLayout mRootContainer;
     private ListView mListView;
     private ActionBarDrawerToggle mDrawerToggle;
+    private View mSideMenu;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -207,6 +207,7 @@ public class MainActivity extends ActionBarActivity {
         mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
         mSlidingPane.setPanelSlideListener(mPanelSlideListener);
 
+        mSideMenu = v_main.findViewById(R.id.side_menu);
         mListView = (ListView)v_main.findViewById(R.id.sidelist);
         mListView.setFooterDividersEnabled(true);
         mSidebarAdapter = new SidebarAdapter(this);
@@ -229,8 +230,8 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
-                if (getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder) instanceof IBrowser)
-                    ((IBrowser) getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder)).setReadyToDisplay(true);
+                if (getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder) instanceof BrowserFragment)
+                    ((BrowserFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder)).setReadyToDisplay(true);
             }
         };
 
@@ -239,60 +240,7 @@ public class MainActivity extends ActionBarActivity {
         // set a custom shadow that overlays the main content when the drawer opens
         mRootContainer.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
 
-        mListView.setOnItemClickListener(new OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                    int position, long id) {
-                SidebarAdapter.SidebarEntry entry = (SidebarEntry) mListView.getItemAtPosition(position);
-                Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder);
-
-                if(current == null || (entry != null && current.getTag().equals(entry.id))) { /* Already selected */
-                    if (mFocusedPrior != 0)
-                        findViewById(R.id.ml_menu_search).requestFocus();
-                    mRootContainer.closeDrawer(mListView);
-                    return;
-                }
-
-                // This should not happen
-                if(entry == null || entry.id == null)
-                    return;
-
-                if (entry.type == SidebarEntry.TYPE_FRAGMENT) {
-
-                /* Slide down the audio player */
-                    slideDownAudioPlayer();
-
-                /* Switch the fragment */
-                    Fragment fragment = getFragment(entry.id);
-                    if (fragment instanceof IBrowser)
-                        ((IBrowser)fragment).setReadyToDisplay(false);
-                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                    ft.replace(R.id.fragment_placeholder, fragment, entry.id);
-                    ft.addToBackStack(mCurrentFragment);
-                    ft.commit();
-                    supportInvalidateOptionsMenu();
-                    mCurrentFragment = entry.id;
-                    mSidebarAdapter.setCurrentFragment(mCurrentFragment);
-
-                /*
-                 * Set user visibility hints to work around weird Android
-                 * behaviour of duplicate context menu events.
-                 */
-                    current.setUserVisibleHint(false);
-                    getFragment(mCurrentFragment).setUserVisibleHint(true);
-                    // HACK ALERT: Set underlying audio browser to be invisible too.
-                    if(current.getTag().equals("tracks"))
-                        getFragment("audio").setUserVisibleHint(false);
-
-                    if (mFocusedPrior != 0)
-                        findViewById(R.id.ml_menu_search).requestFocus();
-                    mRootContainer.closeDrawer(mListView);
-                }else if (entry.attributeID == R.attr.ic_menu_preferences){
-                    startActivityForResult(new Intent(mContext, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
-                }
-            }
-        });
+        mListView.setOnItemClickListener(this);
 
         /* Set up the audio player */
         mAudioPlayer = new AudioPlayer();
@@ -311,7 +259,7 @@ public class MainActivity extends ActionBarActivity {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mRootContainer.openDrawer(mListView);
+                    mRootContainer.openDrawer(mSideMenu);
                 }
             }, 500);
         }
@@ -448,11 +396,11 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public void onBackPressed() {
-        if(mRootContainer.isDrawerOpen(mListView)) {
+        if(mRootContainer.isDrawerOpen(mSideMenu)) {
             /* Close the menu first */
             if (mFocusedPrior != 0)
                 findViewById(R.id.ml_menu_search).requestFocus();
-            mRootContainer.closeDrawer(mListView);
+            mRootContainer.closeDrawer(mSideMenu);
             return;
         }
 
@@ -689,7 +637,7 @@ public class MainActivity extends ActionBarActivity {
                 MediaDatabase.getInstance().clearSearchHistory();
                 break;
         }
-        mRootContainer.closeDrawer(mListView);
+        mRootContainer.closeDrawer(mSideMenu);
         return super.onOptionsItemSelected(item);
     }
 
@@ -777,6 +725,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     // Note. onKeyDown will not occur while moving within a list
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
 		View v = getCurrentFocus();
@@ -1021,6 +970,56 @@ public class MainActivity extends ActionBarActivity {
             if (mRootContainer.getChildAt(i).getId() == R.id.audio_tips)
                 mRootContainer.removeViewAt(i);
             }
+        }
+    }
+
+    public void onClick(View v){
+        switch (v.getId()){
+            case R.id.settings:
+            case R.id.settings_icon:
+                startActivityForResult(new Intent(mContext, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
+                break;
+        }
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        SidebarAdapter.SidebarEntry entry = (SidebarEntry) mListView.getItemAtPosition(position);
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder);
+
+        if(current == null || (entry != null && current.getTag().equals(entry.id))) { /* Already selected */
+            if (mFocusedPrior != 0)
+                findViewById(R.id.ml_menu_search).requestFocus();
+            mRootContainer.closeDrawer(mSideMenu);
+            return;
+        }
+
+        // This should not happen
+        if(entry == null || entry.id == null)
+            return;
+
+        if (entry.type == SidebarEntry.TYPE_FRAGMENT) {
+
+                /* Slide down the audio player */
+            slideDownAudioPlayer();
+
+                /* Switch the fragment */
+            Fragment fragment = getFragment(entry.id);
+            if (fragment instanceof BrowserFragment)
+                ((BrowserFragment)fragment).setReadyToDisplay(false);
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.fragment_placeholder, fragment, entry.id);
+            ft.addToBackStack(mCurrentFragment);
+            ft.commit();
+            supportInvalidateOptionsMenu();
+            mCurrentFragment = entry.id;
+            mSidebarAdapter.setCurrentFragment(mCurrentFragment);
+
+            if (mFocusedPrior != 0)
+                findViewById(R.id.ml_menu_search).requestFocus();
+            mRootContainer.closeDrawer(mSideMenu);
+        }else if (entry.attributeID == R.attr.ic_menu_preferences){
+            startActivityForResult(new Intent(mContext, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
         }
     }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * MediaInfoActivity.java
  *****************************************************************************
- * Copyright © 2011-2012 VLC authors and VideoLAN
+ * Copyright © 2011-2015 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,9 @@ import java.nio.ByteBuffer;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
 import org.videolan.libvlc.TrackInfo;
+import org.videolan.libvlc.util.Extensions;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.gui.MainActivity;
@@ -60,7 +61,7 @@ public class MediaInfoFragment extends ListFragment {
     public final static String TAG = "VLC/MediaInfoFragment";
     LibVLC mLibVlc = null;
 
-    private Media mItem;
+    private MediaWrapper mItem;
     private Bitmap mImage;
     private TextView mLengthView;
     private TextView mSizeView;
@@ -156,13 +157,24 @@ public class MediaInfoFragment extends ListFragment {
     };
 
     private void checkSubtitles(File itemFile) {
-        String extension, filename, videoName = Uri.decode(itemFile.getName());
+        String extension, filename, videoName = Uri.decode(itemFile.getName()), parentPath = Uri.decode(itemFile.getParent());
         videoName = videoName.substring(0, videoName.lastIndexOf('.'));
+        String[] subFolders = {"/Subtitles", "/subtitles", "/Subs", "/subs"};
         String[] files = itemFile.getParentFile().list();
+        for (int i = 0 ; i < subFolders.length ; ++i){
+            File subFolder = new File(parentPath+subFolders[i]);
+            if (!subFolder.exists())
+                continue;
+            String[] subFiles = subFolder.list();
+            String[] newFiles = new String[files.length+subFiles.length];
+            System.arraycopy(subFiles, 0, newFiles, 0, subFiles.length);
+            System.arraycopy(files, 0, newFiles, subFiles.length, files.length);
+            files = newFiles;
+        }
         for (int i = 0; i<files.length ; ++i){
             filename = Uri.decode(files[i]);
             extension = filename.substring(filename.lastIndexOf('.')+1);
-            if (!Media.SUBTITLES_EXTENSIONS.contains(extension))
+            if (!Extensions.SUBTITLES.contains(extension))
                 continue;
             if (filename.startsWith(videoName)) {
                 mHandler.obtainMessage(SHOW_SUBTITLES).sendToTarget();

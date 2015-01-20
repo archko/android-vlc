@@ -35,7 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
-import org.videolan.libvlc.Media;
+import org.videolan.libvlc.util.Extensions;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
@@ -54,7 +54,7 @@ public class MediaLibrary {
     public static final int MEDIA_ITEMS_UPDATED = 100;
 
     private static MediaLibrary mInstance;
-    private final ArrayList<Media> mItemList;
+    private final ArrayList<MediaWrapper> mItemList;
     private final ArrayList<Handler> mUpdateHandler;
     private final ReadWriteLock mItemListLock;
     private boolean isStopping = false;
@@ -82,7 +82,7 @@ public class MediaLibrary {
 
     private MediaLibrary() {
         mInstance = this;
-        mItemList = new ArrayList<Media>();
+        mItemList = new ArrayList<MediaWrapper>();
         mUpdateHandler = new ArrayList<Handler>();
         mItemListLock = new ReentrantReadWriteLock();
     }
@@ -133,8 +133,8 @@ public class MediaLibrary {
         mUpdateHandler.remove(handler);
     }
 
-    public ArrayList<Media> searchMedia(String query, int type){
-        ArrayList<Media> mediaList = new ArrayList<Media>();
+    public ArrayList<MediaWrapper> searchMedia(String query, int type){
+        ArrayList<MediaWrapper> mediaList = new ArrayList<MediaWrapper>();
         ArrayList<String> pathList = MediaDatabase.getInstance().searchMedia(query, type);
         if (!pathList.isEmpty()){
             for (String path : pathList) {
@@ -144,12 +144,12 @@ public class MediaLibrary {
         return mediaList;
     }
 
-    public ArrayList<Media> getVideoItems() {
-        ArrayList<Media> videoItems = new ArrayList<Media>();
+    public ArrayList<MediaWrapper> getVideoItems() {
+        ArrayList<MediaWrapper> videoItems = new ArrayList<MediaWrapper>();
         mItemListLock.readLock().lock();
         for (int i = 0; i < mItemList.size(); i++) {
-            Media item = mItemList.get(i);
-            if (item != null && item.getType() == Media.TYPE_VIDEO) {
+            MediaWrapper item = mItemList.get(i);
+            if (item != null && item.getType() == MediaWrapper.TYPE_VIDEO) {
                 videoItems.add(item);
             }
         }
@@ -157,12 +157,12 @@ public class MediaLibrary {
         return videoItems;
     }
 
-    public ArrayList<Media> getAudioItems() {
-        ArrayList<Media> audioItems = new ArrayList<Media>();
+    public ArrayList<MediaWrapper> getAudioItems() {
+        ArrayList<MediaWrapper> audioItems = new ArrayList<MediaWrapper>();
         mItemListLock.readLock().lock();
         for (int i = 0; i < mItemList.size(); i++) {
-            Media item = mItemList.get(i);
-            if (item.getType() == Media.TYPE_AUDIO) {
+            MediaWrapper item = mItemList.get(i);
+            if (item.getType() == MediaWrapper.TYPE_AUDIO) {
                 audioItems.add(item);
             }
         }
@@ -170,14 +170,14 @@ public class MediaLibrary {
         return audioItems;
     }
 
-    public ArrayList<Media> getMediaItems() {
+    public ArrayList<MediaWrapper> getMediaItems() {
         return mItemList;
     }
 
-    public Media getMediaItem(String location) {
+    public MediaWrapper getMediaItem(String location) {
         mItemListLock.readLock().lock();
         for (int i = 0; i < mItemList.size(); i++) {
-            Media item = mItemList.get(i);
+            MediaWrapper item = mItemList.get(i);
             if (item.getLocation().equals(location)) {
                 mItemListLock.readLock().unlock();
                 return item;
@@ -187,10 +187,10 @@ public class MediaLibrary {
         return null;
     }
 
-    public ArrayList<Media> getMediaItems(List<String> pathList) {
-        ArrayList<Media> items = new ArrayList<Media>();
+    public ArrayList<MediaWrapper> getMediaItems(List<String> pathList) {
+        ArrayList<MediaWrapper> items = new ArrayList<MediaWrapper>();
         for (int i = 0; i < pathList.size(); i++) {
-            Media item = getMediaItem(pathList.get(i));
+            MediaWrapper item = getMediaItem(pathList.get(i));
             items.add(item);
         }
         return items;
@@ -233,7 +233,7 @@ public class MediaLibrary {
             directories.addAll(mediaDirs);
 
             // get all existing media items
-            HashMap<String, Media> existingMedias = DBManager.getMedias();
+            HashMap<String, MediaWrapper> existingMedias = DBManager.getMedias();
 
             // list of all added files
             HashSet<String> addedLocations = new HashSet<String>();
@@ -319,7 +319,7 @@ public class MediaLibrary {
                     } else {
                         mItemListLock.writeLock().lock();
                         // create new media item
-                        Media m = new Media(libVlcInstance, fileURI);
+                        MediaWrapper m = new MediaWrapper(libVlcInstance, fileURI);
                         mItemList.add(m);
                         // Add this item to database
                         MediaDatabase db = MediaDatabase.getInstance();
@@ -396,8 +396,8 @@ public class MediaLibrary {
                     int dotIndex = fileName.lastIndexOf(".");
                     if (dotIndex != -1) {
                         String fileExt = fileName.substring(dotIndex);
-                        accepted = Media.AUDIO_EXTENSIONS.contains(fileExt) ||
-                                   Media.VIDEO_EXTENSIONS.contains(fileExt);
+                        accepted = Extensions.AUDIO.contains(fileExt) ||
+                                   Extensions.VIDEO.contains(fileExt);
                     }
                 }
             }

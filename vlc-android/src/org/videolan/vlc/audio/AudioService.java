@@ -44,10 +44,10 @@ import org.videolan.libvlc.EventHandler;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
-import org.videolan.libvlc.MediaList;
-import org.videolan.libvlc.MediaListPlayer;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaWrapperList;
+import org.videolan.vlc.MediaWrapperListPlayer;
 import org.videolan.vlc.R;
 import org.videolan.vlc.RemoteControlClientReceiver;
 import org.videolan.vlc.VLCApplication;
@@ -123,7 +123,7 @@ public class AudioService extends Service {
     public static final int NEXT_ITEM = 3;
 
     private LibVLC mLibVLC;
-    private MediaListPlayer mMediaListPlayer;
+    private MediaWrapperListPlayer mMediaListPlayer;
     private HashMap<IAudioServiceCallback, Integer> mCallback;
     private EventHandler mEventHandler;
     private OnAudioFocusChangeListener audioFocusListener;
@@ -170,7 +170,7 @@ public class AudioService extends Service {
         } catch (LibVlcException e) {
             e.printStackTrace();
         }
-        mMediaListPlayer = new MediaListPlayer(mLibVLC);
+        mMediaListPlayer = new MediaWrapperListPlayer(mLibVLC);
 
         mCallback = new HashMap<IAudioServiceCallback, Integer>();
         mCurrentIndex = -1;
@@ -479,7 +479,7 @@ public class AudioService extends Service {
                     String location = service.mMediaListPlayer.getMediaList().getMRL(service.mCurrentIndex);
                     long length = service.mLibVLC.getLength();
                     MediaDatabase dbManager = MediaDatabase.getInstance();
-                    Media m = dbManager.getMedia(location);
+                    MediaWrapper m = dbManager.getMedia(location);
                     /**
                      * 1) There is a media to update
                      * 2) It has a length of 0
@@ -562,75 +562,60 @@ public class AudioService extends Service {
         }
     };
 
-    private final Handler mListEventHandler = new MediaListEventHandler(this);
+    private final MediaWrapperList.EventListener mListEventListener = new MediaWrapperList.EventListener() {
 
-    private static class MediaListEventHandler extends WeakHandler<AudioService> {
+        @Override
+        public void onItemAdded(int index, String mrl) {
+            Log.i(TAG, "CustomMediaListItemAdded");
+            if(mCurrentIndex >= index && !mExpanding.get())
+                mCurrentIndex++;
 
-        public MediaListEventHandler(AudioService audioService) {
-            super(audioService);
+            determinePrevAndNextIndices();
+            executeUpdate();
         }
 
         @Override
-        public void handleMessage(Message msg) {
-            AudioService service = getOwner();
-            if(service == null) return;
-
-            int index;
-            switch (msg.getData().getInt("event")) {
-            case EventHandler.CustomMediaListItemAdded:
-                Log.i(TAG, "CustomMediaListItemAdded");
-                index = msg.getData().getInt("item_index");
-                if(service.mCurrentIndex >= index && !service.mExpanding.get())
-                    service.mCurrentIndex++;
-
-                service.determinePrevAndNextIndices();
-                service.executeUpdate();
-                break;
-            case EventHandler.CustomMediaListItemDeleted:
-                Log.i(TAG, "CustomMediaListItemDeleted");
-                index = msg.getData().getInt("item_index");
-                if (service.mCurrentIndex == index && !service.mExpanding.get()) {
-                    // The current item has been deleted
-                    service.mCurrentIndex--;
-                    service.determinePrevAndNextIndices();
-                    if (service.mNextIndex != -1)
-                        service.next();
-                    else if (service.mCurrentIndex != -1) {
-                        service.mMediaListPlayer.playIndex(service.mCurrentIndex);
-                        service.executeOnMediaPlayedAdded();
-                    } else
-                        service.stop();
-                    break;
-                }
-
-                if(service.mCurrentIndex > index && !service.mExpanding.get())
-                    service.mCurrentIndex--;
-                service.determinePrevAndNextIndices();
-                service.executeUpdate();
-                break;
-            case EventHandler.CustomMediaListItemMoved:
-                Log.i(TAG, "CustomMediaListItemMoved");
-                int positionStart = msg.getData().getInt("index_before");
-                int positionEnd = msg.getData().getInt("index_after");
-                if (service.mCurrentIndex == positionStart) {
-                    service.mCurrentIndex = positionEnd;
-                    if (positionEnd > positionStart)
-                        service.mCurrentIndex--;
-                } else if (positionStart > service.mCurrentIndex
-                        && positionEnd <= service.mCurrentIndex)
-                    service.mCurrentIndex++;
-                else if (positionStart < service.mCurrentIndex
-                        && positionEnd > service.mCurrentIndex)
-                    service.mCurrentIndex--;
-
-                // If we are in random mode, we completely reset the stored previous track
-                // as their indices changed.
-                service.mPrevious.clear();
-
-                service.determinePrevAndNextIndices();
-                service.executeUpdate();
-                break;
+        public void onItemRemoved(int index, String mrl) {
+            Log.i(TAG, "CustomMediaListItemDeleted");
+            if (mCurrentIndex == index && !mExpanding.get()) {
+                // The current item has been deleted
+                mCurrentIndex--;
+                determinePrevAndNextIndices();
+                if (mNextIndex != -1)
+                    next();
+                else if (mCurrentIndex != -1) {
+                    mMediaListPlayer.playIndex(mCurrentIndex);
+                    executeOnMediaPlayedAdded();
+                } else
+                    stop();
             }
+
+            if(mCurrentIndex > index && !mExpanding.get())
+                mCurrentIndex--;
+            determinePrevAndNextIndices();
+            executeUpdate();
+        }
+
+        @Override
+        public void onItemMoved(int indexBefore, int indexAfter, String mrl) {
+            Log.i(TAG, "CustomMediaListItemMoved");
+            if (mCurrentIndex == indexBefore) {
+                mCurrentIndex = indexAfter;
+                if (indexAfter > indexBefore)
+                    mCurrentIndex--;
+            } else if (indexBefore > mCurrentIndex
+                    && indexAfter <= mCurrentIndex)
+                mCurrentIndex++;
+            else if (indexBefore < mCurrentIndex
+                    && indexAfter > mCurrentIndex)
+                mCurrentIndex--;
+
+            // If we are in random mode, we completely reset the stored previous track
+            // as their indices changed.
+            mPrevious.clear();
+
+            determinePrevAndNextIndices();
+            executeUpdate();
         }
     };
 
@@ -677,7 +662,7 @@ public class AudioService extends Service {
     }
 
     private void executeOnMediaPlayedAdded() {
-        final Media media = mMediaListPlayer.getMediaList().getMedia(mCurrentIndex);
+        final MediaWrapper media = mMediaListPlayer.getMediaList().getMedia(mCurrentIndex);
         for (IAudioServiceCallback callback : mCallback.keySet()) {
             try {
                 callback.onMediaPlayedAdded(media, 0);
@@ -692,7 +677,7 @@ public class AudioService extends Service {
      *
      * @return The current media or null if there is not any.
      */
-    private Media getCurrentMedia() {
+    private MediaWrapper getCurrentMedia() {
         return mMediaListPlayer.getMediaList().getMedia(mCurrentIndex);
     }
 
@@ -738,7 +723,7 @@ public class AudioService extends Service {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void showNotification() {
         try {
-            Media media = getCurrentMedia();
+            MediaWrapper media = getCurrentMedia();
             if (media == null)
                 return;
             Bitmap cover = AudioUtil.getCover(this, media, 64);
@@ -858,7 +843,7 @@ public class AudioService extends Service {
     private void stop() {
         mLibVLC.stop();
         mEventHandler.removeHandler(mVlcEventHandler);
-        mMediaListPlayer.getMediaList().getEventHandler().removeHandler(mListEventHandler);
+        mMediaListPlayer.getMediaList().removeEventListener(mListEventListener);
         setRemoteControlClientPlaybackState(EventHandler.MediaPlayerStopped);
         mCurrentIndex = -1;
         mPrevious.clear();
@@ -961,7 +946,7 @@ public class AudioService extends Service {
         if (!LibVlcUtil.isICSOrLater()) // NOP check
             return;
 
-        Media media = getCurrentMedia();
+        MediaWrapper media = getCurrentMedia();
         if (mRemoteControlClient != null && media != null) {
             MetadataEditor editor = mRemoteControlClient.editMetadata(true);
             if (media.getNowPlaying() != null) {
@@ -1031,7 +1016,7 @@ public class AudioService extends Service {
     }
 
     private Bitmap getCover() {
-        Media media = getCurrentMedia();
+        MediaWrapper media = getCurrentMedia();
         return media != null ? AudioUtil.getCover(this, media, 512) : null;
     }
 
@@ -1083,7 +1068,7 @@ public class AudioService extends Service {
         @Override
         public String getArtist() throws RemoteException {
             if (hasCurrentMedia()) {
-                final Media media = getCurrentMedia();
+                final MediaWrapper media = getCurrentMedia();
                 return media.isArtistUnknown() && media.getNowPlaying() != null ?
                         media.getNowPlaying()
                         : Util.getMediaArtist(AudioService.this, media);
@@ -1204,16 +1189,16 @@ public class AudioService extends Service {
             Log.v(TAG, "Loading position " + ((Integer)position).toString() + " in " + mediaPathList.toString());
             mEventHandler.addHandler(mVlcEventHandler);
 
-            mMediaListPlayer.getMediaList().getEventHandler().removeHandler(mListEventHandler);
+            mMediaListPlayer.getMediaList().removeEventListener(mListEventListener);
             mMediaListPlayer.getMediaList().clear();
-            MediaList mediaList = mMediaListPlayer.getMediaList();
+            MediaWrapperList mediaList = mMediaListPlayer.getMediaList();
 
             mPrevious.clear();
 
             MediaDatabase db = MediaDatabase.getInstance();
             for (int i = 0; i < mediaPathList.size(); i++) {
                 String location = mediaPathList.get(i);
-                Media media = db.getMedia(location);
+                MediaWrapper media = db.getMedia(location);
                 if(media == null) {
                     if(!validateLocation(location)) {
                         Log.w(TAG, "Invalid location " + location);
@@ -1221,10 +1206,10 @@ public class AudioService extends Service {
                         continue;
                     }
                     Log.v(TAG, "Creating on-the-fly Media object for " + location);
-                    media = new Media(mLibVLC, location);
+                    media = new MediaWrapper(mLibVLC, location);
                 }
                 if (noVideo)
-                    media.addFlags(Media.FLAG_NO_VIDEO);
+                    media.addFlags(LibVLC.MEDIA_NO_VIDEO);
                 mediaList.add(media);
             }
 
@@ -1240,7 +1225,7 @@ public class AudioService extends Service {
             }
 
             // Add handler after loading the list
-            mMediaListPlayer.getMediaList().getEventHandler().addHandler(mListEventHandler);
+            mMediaListPlayer.getMediaList().addEventListener(mListEventListener);
 
             mMediaListPlayer.playIndex(mCurrentIndex);
             executeOnMediaPlayedAdded();
@@ -1322,14 +1307,14 @@ public class AudioService extends Service {
             MediaDatabase db = MediaDatabase.getInstance();
             for (int i = 0; i < mediaLocationList.size(); i++) {
                 String location = mediaLocationList.get(i);
-                Media media = db.getMedia(location);
+                MediaWrapper media = db.getMedia(location);
                 if(media == null) {
                     if (!validateLocation(location)) {
                         showToast(getResources().getString(R.string.invalid_location, location), Toast.LENGTH_SHORT);
                         continue;
                     }
                     Log.v(TAG, "Creating on-the-fly Media object for " + location);
-                    media = new Media(mLibVLC, location);
+                    media = new MediaWrapper(mLibVLC, location);
                 }
                 mMediaListPlayer.getMediaList().add(media);
             }
@@ -1364,8 +1349,8 @@ public class AudioService extends Service {
         }
 
         @Override
-        public List<Media> getMedias() {
-            final ArrayList<Media> ml = new ArrayList<Media>();
+        public List<MediaWrapper> getMedias() {
+            final ArrayList<MediaWrapper> ml = new ArrayList<MediaWrapper>();
             for (int i = 0; i < mMediaListPlayer.getMediaList().size(); i++) {
                 ml.add(mMediaListPlayer.getMediaList().getMedia(i));
             }
@@ -1450,7 +1435,7 @@ public class AudioService extends Service {
         i.setAction(ACTION_WIDGET_UPDATE);
 
         if (hasCurrentMedia()) {
-            final Media media = getCurrentMedia();
+            final MediaWrapper media = getCurrentMedia();
             i.putExtra("title", media.getTitle());
             i.putExtra("artist", media.isArtistUnknown() && media.getNowPlaying() != null ?
                     media.getNowPlaying()

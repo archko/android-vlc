@@ -31,8 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
-import org.videolan.libvlc.Media;
-import org.videolan.vlc.gui.video.VideoBrowserInterface;
+import org.videolan.vlc.interfaces.IVideoBrowser;
 import org.videolan.vlc.util.BitmapUtil;
 import org.videolan.vlc.util.VLCInstance;
 
@@ -46,9 +45,9 @@ import android.view.Display;
 public class Thumbnailer implements Runnable {
     public final static String TAG = "VLC/Thumbnailer";
 
-    private VideoBrowserInterface mVideoBrowser;
+    private IVideoBrowser mVideoBrowser;
 
-    private final Queue<Media> mItems = new LinkedList<Media>();
+    private final Queue<MediaWrapper> mItems = new LinkedList<MediaWrapper>();
 
     private boolean isStopping = false;
     private final Lock lock = new ReentrantLock();
@@ -67,7 +66,7 @@ public class Thumbnailer implements Runnable {
         mPrefix = context.getResources().getString(R.string.thumbnail);
     }
 
-    public void start(VideoBrowserInterface videoBrowser) {
+    public void start(IVideoBrowser videoBrowser) {
         if (mLibVlc == null) {
             try {
                 mLibVlc = VLCInstance.getLibVlcInstance();
@@ -111,10 +110,10 @@ public class Thumbnailer implements Runnable {
     }
 
     /**
-     * Add a new id of the file browser item to create its thumbnail.
-     * @param id the if of the file browser item.
+     * Add a new media item to create its thumbnail.
+     * @param item media wrapper of the file browser item.
      */
-    public void addJob(Media item) {
+    public void addJob(MediaWrapper item) {
         if(BitmapUtil.getPictureFromCache(item) != null || item.isPictureParsed())
             return;
         lock.lock();
@@ -160,7 +159,7 @@ public class Thumbnailer implements Runnable {
                 break;
             }
             total = totalCount;
-            Media item = mItems.poll();
+            MediaWrapper item = mItems.poll();
             lock.unlock();
 
             if (mVideoBrowser != null) {
@@ -214,7 +213,7 @@ public class Thumbnailer implements Runnable {
         Log.d(TAG, "Thumbnailer stopped");
     }
 
-    public void setVideoBrowser(VideoBrowserInterface browser){
+    public void setVideoBrowser(IVideoBrowser browser){
         mVideoBrowser = browser;
     }
 }

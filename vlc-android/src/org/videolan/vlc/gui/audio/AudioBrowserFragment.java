@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.view.ContextMenu;
@@ -51,13 +50,13 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.BrowserFragment;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCRunnable;
@@ -72,7 +71,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, IBrowser {
+public class AudioBrowserFragment extends BrowserFragment implements SwipeRefreshLayout.OnRefreshListener {
     public final static String TAG = "VLC/AudioBrowserFragment";
 
     private FlingViewGroup mFlingViewGroup;
@@ -83,7 +82,7 @@ public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout
     private AudioServiceController mAudioController;
     private MediaLibrary mMediaLibrary;
 
-    List<Media> mAudioList;
+    List<MediaWrapper> mAudioList;
     private AudioBrowserListAdapter mArtistsAdapter;
     private AudioBrowserListAdapter mAlbumsAdapter;
     private AudioBrowserListAdapter mSongsAdapter;
@@ -99,7 +98,6 @@ public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout
     public final static int MODE_GENRE = 3;
 
     public final static int MSG_LOADING = 0;
-    private volatile boolean mReadyToDisplay = true;
     private volatile boolean mDisplaying = false;
 
     /* All subclasses of Fragment must include a public empty constructor. */
@@ -302,7 +300,7 @@ public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout
     OnItemClickListener artistListListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<Media> mediaList = mArtistsAdapter.getMedia(p);
+            ArrayList<MediaWrapper> mediaList = mArtistsAdapter.getMedia(p);
             MainActivity activity = (MainActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
             if (frag != null) {
@@ -322,7 +320,7 @@ public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout
     OnItemClickListener genreListListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<Media> mediaList = mGenresAdapter.getMedia(p);
+            ArrayList<MediaWrapper> mediaList = mGenresAdapter.getMedia(p);
             MainActivity activity = (MainActivity)getActivity();
             AudioAlbumsSongsFragment frag = (AudioAlbumsSongsFragment)activity.showSecondaryFragment("albumsSongs");
             if (frag != null) {
@@ -389,7 +387,7 @@ public class AudioBrowserFragment extends Fragment implements SwipeRefreshLayout
                         @Override
                         public void run(Object o) {
                             AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;
-                            Media media = listItem.mMediaList.get(0);
+                            MediaWrapper media = listItem.mMediaList.get(0);
                             mMediaLibrary.getMediaItems().remove(media);
                             mAudioController.removeLocation(media.getLocation());
                             updateLists();
