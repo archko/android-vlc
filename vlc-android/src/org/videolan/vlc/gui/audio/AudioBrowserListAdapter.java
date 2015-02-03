@@ -82,10 +82,10 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
 
     // An item of the list: a media or a separator.
     class ListItem {
-        public String mTitle;
-        public String mSubTitle;
-        public ArrayList<MediaWrapper> mMediaList;
-        public boolean mIsSeparator;
+        final public String mTitle;
+        final public String mSubTitle;
+        final public ArrayList<MediaWrapper> mMediaList;
+        final public boolean mIsSeparator;
 
         public ListItem(String title, String subTitle, MediaWrapper media, boolean isSeparator) {
             mMediaList = new ArrayList<MediaWrapper>();
@@ -113,12 +113,13 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     public void add(String title, String subTitle, MediaWrapper media) {
         if(title == null) return;
         title = title.trim();
+        final String titleKey = title.toLowerCase();
         if(subTitle != null) subTitle = subTitle.trim();
-        if (mMediaItemMap.containsKey(title))
-            mMediaItemMap.get(title).mMediaList.add(media);
+        if (mMediaItemMap.containsKey(titleKey))
+            mMediaItemMap.get(titleKey).mMediaList.add(media);
         else {
             ListItem item = new ListItem(title, subTitle, media, false);
-            mMediaItemMap.put(title, item);
+            mMediaItemMap.put(titleKey, item);
             mItems.add(item);
         }
     }
@@ -148,69 +149,59 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
                             title = media.getTitle();
                             subTitle = Util.getMediaArtist(mContext, media);
                     }
-                    if (title == null)
-                        continue;
-                    title = title.trim();
-                    if (subTitle != null) subTitle = subTitle.trim();
-                    if (mMediaItemMap.containsKey(title))
-                        mMediaItemMap.get(title).mMediaList.add(media);
-                    else {
-                        ListItem item = new ListItem(title, subTitle, media, false);
-                        mMediaItemMap.put(title, item);
-                        mItems.add(item);
-                    }
+                    add(title, subTitle, media);
                 }
-                addLetterSeparators();
+                calculateSections(type);
             }
         });
-    }
-
-    public void addLetterSeparators() {
-        calculateSections(true);
-    }
-
-    public void addScrollSections() {
-        calculateSections(false);
     }
 
     /**
      * Calculate sections of the list
      *
-     * @param addSeparators True to add GUI-level separators, false to just populate the cache
+     * @param type Type of the audio file sort.
      */
-    private void calculateSections(boolean addSeparators) {
+    private void calculateSections(int type) {
         char prevFirstChar = 'a';
         boolean firstSeparator = true;
 
         for (int i = 0; i < mItems.size(); ++i) {
             String title = mItems.get(i).mTitle;
+            String unknown;
+            switch (type){
+                case TYPE_ALBUMS:
+                    unknown = mContext.getString(R.string.unknown_album);
+                    break;
+                case TYPE_GENRES:
+                    unknown = mContext.getString(R.string.unknown_genre);
+                    break;
+                case TYPE_ARTISTS:
+                    unknown = mContext.getString(R.string.unknown_artist);
+                    break;
+                default:
+                    unknown = null;
+            }
             char firstChar;
-            if(title.length() > 0)
+            if(title.length() > 0 && (unknown == null || !unknown.equals(title)))
                 firstChar = title.toUpperCase(Locale.ENGLISH).charAt(0);
             else
                 firstChar = '#'; // Blank / spaces-only song title.
 
             if (Character.isLetter(firstChar)) {
                 if (firstSeparator || firstChar != prevFirstChar) {
-                    if(addSeparators) {
-                        ListItem item = new ListItem(String.valueOf(firstChar), null, null, true);
-                        mItems.add(i, item);
-                        mSections.put(i, String.valueOf(firstChar));
-                        i++;
-                    } else
-                        mSections.put(i, String.valueOf(firstChar));
+                    ListItem item = new ListItem(String.valueOf(firstChar), null, null, true);
+                    mItems.add(i, item);
+                    mSections.put(i, String.valueOf(firstChar));
+                    i++;
                     prevFirstChar = firstChar;
                     firstSeparator = false;
                 }
             }
             else if (firstSeparator) {
-                if(addSeparators) {
-                    ListItem item = new ListItem("#", null, null, true);
-                    mItems.add(i, item);
-                    mSections.put(i, "#");
-                    i++;
-                } else
-                    mSections.put(i, "#");
+                ListItem item = new ListItem("#", null, null, true);
+                mItems.add(i, item);
+                mSections.put(i, "#");
+                i++;
                 prevFirstChar = firstChar;
                 firstSeparator = false;
             }
@@ -220,11 +211,12 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     public void addSeparator(String title, MediaWrapper media) {
         if(title == null) return;
         title = title.trim();
-        if (mSeparatorItemMap.containsKey(title))
-            mSeparatorItemMap.get(title).mMediaList.add(media);
+        final String titleKey = title.toLowerCase();
+        if (mSeparatorItemMap.containsKey(titleKey))
+            mSeparatorItemMap.get(titleKey).mMediaList.add(media);
         else {
             ListItem item = new ListItem(title, null, media, true);
-            mSeparatorItemMap.put(title, item);
+            mSeparatorItemMap.put(titleKey, item);
             mItems.add(item);
         }
     }

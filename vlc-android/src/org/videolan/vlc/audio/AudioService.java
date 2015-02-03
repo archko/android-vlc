@@ -20,20 +20,12 @@
 
 package org.videolan.vlc.audio;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -44,6 +36,7 @@ import org.videolan.libvlc.EventHandler;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaWrapperList;
@@ -56,7 +49,6 @@ import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
 import org.videolan.vlc.interfaces.IAudioService;
 import org.videolan.vlc.interfaces.IAudioServiceCallback;
-import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
@@ -90,7 +82,6 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -170,7 +161,7 @@ public class AudioService extends Service {
         } catch (LibVlcException e) {
             e.printStackTrace();
         }
-        mMediaListPlayer = new MediaWrapperListPlayer(mLibVLC);
+        mMediaListPlayer = MediaWrapperListPlayer.getInstance(mLibVLC);
 
         mCallback = new HashMap<IAudioServiceCallback, Integer>();
         mCurrentIndex = -1;
@@ -525,11 +516,6 @@ public class AudioService extends Service {
                     if (service.mWakeLock.isHeld())
                         service.mWakeLock.release();
                     break;
-                case EventHandler.MediaPlayerVout:
-                    if(msg.getData().getInt("data") > 0) {
-                        service.handleVout();
-                    }
-                    break;
                 case EventHandler.MediaPlayerPositionChanged:
                     float pos = msg.getData().getFloat("data");
                     service.updateWidgetPosition(service, pos);
@@ -549,6 +535,8 @@ public class AudioService extends Service {
                     // avoid useless error logs
                     break;
                 case EventHandler.MediaMetaChanged:
+                    if (!service.hasCurrentMedia())
+                        break;
                     service.getCurrentMedia().updateMeta(service.mLibVLC);
                     service.setUpRemoteControlClient();
                     service.executeUpdate();
@@ -618,22 +606,6 @@ public class AudioService extends Service {
             executeUpdate();
         }
     };
-
-    private void handleVout() {
-        if (!hasCurrentMedia())
-            return;
-        Log.i(TAG, "Obtained video track");
-        String title = getCurrentMedia().getTitle();
-        String MRL = mMediaListPlayer.getMediaList().getMRL(mCurrentIndex);
-        int index = mCurrentIndex;
-        mCurrentIndex = -1;
-        mEventHandler.removeHandler(mVlcEventHandler);
-        // Preserve playback when switching to video
-        hideNotification(false);
-
-        // Switch to the video player & don't lose the currently playing stream
-        VideoPlayerActivity.start(VLCApplication.getAppContext(), MRL, title, index, true);
-    }
 
     private void executeUpdate() {
         executeUpdate(true);
@@ -1198,19 +1170,22 @@ public class AudioService extends Service {
             MediaDatabase db = MediaDatabase.getInstance();
             for (int i = 0; i < mediaPathList.size(); i++) {
                 String location = mediaPathList.get(i);
-                MediaWrapper media = db.getMedia(location);
-                if(media == null) {
+                MediaWrapper mediaWrapper = db.getMedia(location);
+                if(mediaWrapper == null) {
                     if(!validateLocation(location)) {
                         Log.w(TAG, "Invalid location " + location);
                         showToast(getResources().getString(R.string.invalid_location, location), Toast.LENGTH_SHORT);
                         continue;
                     }
                     Log.v(TAG, "Creating on-the-fly Media object for " + location);
-                    media = new MediaWrapper(mLibVLC, location);
+                    final Media media = new Media(mLibVLC, location);
+                    media.parse(); // FIXME: parse should be done asynchronously
+                    media.release();
+                    mediaWrapper = new MediaWrapper(media);
                 }
                 if (noVideo)
-                    media.addFlags(LibVLC.MEDIA_NO_VIDEO);
-                mediaList.add(media);
+                    mediaWrapper.addFlags(LibVLC.MEDIA_NO_VIDEO);
+                mediaList.add(mediaWrapper);
             }
 
             if (mMediaListPlayer.getMediaList().size() == 0) {
@@ -1307,16 +1282,19 @@ public class AudioService extends Service {
             MediaDatabase db = MediaDatabase.getInstance();
             for (int i = 0; i < mediaLocationList.size(); i++) {
                 String location = mediaLocationList.get(i);
-                MediaWrapper media = db.getMedia(location);
-                if(media == null) {
+                MediaWrapper mediaWrapper = db.getMedia(location);
+                if(mediaWrapper == null) {
                     if (!validateLocation(location)) {
                         showToast(getResources().getString(R.string.invalid_location, location), Toast.LENGTH_SHORT);
                         continue;
                     }
                     Log.v(TAG, "Creating on-the-fly Media object for " + location);
-                    media = new MediaWrapper(mLibVLC, location);
+                    final Media media = new Media(mLibVLC, location);
+                    media.parse(); // FIXME: parse should'nt be done asynchronously
+                    media.release();
+                    mediaWrapper = new MediaWrapper(media);
                 }
-                mMediaListPlayer.getMediaList().add(media);
+                mMediaListPlayer.getMediaList().add(mediaWrapper);
             }
             AudioService.this.saveMediaList();
             determinePrevAndNextIndices();

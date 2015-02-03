@@ -29,12 +29,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.VLCCallbackTask;
 import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.video.VideoPlayerActivity;
 
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
@@ -105,8 +107,12 @@ public class Util {
      */
     public static MediaWrapper getOrCreateMedia(LibVLC libVLC, String mrl) {
         MediaWrapper mlItem = MediaLibrary.getInstance().getMediaItem(mrl);
-        if(mlItem == null)
-            mlItem = new MediaWrapper(libVLC, mrl);
+        if(mlItem == null) {
+            final Media media = new Media(libVLC, mrl);
+            media.parse(); // FIXME: parse should'nt be done asynchronously
+            media.release();
+            mlItem = new MediaWrapper(media);
+        }
         return mlItem;
     }
 
@@ -176,21 +182,7 @@ public class Util {
 
 
     public static void openStream(Context context, final String uri){
-        VLCCallbackTask task = new VLCCallbackTask(context){
-            @Override
-            public void run() {
-                AudioServiceController c = AudioServiceController.getInstance();
-
-                      /* Use the audio player by default. If a video track is
-                       * detected, then it will automatically switch to the video
-                       * player. This allows us to support more types of streams
-                       * (for example, RTSP and TS streaming) where ES can be
-                       * dynamically adapted rather than a simple scan.
-                       */
-                c.load(uri, false);
-            }
-        };
-        task.execute();
+        VideoPlayerActivity.start(context, uri);
     }
 
     private static String getMediaString(Context ctx, int id) {
@@ -237,12 +229,12 @@ public class Util {
     }
 
     public static String getMediaSubtitle(Context ctx, MediaWrapper media) {
-        if (media.getType() == MediaWrapper.TYPE_VIDEO)
-            return "";
-        else
+        if (media.getType() == MediaWrapper.TYPE_AUDIO)
             return media.getNowPlaying() != null
                         ? media.getNowPlaying()
                         : getMediaArtist(ctx, media) + " - " + getMediaAlbum(ctx, media);
+        else
+            return "";
     }
 
     @TargetApi(android.os.Build.VERSION_CODES.GINGERBREAD)

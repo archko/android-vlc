@@ -21,6 +21,35 @@
 #ifndef LIBVLCJNI_UTILS_H
 #define LIBVLCJNI_UTILS_H
 
+struct fields {
+    struct {
+        jclass clazz;
+    } IllegalStateException;
+    struct {
+        jclass clazz;
+    } IllegalArgumentException;
+    struct {
+        jclass clazz;
+    } String;
+    struct {
+        jclass clazz;
+        jfieldID mInstanceID;
+        jmethodID dispatchEventFromNativeID;
+    } VLCObject;
+    struct {
+        struct {
+            jclass clazz;
+        } Track;
+
+        jclass clazz;
+        jmethodID createAudioTrackFromNativeID;
+        jmethodID createVideoTrackFromNativeID;
+        jmethodID createSubtitleTrackFromNativeID;
+    } Media;
+};
+
+extern struct fields fields;
+
 libvlc_media_t *new_media(JNIEnv *env, jobject thiz, jstring fileLocation, bool noOmx, bool noVideo);
 
 libvlc_instance_t *getLibVlcInstance(JNIEnv *env, jobject thiz);

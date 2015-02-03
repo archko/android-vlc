@@ -25,7 +25,9 @@ import java.util.Locale;
 import org.videolan.libvlc.util.Extensions;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.TrackInfo;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.Media.VideoTrack;
+import org.videolan.libvlc.Media.Meta;
 
 import android.graphics.Bitmap;
 import android.os.Parcel;
@@ -40,8 +42,8 @@ public class MediaWrapper implements Parcelable {
     public final static int TYPE_VIDEO = 0;
     public final static int TYPE_AUDIO = 1;
     public final static int TYPE_GROUP = 2;
+    public final static int TYPE_DIR = 3;
 
-    /** Metadata from libvlc_media */
     protected String mTitle;
     private String mArtist;
     private String mGenre;
@@ -59,32 +61,6 @@ public class MediaWrapper implements Parcelable {
     private String mTrackID;
     private String mArtworkURL;
 
-    public final static int libvlc_meta_Title       = 0;
-    public final static int libvlc_meta_Artist      = 1;
-    public final static int libvlc_meta_Genre       = 2;
-//    public final static int libvlc_meta_Copyright   = 3;
-    public final static int libvlc_meta_Album       = 4;
-//    public final static int libvlc_meta_TrackNumber = 5;
-//    public final static int libvlc_meta_Description = 6;
-//    public final static int libvlc_meta_Rating      = 7;
-//    public final static int libvlc_meta_Date        = 8;
-//    public final static int libvlc_meta_Setting     = 9;
-//    public final static int libvlc_meta_URL         = 10;
-//    public final static int libvlc_meta_Language    = 11;
-    public final static int libvlc_meta_NowPlaying  = 12;
-//    public final static int libvlc_meta_Publisher   = 13;
-//    public final static int libvlc_meta_EncodedBy   = 14;
-    public final static int libvlc_meta_ArtworkURL  = 15;
-//    public final static int libvlc_meta_TrackID     = 16;
-//    public final static int libvlc_meta_TrackTotal  = 17;
-//    public final static int libvlc_meta_Director    = 18;
-//    public final static int libvlc_meta_Season      = 19;
-//    public final static int libvlc_meta_Episode     = 20;
-//    public final static int libvlc_meta_ShowName    = 21;
-//    public final static int libvlc_meta_Actors      = 22;
-    public final static int libvlc_meta_AlbumArtist = 23;
-//    public final static int libvlc_meta_DiscNumber  = 24;
-
     private final String mLocation;
     private String mFilename;
     private long mTime = 0;
@@ -99,62 +75,53 @@ public class MediaWrapper implements Parcelable {
     private int mFlags = 0;
 
     /**
-     * Create a new Media
-     * @param libVLC A pointer to the libVLC instance. Should not be NULL
-     * @param URI The URI of the media.
+     * Create a new MediaWrapper
+     * @param mrl Should not be null.
      */
-    public MediaWrapper(LibVLC libVLC, String URI) {
-        if(libVLC == null)
-            throw new NullPointerException("libVLC was null");
+    public MediaWrapper(String mrl) {
+        if (mrl == null)
+            throw new NullPointerException("mrl was null");
 
-        mLocation = URI;
-
-        mType = TYPE_ALL;
-        TrackInfo[] tracks = libVLC.readTracksInfo(mLocation);
-
-        extractTrackInfo(tracks);
+        mLocation = mrl;
+        init(null);
     }
 
-    private void extractTrackInfo(TrackInfo[] tracks) {
-        if (tracks == null) {
-            mTitle = null;
-            mArtist = null;
-            mAlbum = null;
-            mGenre = null;
-            mAlbumArtist = null;
-            return;
-        }
+    /**
+     * Create a new MediaWrapper
+     * @param media should be parsed and not NULL
+     */
+    public MediaWrapper(Media media) {
+        if (media == null)
+            throw new NullPointerException("media was null");
 
-        for (TrackInfo track : tracks) {
-            if (track.Type == TrackInfo.TYPE_VIDEO) {
-                mType = TYPE_VIDEO;
-                mWidth = track.Width;
-                mHeight = track.Height;
-            } else if (mType == TYPE_ALL && track.Type == TrackInfo.TYPE_AUDIO){
-                mType = TYPE_AUDIO;
-            } else if (track.Type == TrackInfo.TYPE_META) {
-                mLength = track.Length;
-                mTitle = track.Title != null ? track.Title.trim() : null;
-                mArtist = track.Artist != null ? track.Artist.trim() : null;
-                mAlbum = track.Album != null ? track.Album.trim() : null;
-                mGenre = track.Genre != null ? track.Genre.trim() : null;
-                mAlbumArtist = track.AlbumArtist != null ? track.AlbumArtist.trim() : null;
-                mArtworkURL = track.ArtworkURL;
-                mNowPlaying = track.NowPlaying;
-                if (!TextUtils.isEmpty(track.TrackNumber)) {
-                    try {
-                        mTrackNumber = Integer.parseInt(track.TrackNumber);
-                    } catch (NumberFormatException ignored) {
+        mLocation = media.getMrl();
+        init(media);
+    }
+
+    private void init(Media media) {
+        mType = TYPE_ALL;
+
+        if (media != null) {
+            if (media.isParsed()) {
+                mLength = media.getDuration();
+
+                for (int i = 0; i < media.getTrackCount(); ++i) {
+                    final Media.Track track = media.getTrack(i);
+                    if (track == null)
+                        continue;
+                    if (track.type == Media.Track.Type.Video) {
+                        final Media.VideoTrack videoTrack = (VideoTrack) track;
+                        mType = TYPE_VIDEO;
+                        mWidth = videoTrack.width;
+                        mHeight = videoTrack.height;
+                    } else if (mType == TYPE_ALL && track.type == Media.Track.Type.Audio){
+                        mType = TYPE_AUDIO;
                     }
                 }
-                Log.d(TAG, "Title " + mTitle);
-                Log.d(TAG, "Artist " + mArtist);
-                Log.d(TAG, "Genre " + mGenre);
-                Log.d(TAG, "Album " + mAlbum);
             }
+            updateMeta(media);
         }
 
-        /* No useful ES found */
         if (mType == TYPE_ALL) {
             int dotIndex = mLocation.lastIndexOf(".");
             if (dotIndex != -1) {
@@ -164,6 +131,13 @@ public class MediaWrapper implements Parcelable {
                 } else if (Extensions.AUDIO.contains(fileExt)) {
                     mType = TYPE_AUDIO;
                 }
+            }
+            if (mType == TYPE_ALL) {
+                /*
+                 * TODO: add something in libvlc to retrieve media type
+                 * In the meantime, assume media is a directory.
+                 */
+                mType = TYPE_DIR;
             }
         }
     }
@@ -221,14 +195,46 @@ public class MediaWrapper implements Parcelable {
         return mLocation;
     }
 
+    private static String getMetaId(Media media, int id, boolean trim) {
+        String meta = media.getMeta(id);
+        return meta != null ? trim ? meta.trim() : meta : null;
+    }
+
+    public void updateMeta(Media media) {
+        if (!media.isParsed())
+            return;
+        mTitle = getMetaId(media, Meta.Title, true);
+        mArtist = getMetaId(media, Meta.Artist, true);
+        mAlbum = getMetaId(media, Meta.Album, true);
+        mGenre = getMetaId(media, Meta.Genre, true);
+        mAlbumArtist = getMetaId(media, Meta.AlbumArtist, true);
+        mArtworkURL = getMetaId(media, Meta.ArtworkURL, false);
+        mNowPlaying = getMetaId(media, Meta.NowPlaying, false);
+        final String trackNumber = getMetaId(media, Meta.TrackNumber, false);
+        if (!TextUtils.isEmpty(trackNumber)) {
+            try {
+                mTrackNumber = Integer.parseInt(trackNumber);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        Log.d(TAG, "Title " + mTitle);
+        Log.d(TAG, "Artist " + mArtist);
+        Log.d(TAG, "Genre " + mGenre);
+        Log.d(TAG, "Album " + mAlbum);
+    }
+
+    /*
+     * XXX to remove
+     */
     public void updateMeta(LibVLC libVLC) {
-        mTitle = libVLC.getMeta(libvlc_meta_Title);
-        mArtist = libVLC.getMeta(libvlc_meta_Artist);
-        mGenre = libVLC.getMeta(libvlc_meta_Genre);
-        mAlbum = libVLC.getMeta(libvlc_meta_Album);
-        mAlbumArtist = libVLC.getMeta(libvlc_meta_AlbumArtist);
-        mNowPlaying = libVLC.getMeta(libvlc_meta_NowPlaying);
-        mArtworkURL = libVLC.getMeta(libvlc_meta_ArtworkURL);
+        mTitle = libVLC.getMeta(Meta.Title);
+        mArtist = libVLC.getMeta(Meta.Artist);
+        mGenre = libVLC.getMeta(Meta.Genre);
+        mAlbum = libVLC.getMeta(Meta.Album);
+        mAlbumArtist = libVLC.getMeta(Meta.AlbumArtist);
+        mNowPlaying = libVLC.getMeta(Meta.NowPlaying);
+        mArtworkURL = libVLC.getMeta(Meta.ArtworkURL);
+
     }
 
     public String getFileName() {

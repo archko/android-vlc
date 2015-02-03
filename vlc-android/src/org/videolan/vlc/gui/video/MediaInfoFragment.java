@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.TrackInfo;
+import org.videolan.libvlc.Media;
 import org.videolan.libvlc.util.Extensions;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaLibrary;
@@ -69,7 +69,7 @@ public class MediaInfoFragment extends ListFragment {
     private ImageButton mPlayButton;
     private TextView mDelete;
     private ImageView mSubtitles;
-    private TrackInfo[] mTracks;
+    private Media mMedia;
     private MediaInfoAdapter mAdapter;
     private final static int NEW_IMAGE = 0;
     private final static int NEW_TEXT = 1;
@@ -173,7 +173,10 @@ public class MediaInfoFragment extends ListFragment {
         }
         for (int i = 0; i<files.length ; ++i){
             filename = Uri.decode(files[i]);
-            extension = filename.substring(filename.lastIndexOf('.')+1);
+            int index = filename.lastIndexOf('.');
+            if (index <= 0)
+                continue;
+            extension = filename.substring(index);
             if (!Extensions.SUBTITLES.contains(extension))
                 continue;
             if (filename.startsWith(videoName)) {
@@ -191,7 +194,9 @@ public class MediaInfoFragment extends ListFragment {
             } catch (LibVlcException e) {
                 return;
             }
-            mTracks = mLibVlc.readTracksInfo(mItem.getLocation());
+            mMedia = new Media(mLibVlc, mItem.getLocation());
+            mMedia.parse();
+            mMedia.release();
             int videoHeight = mItem.getHeight();
             int videoWidth = mItem.getWidth();
             if (videoWidth == 0 || videoHeight == 0)
@@ -240,12 +245,14 @@ public class MediaInfoFragment extends ListFragment {
 
     private void updateText() {
         boolean hasSubs = false;
-        for (TrackInfo track : mTracks) {
-            if (track.Type != TrackInfo.TYPE_META) {
-                mAdapter.add(track);
-                if (track.Type == TrackInfo.TYPE_TEXT)
-                    hasSubs = true;
-            }
+        if (mMedia == null)
+            return;
+        final int trackCount = mMedia.getTrackCount();
+        for (int i = 0; i < trackCount; ++i) {
+            final Media.Track track = mMedia.getTrack(i);
+            if (track.type == Media.Track.Type.Text)
+                hasSubs = true;
+            mAdapter.add(track);
         }
         if (mAdapter.isEmpty()) {
             ((MainActivity) getActivity()).popSecondaryFragment();

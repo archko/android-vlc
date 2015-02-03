@@ -69,6 +69,7 @@
         <item name="ic_menu_history">@drawable/ic_menu_history</item>
         <item name="ic_menu_openmrl">@drawable/ic_menu_goto</item>
         <item name="ic_menu_preferences">@drawable/ic_menu_preferences</item>
+        <item name="ic_menu_cone">@drawable/ic_menu_cone</item>
         <item name="ic_move_media">@drawable/ic_move_media</item>
         <item name="gridview_progressbar">@drawable/gridview_progressbar_w</item>
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsLight</item>
@@ -136,6 +137,7 @@
         <item name="ic_menu_history">@drawable/ic_menu_history_w</item>
         <item name="ic_menu_openmrl">@drawable/ic_menu_goto_w</item>
         <item name="ic_menu_preferences">@drawable/ic_menu_preferences_w</item>
+        <item name="ic_menu_cone">@drawable/ic_menu_cone_w</item>
         <item name="ic_move_media">@drawable/ic_move_media_w</item>
         <item name="gridview_progressbar">@drawable/gridview_progressbar</item>
         <item name="advanced_options_style">@style/Theme.VLC.AdvancedOptionsBlack</item>
@@ -190,6 +192,14 @@
     </style>
 
     <!-- Advanced options menu styles -->
+
+    <style name="Theme.VLC.TransparentDialog" parent="@style/Theme.AppCompat.Dialog">
+      <item name="android:windowIsFloating">true</item>
+      <item name="android:backgroundDimEnabled">true</item>
+      <item name="android:windowIsTranslucent">true</item>
+      <item name="android:windowNoTitle">true</item>
+      <item name="android:windowBackground">@drawable/rounded_corners</item>
+    </style>
 
     <style name="Theme.VLC.AdvancedOptions" parent="@android:style/Theme.Dialog">
       <item name="android:windowIsFloating">true</item>

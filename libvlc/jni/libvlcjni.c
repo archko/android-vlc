@@ -48,6 +48,8 @@
 #define LOG_TAG "VLC/JNI/main"
 #include "log.h"
 
+struct fields fields;
+
 #define VLC_JNI_VERSION JNI_VERSION_1_2
 
 #define THREAD_NAME "libvlcjni"
@@ -211,19 +213,102 @@ end:
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
+    JNIEnv* env = NULL;
     // Keep a reference on the Java VM.
     myVm = vm;
 
+    if ((*vm)->GetEnv(vm, (void**) &env, VLC_JNI_VERSION) != JNI_OK)
+        return -1;
     pthread_mutex_init(&vout_android_lock, NULL);
     pthread_cond_init(&vout_android_surf_attached, NULL);
+
+#define GET_CLASS(clazz, str) do { \
+    (clazz) = (*env)->FindClass(env, (str)); \
+    if (!(clazz)) { \
+        LOGE("FindClass(%s) failed", (str)); \
+        return -1; \
+    } \
+    (clazz) = (jclass) (*env)->NewGlobalRef(env, (clazz)); \
+    if (!(clazz)) { \
+        LOGE("NewGlobalRef(%s) failed", (str)); \
+        return -1; \
+    } \
+} while (0)
+
+#define GET_ID(get, id, clazz, str, args) do { \
+    (id) = (*env)->get(env, (clazz), (str), (args)); \
+    if (!(id)) { \
+        LOGE(#get"(%s) failed", (str)); \
+        return -1; \
+    } \
+} while (0)
+
+    GET_CLASS(fields.IllegalStateException.clazz,
+              "java/lang/IllegalStateException");
+    GET_CLASS(fields.IllegalArgumentException.clazz,
+              "java/lang/IllegalArgumentException");
+    GET_CLASS(fields.String.clazz,
+              "java/lang/String");
+    GET_CLASS(fields.VLCObject.clazz,
+              "org/videolan/libvlc/VLCObject");
+    GET_CLASS(fields.Media.clazz,
+              "org/videolan/libvlc/Media");
+    GET_CLASS(fields.Media.Track.clazz,
+              "org/videolan/libvlc/Media$Track");
+
+    GET_ID(GetFieldID,
+           fields.VLCObject.mInstanceID,
+           fields.VLCObject.clazz,
+           "mInstance", "J");
+
+    GET_ID(GetMethodID,
+           fields.VLCObject.dispatchEventFromNativeID,
+           fields.VLCObject.clazz,
+           "dispatchEventFromNative", "(IJJ)V");
+
+    GET_ID(GetStaticMethodID,
+           fields.Media.createAudioTrackFromNativeID,
+           fields.Media.clazz,
+           "createAudioTrackFromNative",
+           "(Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;II)"
+           "Lorg/videolan/libvlc/Media$Track;");
+
+    GET_ID(GetStaticMethodID,
+           fields.Media.createVideoTrackFromNativeID,
+           fields.Media.clazz,
+           "createVideoTrackFromNative",
+           "(Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;IIIIII)"
+           "Lorg/videolan/libvlc/Media$Track;");
+
+    GET_ID(GetStaticMethodID,
+           fields.Media.createSubtitleTrackFromNativeID,
+           fields.Media.clazz,
+           "createSubtitleTrackFromNative",
+           "(Ljava/lang/String;Ljava/lang/String;IIIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)"
+           "Lorg/videolan/libvlc/Media$Track;");
+
+#undef GET_CLASS
+#undef GET_ID
 
     LOGD("JNI interface loaded.");
     return VLC_JNI_VERSION;
 }
 
-void JNI_OnUnload(JavaVM* vm, void* reserved) {
+void JNI_OnUnload(JavaVM* vm, void* reserved)
+{
+    JNIEnv* env = NULL;
+
     pthread_mutex_destroy(&vout_android_lock);
     pthread_cond_destroy(&vout_android_surf_attached);
+
+    if ((*vm)->GetEnv(vm, (void**) &env, VLC_JNI_VERSION) != JNI_OK)
+        return;
+
+    (*env)->DeleteGlobalRef(env, fields.IllegalStateException.clazz);
+    (*env)->DeleteGlobalRef(env, fields.IllegalArgumentException.clazz);
+    (*env)->DeleteGlobalRef(env, fields.String.clazz);
+    (*env)->DeleteGlobalRef(env, fields.VLCObject.clazz);
+    (*env)->DeleteGlobalRef(env, fields.Media.clazz);
 }
 
 int jni_attach_thread(JNIEnv **env, const char *thread_name)
@@ -624,6 +709,7 @@ jstring Java_org_videolan_libvlc_LibVLC_getMeta(JNIEnv *env, jobject thiz, int m
         string = (*env)->NewStringUTF(env, psz_meta);
         free(psz_meta);
     }
+    libvlc_media_release(p_mp);
     return string;
 }
 
@@ -699,10 +785,17 @@ static int expand_media_internal(JNIEnv *env, libvlc_instance_t* p_instance, job
 }
 
 jint Java_org_videolan_libvlc_LibVLC_expandMedia(JNIEnv *env, jobject thiz, jobject children) {
-    return (jint)expand_media_internal(env,
+    jint ret;
+    libvlc_media_t *p_md = libvlc_media_player_get_media(getMediaPlayer(env, thiz));
+
+    if (!p_md)
+        return -1;
+    ret = (jint)expand_media_internal(env,
         getLibVlcInstance(env, thiz),
         children,
-        (libvlc_media_t*)libvlc_media_player_get_media(getMediaPlayer(env, thiz)));
+        p_md);
+    libvlc_media_release(p_md);
+    return ret;
 }
 
 // TODO: remove static variables

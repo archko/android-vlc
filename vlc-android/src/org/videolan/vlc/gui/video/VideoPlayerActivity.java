@@ -43,6 +43,7 @@ import org.videolan.libvlc.IVideoPlayer;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaWrapperListPlayer;
@@ -262,6 +263,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private boolean mDisabledHardwareAcceleration = false;
     private int mPreviousHardwareAccelerationMode;
 
+    /**
+     * Flag to indicate whether the media should be paused once loaded
+     * (e.g. lock screen, or to restore the pause state)
+     */
+    private boolean mPauseOnLoaded = false;
+
     // Tips
     private View mOverlayTips;
     private static final String PREF_TIPS_SHOWN = "video_player_tips_shown";
@@ -376,7 +383,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             Log.d(TAG, "LibVLC initialisation failed");
             return;
         }
-        mMediaListPlayer = new MediaWrapperListPlayer(mLibVLC);
+        mMediaListPlayer = MediaWrapperListPlayer.getInstance(mLibVLC);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.player_surface);
         mSurfaceHolder = mSurfaceView.getHolder();
@@ -631,6 +638,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     protected void onResume() {
         super.onResume();
         mSwitchingView = false;
+        mPauseOnLoaded = false;
         AudioServiceController.getInstance().bindAudioService(this,
                 new AudioServiceController.AudioServiceConnectionListener() {
                     @Override
@@ -669,23 +677,18 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void startPlayback() {
-        loadMedia();
-
         /*
-         * if the activity has been paused by pressing the power button,
+         * If the activity has been paused by pressing the power button, then
          * pressing it again will show the lock screen.
-         * But onResume will also be called, even if vlc-android is still in the background.
-         * To workaround that, pause playback if the lockscreen is displayed
+         * But onResume will also be called, even if vlc-android is still in
+         * the background.
+         * To workaround this, pause playback if the lockscreen is displayed.
          */
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mLibVLC != null && mLibVLC.isPlaying()) {
-                    KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
-                    if (km.inKeyguardRestrictedInputMode())
-                        mLibVLC.pause();
-                }
-            }}, 500);
+        KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
+        if(km.inKeyguardRestrictedInputMode())
+            mPauseOnLoaded = true;
+
+        loadMedia();
 
         // Add any selected subtitle file from the file picker
         if(mSubtitleSelectedFiles.size() > 0) {
@@ -719,28 +722,27 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         start(context, location, null, -1, false, false);
     }
 
-    public static void start(Context context, String location, Boolean fromStart) {
-        start(context, location, null, -1, false, fromStart);
+    public static void start(Context context, String location, boolean fromStart) {
+        start(context, location, null, -1, fromStart, false);
     }
 
-    public static void start(Context context, String location, String title, Boolean dontParse) {
-        start(context, location, title, -1, dontParse, false);
+    public static void start(Context context, String location, String title) {
+        start(context, location, title, -1, false, false);
     }
 
-    public static void start(Context context, String location, String title, int position, Boolean dontParse) {
-        start(context, location, title, position, dontParse, false);
+    public static void start(Context context, String location, String title, int position) {
+        start(context, location, title, position, false, false);
     }
 
-    public static void start(Context context, String location, String title, int position, Boolean dontParse, Boolean fromStart) {
+    public static void start(Context context, String location, String title, int position, boolean fromStart, boolean newTask) {
         Intent intent = new Intent(context, VideoPlayerActivity.class);
         intent.setAction(VideoPlayerActivity.PLAY_FROM_VIDEOGRID);
         intent.putExtra("itemLocation", location);
         intent.putExtra("itemTitle", title);
-        intent.putExtra("dontParse", dontParse);
         intent.putExtra("fromStart", fromStart);
         intent.putExtra("itemPosition", position);
 
-        if (dontParse)
+        if (newTask)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 
         context.startActivity(intent);
@@ -934,37 +936,50 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mHandler.sendMessage(msg);
     }
 
+    private static class ConfigureSurfaceHolder {
+        private final Surface surface;
+        private boolean configured;
+
+        private ConfigureSurfaceHolder(Surface surface) {
+            this.surface = surface;
+        }
+    }
+
     @Override
-    public int configureSurface(final Surface surface, final int width, final int height, final int hal) {
+    public int configureSurface(Surface surface, final int width, final int height, final int hal) {
         if (LibVlcUtil.isICSOrLater() || surface == null)
             return -1;
         if (width * height == 0)
             return 0;
         Log.d(TAG, "configureSurface: " + width +"x"+height);
 
+        final ConfigureSurfaceHolder holder = new ConfigureSurfaceHolder(surface);
+
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                if (mSurface == surface && mSurfaceHolder != null) {
+                if (mSurface == holder.surface && mSurfaceHolder != null) {
                     if (hal != 0)
                         mSurfaceHolder.setFormat(hal);
                     mSurfaceHolder.setFixedSize(width, height);
-                } else if (mSubtitleSurface == surface && mSubtitlesSurfaceHolder != null) {
+                } else if (mSubtitleSurface == holder.surface && mSubtitlesSurfaceHolder != null) {
                     if (hal != 0)
                         mSubtitlesSurfaceHolder.setFormat(hal);
                     mSubtitlesSurfaceHolder.setFixedSize(width, height);
                 }
 
-                synchronized (surface) {
-                    surface.notifyAll();
+                synchronized (holder) {
+                    holder.configured = true;
+                    holder.notifyAll();
                 }
             }
         });
 
         try {
-            synchronized (surface) {
-                surface.wait();
+            synchronized (holder) {
+                while (!holder.configured)
+                    holder.wait();
             }
         } catch (InterruptedException e) {
             return 0;
@@ -1153,6 +1168,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                     break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
+                    // Handle pause flag
+                    if(activity.mPauseOnLoaded) {
+                        activity.mPauseOnLoaded = false;
+                        activity.mLibVLC.pause();
+                        activity.setOverlayProgress();
+                    }
                     activity.stopLoadingAnimation();
                     activity.showOverlay();
                     /** FIXME: update the track list when it changes during the
@@ -1355,7 +1376,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             sw = mPresentation.getWindow().getDecorView().getWidth();
             sh = mPresentation.getWindow().getDecorView().getHeight();
         }
-        if (mLibVLC != null)
+        if (mLibVLC != null && !mLibVLC.useCompatSurface())
             mLibVLC.setWindowSize(sw, sh);
 
         double dw = sw, dh = sh;
@@ -2232,7 +2253,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private void loadMedia() {
         mLocation = null;
         String title = getResources().getString(R.string.title);
-        boolean dontParse = false;
         boolean fromStart = false;
         Uri data;
         String itemTitle = null;
@@ -2329,7 +2349,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 && getIntent().getExtras() != null) {
             mLocation = getIntent().getExtras().getString("itemLocation");
             itemTitle = getIntent().getExtras().getString("itemTitle");
-            dontParse = getIntent().getExtras().getBoolean("dontParse");
             fromStart = getIntent().getExtras().getBoolean("fromStart");
             itemPosition = getIntent().getExtras().getInt("itemPosition", -1);
         }
@@ -2355,32 +2374,22 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
 
         /* Start / resume playback */
-        if(dontParse && itemPosition >= 0) {
-            // Provided externally from AudioService
-            Log.d(TAG, "Continuing playback from AudioService at index " + itemPosition);
-            savedIndexPosition = itemPosition;
-            if(!mLibVLC.isPlaying()) {
-                // AudioService-transitioned playback for item after sleep and resume
-                mMediaListPlayer.playIndex(savedIndexPosition);
-                dontParse = false;
-            }
-            else {
-                stopLoadingAnimation();
-                showOverlay();
-            }
-            updateNavStatus();
-        } else if (savedIndexPosition > -1) {
+        if (savedIndexPosition > -1) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
             mMediaListPlayer.playIndex(savedIndexPosition);
-        } else if (mLocation != null && mLocation.length() > 0 && !dontParse) {
+        } else if (mLocation != null && mLocation.length() > 0) {
             AudioServiceController.getInstance().stop(); // Stop the previous playback.
-            mMediaListPlayer.getMediaList().add(new MediaWrapper(mLibVLC, mLocation));
+            mMediaListPlayer.getMediaList().clear();
+            final Media media = new Media(mLibVLC, mLocation);
+            media.parse(); // FIXME: parse should'nt be done asynchronously
+            media.release();
+            mMediaListPlayer.getMediaList().add(new MediaWrapper(media));
             savedIndexPosition = mMediaListPlayer.getMediaList().size() - 1;
             mMediaListPlayer.playIndex(savedIndexPosition);
         }
         mCanSeek = false;
 
-        if (mLocation != null && mLocation.length() > 0 && !dontParse) {
+        if (mLocation != null && mLocation.length() > 0) {
             // restore last position
             MediaWrapper media = MediaDatabase.getInstance().getMedia(mLocation);
             if(media != null) {
@@ -2410,11 +2419,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             boolean wasPaused = mSettings.getBoolean(PreferencesActivity.VIDEO_PAUSED, false);
             if(wasPaused) {
                 Log.d(TAG, "Video was previously paused, resuming in paused mode");
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLibVLC.pause();
-                    }}, 500);
+                mPauseOnLoaded = true;
             }
 
             // Get possible subtitles
