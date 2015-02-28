@@ -61,7 +61,7 @@ public class PickTimeFragment extends DialogFragment implements DialogInterface.
             Bundle savedInstanceState) {
         try {
             mLibVLC = LibVLC.getInstance();
-        } catch (LibVlcException e) {
+        } catch (Exception e) {
             getDialog().dismiss();
         }
         mAction = getArguments().getInt(ACTION);

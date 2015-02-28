@@ -21,6 +21,7 @@
 package org.videolan.vlc.util;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +46,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.text.TextUtils.TruncateAt;
 import android.util.DisplayMetrics;
@@ -77,9 +79,11 @@ public class Util {
     }
 
     public static String readAsset(String assetName, String defaultS) {
+        InputStream is = null;
+        BufferedReader r = null;
         try {
-            InputStream is = VLCApplication.getAppResources().getAssets().open(assetName);
-            BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF8"));
+            is = VLCApplication.getAppResources().getAssets().open(assetName);
+            r = new BufferedReader(new InputStreamReader(is, "UTF8"));
             StringBuilder sb = new StringBuilder();
             String line = r.readLine();
             if(line != null) {
@@ -94,6 +98,9 @@ public class Util {
             return sb.toString();
         } catch (IOException e) {
             return defaultS;
+        } finally {
+            close(is);
+            close(r);
         }
     }
 
@@ -129,6 +136,15 @@ public class Util {
         return resId;
     }
 
+    /**
+     * Get a color id from an attribute id.
+     * @param context
+     * @param attrId
+     * @return the color id
+     */
+    public static int getColorFromAttribute(Context context, int attrId) {
+        return VLCApplication.getAppResources().getColor(getResourceFromAttribute(context, attrId));
+    }
     /**
      * Set the alignment mode of the specified TextView with the desired align
      * mode from preferences.
@@ -180,6 +196,14 @@ public class Util {
         VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
+
+    public static void openMedia(Context context, final MediaWrapper media){
+        String mrl = Uri.decode(media.getLocation());
+        if (media.getType() == MediaWrapper.TYPE_VIDEO)
+            VideoPlayerActivity.start(context, mrl, media.getTitle());
+        else if (media.getType() == MediaWrapper.TYPE_AUDIO)
+            openStream(context, mrl);
+    }
 
     public static void openStream(Context context, final String uri){
         VideoPlayerActivity.start(context, uri);
@@ -245,6 +269,7 @@ public class Util {
             editor.commit();
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static boolean deleteFile (Context context, String path){
         boolean deleted = false;
         if (path.startsWith("file://"))
@@ -263,5 +288,18 @@ public class Util {
                 deleted = file.delete();
         }
         return deleted;
+    }
+
+    public static boolean close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        } else {
+                return false;
+        }
     }
 }

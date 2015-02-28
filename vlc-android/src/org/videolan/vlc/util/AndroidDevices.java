@@ -33,7 +33,11 @@ import java.util.StringTokenizer;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.VLCApplication;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Environment;
@@ -130,12 +134,7 @@ public class AndroidDevices {
         catch (FileNotFoundException e) {}
         catch (IOException e) {}
         finally {
-            if (bufReader != null) {
-                try {
-                    bufReader.close();
-                }
-                catch (IOException e) {}
-            }
+            Util.close(bufReader);
         }
         return list;
     }
@@ -147,6 +146,7 @@ public class AndroidDevices {
         return list.toArray(new String[list.size()]);
     }
 
+    @TargetApi(VERSION_CODES.HONEYCOMB_MR1)
     public static float getCenteredAxis(MotionEvent event,
             InputDevice device, int axis) {
         final InputDevice.MotionRange range =
@@ -166,5 +166,19 @@ public class AndroidDevices {
             }
         }
         return 0;
+    }
+
+    public static boolean hasLANConnection(){
+        boolean networkEnabled = false;
+        ConnectivityManager connectivity = (ConnectivityManager)(VLCApplication.getAppContext().getSystemService(Context.CONNECTIVITY_SERVICE));
+        if (connectivity != null) {
+            NetworkInfo networkInfo = connectivity.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected() &&
+                    (networkInfo.getType() != ConnectivityManager.TYPE_MOBILE)) {
+                networkEnabled = true;
+            }
+        }
+        return networkEnabled;
+
     }
 }

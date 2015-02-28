@@ -19,19 +19,7 @@
  *****************************************************************************/
 package org.videolan.vlc.gui.audio;
 
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
-import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.interfaces.OnEqualizerBarChangeListener;
-import org.videolan.vlc.util.Preferences;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.VLCInstance;
-import org.videolan.vlc.widget.EqualizerBar;
-
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -51,6 +39,14 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.ToggleButton;
 
+import org.videolan.libvlc.LibVLC;
+import org.videolan.vlc.R;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.interfaces.OnEqualizerBarChangeListener;
+import org.videolan.vlc.util.Preferences;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.widget.EqualizerBar;
+
 public class EqualizerFragment extends Fragment {
 
     public final static String TAG = "VLC/EqualizerFragment";
@@ -66,8 +62,7 @@ public class EqualizerFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.equalizer));
 
         super.onCreateView(inflater, container, savedInstanceState);
@@ -85,20 +80,6 @@ public class EqualizerFragment extends Fragment {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View v = inflater.inflate(R.layout.equalizer, null);
-        ViewGroup rootView = (ViewGroup) getView();
-        rootView.removeAllViews();
-        rootView.addView(v);
-        saveViewChildren(v);
-
-        fillViews();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         fillViews();
@@ -108,18 +89,13 @@ public class EqualizerFragment extends Fragment {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(VLCApplication.getAppContext());
         float[] bands = null;
         String[] presets = null;
-        try {
-            libVlc = VLCInstance.getLibVlcInstance();
-            bands = libVlc.getBands();
-            presets = libVlc.getPresets();
-            if (equalizer == null)
-                equalizer = Preferences.getFloatArray(preferences, "equalizer_values");
-            if (equalizer == null)
-                equalizer = new float[bands.length + 1];
-        } catch (LibVlcException e) {
-            e.printStackTrace();
-            return;
-        }
+        libVlc = LibVLC.getInstance();
+        bands = libVlc.getBands();
+        presets = libVlc.getPresets();
+        if (equalizer == null)
+            equalizer = Preferences.getFloatArray(preferences, "equalizer_values");
+        if (equalizer == null)
+            equalizer = new float[bands.length + 1];
 
         // on/off
         button.setChecked(libVlc.getEqualizer() != null);

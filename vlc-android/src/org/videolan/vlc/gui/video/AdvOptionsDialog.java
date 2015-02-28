@@ -21,6 +21,7 @@
  */
 package org.videolan.vlc.gui.video;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -35,11 +36,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.videolan.libvlc.LibVLC;
+import org.videolan.vlc.BuildConfig;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.gui.dialogs.AudioDelayDialog;
@@ -47,12 +48,15 @@ import org.videolan.vlc.gui.dialogs.JumpToTimeDialog;
 import org.videolan.vlc.gui.dialogs.PickTimeFragment;
 import org.videolan.vlc.gui.dialogs.SubsDelayDialog;
 import org.videolan.vlc.gui.dialogs.TimePickerDialogFragment;
+import org.videolan.vlc.interfaces.IDelayController;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Strings;
 
 import java.util.Calendar;
 
-import static org.videolan.vlc.gui.dialogs.PickTimeFragment.*;
+import static org.videolan.vlc.gui.dialogs.PickTimeFragment.ACTION_AUDIO_DELAY;
+import static org.videolan.vlc.gui.dialogs.PickTimeFragment.ACTION_JUMP_TO_TIME;
+import static org.videolan.vlc.gui.dialogs.PickTimeFragment.ACTION_SPU_DELAY;
 
 public class AdvOptionsDialog extends DialogFragment implements View.OnClickListener {
 
@@ -67,21 +71,19 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
     private SeekBar mSeek;
     private Button mReset;
 
-    private ImageView mSleepIcon;
     private TextView mSleepTitle;
     private TextView mSleepTime;
     private TextView mSleepCancel;
 
-    private ImageView mJumpIcon;
     private TextView mJumpTitle;
 
     private TextView mAudioDelay;
     private TextView mSpuDelay;
 
-    private LibVLC mLibVLC;
     private static AdvOptionsDialog sInstance;
     private int mTextColor;
 
+    private IDelayController mDelayController;
     public AdvOptionsDialog() {}
 
     @Override
@@ -91,6 +93,12 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         setStyle(STYLE_NO_FRAME, R.style.Theme_VLC_TransparentDialog);
         if (VLCApplication.sPlayerSleepTime != null && VLCApplication.sPlayerSleepTime.before(Calendar.getInstance()))
             VLCApplication.sPlayerSleepTime = null;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mDelayController = (IDelayController) activity;
     }
 
     @Override
@@ -105,13 +113,11 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         mSeek.setOnSeekBarChangeListener(mSeekBarListener);
         mReset.setOnClickListener(mResetListener);
 
-        mSleepIcon = (ImageView) root.findViewById(R.id.sleep_timer_icon);
         mSleepTitle = (TextView) root.findViewById(R.id.sleep_timer_title);
         mSleepTime = (TextView) root.findViewById(R.id.sleep_timer_value);
         mSleepCancel = (TextView) root.findViewById(R.id.sleep_timer_cancel);
 
         if (AndroidDevices.hasTsp()) {
-            mSleepIcon.setOnClickListener(this);
             mSleepTitle.setOnClickListener(this);
             mSleepTime.setOnClickListener(this);
             mSleepCancel.setOnClickListener(this);
@@ -119,24 +125,26 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
             root.findViewById(R.id.sleep_timer_container).setVisibility(View.GONE);
         }
 
-        mJumpIcon = (ImageView) root.findViewById(R.id.jump_icon);
         mJumpTitle = (TextView) root.findViewById(R.id.jump_title);
 
         mAudioDelay = (TextView) root.findViewById(R.id.audio_delay);
         mSpuDelay = (TextView) root.findViewById(R.id.spu_delay);
 
-        mJumpIcon.setOnClickListener(this);
         mJumpTitle.setOnClickListener(this);
 
-        mAudioDelay.setOnClickListener(this);
         mSpuDelay.setOnClickListener(this);
 
         mReset.setOnFocusChangeListener(mFocusListener);
         mSleepTime.setOnFocusChangeListener(mFocusListener);
         mSleepCancel.setOnFocusChangeListener(mFocusListener);
         mJumpTitle.setOnFocusChangeListener(mFocusListener);
-        mAudioDelay.setOnFocusChangeListener(mFocusListener);
         mSpuDelay.setOnFocusChangeListener(mFocusListener);
+        if (BuildConfig.DEBUG) { //Hide audio delay option for now, it is not usable yet.
+            mAudioDelay.setOnClickListener(this);
+            mAudioDelay.setOnFocusChangeListener(mFocusListener);
+        } else {
+            mAudioDelay.setVisibility(View.GONE);
+        }
 
         getDialog().setCancelable(true);
         mHandler.sendEmptyMessage(TOGGLE_CANCEL);
@@ -166,21 +174,38 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
     };
 
     private void showTimePickerFragment(int action) {
-        DialogFragment newFragment;
-        switch (action){
-            case PickTimeFragment.ACTION_AUDIO_DELAY:
-                newFragment = new AudioDelayDialog();
-                break;
-            case PickTimeFragment.ACTION_SPU_DELAY:
-                newFragment = new SubsDelayDialog();
-                break;
-            case PickTimeFragment.ACTION_JUMP_TO_TIME:
-                newFragment = new JumpToTimeDialog();
-                break;
-            default:
-                return;
+        DialogFragment newFragment = null;
+        if (AndroidDevices.hasTsp()) {
+            switch (action){
+                case PickTimeFragment.ACTION_AUDIO_DELAY:
+                    mDelayController.showAudioDelaySetting();
+                    break;
+                case PickTimeFragment.ACTION_SPU_DELAY:
+                    mDelayController.showSubsDelaySetting();
+                    break;
+                case PickTimeFragment.ACTION_JUMP_TO_TIME:
+                    newFragment = new JumpToTimeDialog();
+                    break;
+                default:
+                    return;
+            }
+        } else {
+            switch (action){
+                case PickTimeFragment.ACTION_AUDIO_DELAY:
+                    newFragment = new AudioDelayDialog();
+                    break;
+                case PickTimeFragment.ACTION_SPU_DELAY:
+                    newFragment = new SubsDelayDialog();
+                    break;
+                case PickTimeFragment.ACTION_JUMP_TO_TIME:
+                    newFragment = new JumpToTimeDialog();
+                    break;
+                default:
+                    return;
+            }
         }
-        newFragment.show(getActivity().getSupportFragmentManager(), "time");
+        if (newFragment != null)
+            newFragment.show(getActivity().getSupportFragmentManager(), "time");
         dismiss();
     }
 
@@ -269,11 +294,9 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
             case R.id.spu_delay:
                 showTimePickerFragment(ACTION_SPU_DELAY);
                 break;
-            case R.id.jump_icon:
             case R.id.jump_title:
                 showTimePickerFragment(ACTION_JUMP_TO_TIME);
                 break;
-            case R.id.sleep_timer_icon:
             case R.id.sleep_timer_title:
             case R.id.sleep_timer_value:
                 showTimePicker(TimePickerDialogFragment.ACTION_SLEEP);

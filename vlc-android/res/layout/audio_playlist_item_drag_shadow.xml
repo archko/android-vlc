@@ -11,7 +11,6 @@
         android:id="@+id/layout_item"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:background="?attr/playlist_item_drag_shadow"
         android:orientation="horizontal"
         android:paddingLeft="10dp" >
@@ -43,7 +42,7 @@
                 android:layout_marginRight="5dip"
                 android:text="@string/artist"
                 android:textColor="?attr/list_subtitle"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <View

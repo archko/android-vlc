@@ -31,9 +31,8 @@ import android.view.Surface;
 
 public class LibVLC {
     private static final String TAG = "VLC/LibVLC";
-    public static final int AOUT_AUDIOTRACK_JAVA = 0;
-    public static final int AOUT_AUDIOTRACK = 1;
-    public static final int AOUT_OPENSLES = 2;
+    public static final int AOUT_AUDIOTRACK = 0;
+    public static final int AOUT_OPENSLES = 1;
 
     public static final int VOUT_ANDROID_SURFACE = 0;
     public static final int VOUT_OPEGLES2 = 1;
@@ -69,12 +68,6 @@ public class LibVLC {
     /** libvlc_media_player pointer */
     private long mInternalMediaPlayerInstance = 0; // Read-only, reserved for JNI
 
-    /** Buffer for VLC messages */
-    private StringBuffer mDebugLogBuffer;
-    private boolean mIsBufferingLog = false;
-
-    private AudioOutput mAout;
-
     /** Keep screen bright */
     //private WakeLock mWakeLock;
 
@@ -84,7 +77,7 @@ public class LibVLC {
     private String codecList = DEFAULT_CODEC_LIST;
     private String devCodecList = null;
     private String subtitlesEncoding = "";
-    private int aout = LibVlcUtil.isGingerbreadOrLater() ? AOUT_OPENSLES : AOUT_AUDIOTRACK_JAVA;
+    private int aout = AOUT_AUDIOTRACK;
     private int vout = VOUT_ANDROID_SURFACE;
     private boolean timeStretching = false;
     private int deblocking = -1;
@@ -99,7 +92,7 @@ public class LibVLC {
     private String mCachePath = "";
 
     /** Native crash handler */
-    private OnNativeCrashListener mOnNativeCrashListener;
+    private static OnNativeCrashListener sOnNativeCrashListener;
 
     /** Check in libVLC already initialized otherwise crash */
     private boolean mIsInitialized = false;
@@ -166,17 +159,15 @@ public class LibVLC {
      * thumbnail and get information e.g. on the MediaLibraryActivity
      *
      * @return libVLC instance
-     * @throws LibVlcException
      */
-    public static LibVLC getInstance() throws LibVlcException {
+    public static LibVLC getInstance() {
         synchronized (LibVLC.class) {
             if (sInstance == null) {
                 /* First call */
                 sInstance = new LibVLC();
             }
+            return sInstance;
         }
-
-        return sInstance;
     }
 
     /**
@@ -196,7 +187,6 @@ public class LibVLC {
      * It is private because this class is a singleton.
      */
     private LibVLC() {
-        mAout = new AudioOutput();
     }
 
     /**
@@ -363,10 +353,10 @@ public class LibVLC {
     }
 
     public void setAout(int aout) {
-        if (aout < 0)
-            this.aout = LibVlcUtil.isICSOrLater() ? AOUT_OPENSLES : AOUT_AUDIOTRACK_JAVA;
+        if (aout == AOUT_OPENSLES && LibVlcUtil.isICSOrLater())
+            this.aout = AOUT_OPENSLES;
         else
-            this.aout = aout;
+            this.aout = AOUT_AUDIOTRACK;
     }
 
     public int getVout() {
@@ -492,7 +482,6 @@ public class LibVLC {
      */
     public void init(Context context) throws LibVlcException {
         Log.v(TAG, "Initializing LibVLC");
-        mDebugLogBuffer = new StringBuffer();
         if (!mIsInitialized) {
             if(!LibVlcUtil.hasCompatibleCPU(context)) {
                 Log.e(TAG, LibVlcUtil.getErrorMsg());
@@ -516,41 +505,6 @@ public class LibVLC {
         nativeDestroy();
         detachEventHandler();
         mIsInitialized = false;
-    }
-
-    /**
-     * Open the Java audio output.
-     * This function is called by the native code
-     */
-    public void initAout(int sampleRateInHz, int channels, int samples) {
-        Log.d(TAG, "Opening the java audio output");
-        mAout.init(sampleRateInHz, channels, samples);
-    }
-
-    /**
-     * Play an audio buffer taken from the native code
-     * This function is called by the native code
-     */
-    public void playAudio(byte[] audioData, int bufferSize) {
-        mAout.playBuffer(audioData, bufferSize);
-    }
-
-    /**
-     * Pause the Java audio output
-     * This function is called by the native code
-     */
-    public void pauseAout() {
-        Log.d(TAG, "Pausing the java audio output");
-        mAout.pause();
-    }
-
-    /**
-     * Close the Java audio output
-     * This function is called by the native code
-     */
-    public void closeAout() {
-        Log.d(TAG, "Closing the java audio output");
-        mAout.release();
     }
 
     /**
@@ -587,23 +541,6 @@ public class LibVLC {
      * @note mLibVlcInstance should be 0 after a call to destroy()
      */
     private native void nativeDestroy();
-
-    /**
-     * Start buffering to the mDebugLogBuffer.
-     */
-    public native void startDebugBuffer();
-    public native void stopDebugBuffer();
-    public String getBufferContent() {
-        return mDebugLogBuffer.toString();
-    }
-
-    public void clearBuffer() {
-        mDebugLogBuffer.setLength(0);
-    }
-
-    public boolean isDebugBuffering() {
-        return mIsBufferingLog;
-    }
 
     /**
      * Play an mrl
@@ -735,11 +672,11 @@ public class LibVLC {
 
     public native int setAudioDelay(long delay);
 
-    public native int getAudioDelay();
+    public native long getAudioDelay();
 
     public native int setSpuDelay(long delay);
 
-    public native int getSpuDelay();
+    public native long getSpuDelay();
 
     public static native String nativeToURI(String path);
     
@@ -777,13 +714,13 @@ public class LibVLC {
         public void onNativeCrash();
     }
 
-    public void setOnNativeCrashListener(OnNativeCrashListener l) {
-        mOnNativeCrashListener = l;
+    public static void setOnNativeCrashListener(OnNativeCrashListener l) {
+        sOnNativeCrashListener = l;
     }
 
-    private void onNativeCrash() {
-        if (mOnNativeCrashListener != null)
-            mOnNativeCrashListener.onNativeCrash();
+    private static void onNativeCrash() {
+        if (sOnNativeCrashListener != null)
+            sOnNativeCrashListener.onNativeCrash();
     }
 
     public String getCachePath() {

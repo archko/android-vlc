@@ -20,46 +20,6 @@
 
 package org.videolan.vlc.gui.video;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.StreamCorruptedException;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
-
-import org.videolan.libvlc.EventHandler;
-import org.videolan.libvlc.IVideoPlayer;
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
-import org.videolan.vlc.MediaWrapper;
-import org.videolan.vlc.MediaDatabase;
-import org.videolan.vlc.MediaWrapperListPlayer;
-import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.CommonDialogs;
-import org.videolan.vlc.gui.CommonDialogs.MenuType;
-import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.gui.PreferencesActivity;
-import org.videolan.vlc.util.AndroidDevices;
-import org.videolan.vlc.util.Strings;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.VLCInstance;
-import org.videolan.vlc.util.WeakHandler;
-
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
@@ -132,9 +92,49 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlayer, GestureDetector.OnDoubleTapListener {
+import org.videolan.libvlc.EventHandler;
+import org.videolan.libvlc.IVideoPlayer;
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.LibVlcException;
+import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.Media;
+import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.MediaWrapperListPlayer;
+import org.videolan.vlc.R;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.CommonDialogs;
+import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.gui.PreferencesActivity;
+import org.videolan.vlc.interfaces.IDelayController;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.VLCInstance;
+import org.videolan.vlc.util.WeakHandler;
 
-	public final static String TAG = "VLC/VideoPlayerActivity";
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.StreamCorruptedException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
+
+public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlayer, GestureDetector.OnDoubleTapListener, IDelayController {
+
+    public final static String TAG = "VLC/VideoPlayerActivity";
 
     // Internal intent identifier to distinguish between internal launch and
     // external intent.
@@ -175,11 +175,13 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private static final int FADE_OUT = 1;
     private static final int SHOW_PROGRESS = 2;
     private static final int SURFACE_LAYOUT = 3;
+    private static final int FADE_OUT_INFO = 4;
     private static final int AUDIO_SERVICE_CONNECTION_SUCCESS = 5;
     private static final int AUDIO_SERVICE_CONNECTION_FAILED = 6;
-    private static final int FADE_OUT_INFO = 4;
+    private static final int END_DELAY_STATE = 7;
     private boolean mDragging;
     private boolean mShowing;
+    private DelayState mDelay = DelayState.OFF;
     private int mUiVisibility = -1;
     private SeekBar mSeekbar;
     private TextView mTitle;
@@ -190,9 +192,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private TextView mInfo;
     private ImageView mLoading;
     private TextView mLoadingText;
+    private ImageView mTipsBackground;
     private ImageView mPlayPause;
     private ImageView mTracks;
     private ImageView mAdvOptions;
+    private ImageView mDelayPlus;
+    private ImageView mDelayMinus;
     private boolean mEnableBrightnessGesture;
     private boolean mEnableCloneMode;
     private boolean mDisplayRemainingTime = false;
@@ -239,7 +244,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private static final int TOUCH_SEEK = 3;
     private int mTouchAction;
     private int mSurfaceYDisplayRange;
-    private float mTouchY, mTouchX;
+    private float mInitTouchY, mTouchY, mTouchX;
 
     //stick event
     private static final int JOYSTICK_INPUT_DELAY = 300;
@@ -377,6 +382,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSize = (ImageView) findViewById(R.id.player_overlay_size);
         mSize.setOnClickListener(mSizeListener);
 
+        mDelayPlus = (ImageView) findViewById(R.id.player_delay_plus);
+        mDelayMinus = (ImageView) findViewById(R.id.player_delay_minus);
+
         try {
             mLibVLC = VLCInstance.getLibVlcInstance();
         } catch (LibVlcException e) {
@@ -407,6 +415,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         /* Loading view */
         mLoading = (ImageView) findViewById(R.id.player_overlay_loading);
         mLoadingText = (TextView) findViewById(R.id.player_overlay_loading_text);
+        if (mPresentation != null)
+            mTipsBackground = (ImageView) findViewById(R.id.player_remote_tips_background);
         startLoadingAnimation();
 
         mSwitchingView = false;
@@ -719,28 +729,23 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     public static void start(Context context, String location) {
-        start(context, location, null, -1, false, false);
+        start(context, location, null, false, false);
     }
 
     public static void start(Context context, String location, boolean fromStart) {
-        start(context, location, null, -1, fromStart, false);
+        start(context, location, null, fromStart, false);
     }
 
     public static void start(Context context, String location, String title) {
-        start(context, location, title, -1, false, false);
+        start(context, location, title, false, false);
     }
 
-    public static void start(Context context, String location, String title, int position) {
-        start(context, location, title, position, false, false);
-    }
-
-    public static void start(Context context, String location, String title, int position, boolean fromStart, boolean newTask) {
+    public static void start(Context context, String location, String title, boolean fromStart, boolean newTask) {
         Intent intent = new Intent(context, VideoPlayerActivity.class);
         intent.setAction(VideoPlayerActivity.PLAY_FROM_VIDEOGRID);
         intent.putExtra("itemLocation", location);
         intent.putExtra("itemTitle", title);
         intent.putExtra("fromStart", fromStart);
-        intent.putExtra("itemPosition", position);
 
         if (newTask)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
@@ -786,44 +791,42 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 event.getAction() != MotionEvent.ACTION_MOVE)
             return false;
 
-		InputDevice mInputDevice = event.getDevice();
+        InputDevice mInputDevice = event.getDevice();
 
         float dpadx = event.getAxisValue(MotionEvent.AXIS_HAT_X);
         float dpady = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
-        if (Math.abs(dpadx) == 1.0f || Math.abs(dpady) == 1.0f)
+        if (mInputDevice == null || Math.abs(dpadx) == 1.0f || Math.abs(dpady) == 1.0f)
             return false;
 
-		float x = AndroidDevices.getCenteredAxis(event, mInputDevice,
-				MotionEvent.AXIS_X);
-		float y = AndroidDevices.getCenteredAxis(event, mInputDevice,
-				MotionEvent.AXIS_Y);
-		float z = AndroidDevices.getCenteredAxis(event, mInputDevice,
-				MotionEvent.AXIS_Z);
-		float rz = AndroidDevices.getCenteredAxis(event, mInputDevice,
-				MotionEvent.AXIS_RZ);
+        float x = AndroidDevices.getCenteredAxis(event, mInputDevice,
+                MotionEvent.AXIS_X);
+        float y = AndroidDevices.getCenteredAxis(event, mInputDevice,
+                MotionEvent.AXIS_Y);
+        float rz = AndroidDevices.getCenteredAxis(event, mInputDevice,
+                MotionEvent.AXIS_RZ);
 
-		if (System.currentTimeMillis() - mLastMove > JOYSTICK_INPUT_DELAY){
-			if (Math.abs(x) > 0.3){
-				if (AndroidDevices.hasTsp()) {
+        if (System.currentTimeMillis() - mLastMove > JOYSTICK_INPUT_DELAY){
+            if (Math.abs(x) > 0.3){
+                if (AndroidDevices.hasTsp()) {
                     seek(x > 0.0f ? 10000 : -10000);
                 } else
                     navigateDvdMenu(x > 0.0f ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT);
-			} else if (Math.abs(y) > 0.3){
-				if (AndroidDevices.hasTsp()) {
+            } else if (Math.abs(y) > 0.3){
+                if (AndroidDevices.hasTsp()) {
                     if (mIsFirstBrightnessGesture)
                         initBrightnessTouch();
                     changeBrightness(-y / 10f);
                 } else
                     navigateDvdMenu(x > 0.0f ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN);
-			} else if (Math.abs(rz) > 0.3){
-				mVol = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-				int delta = -(int) ((rz / 7) * mAudioMax);
-				int vol = (int) Math.min(Math.max(mVol + delta, 0), mAudioMax);
-				setAudioVolume(vol);
-			}
+            } else if (Math.abs(rz) > 0.3){
+                mVol = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                int delta = -(int) ((rz / 7) * mAudioMax);
+                int vol = (int) Math.min(Math.max(mVol + delta, 0), mAudioMax);
+                setAudioVolume(vol);
+            }
             mLastMove = System.currentTimeMillis();
-		}
-		return true;
+        }
+        return true;
     }
 
     @Override
@@ -852,12 +855,14 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             else
                 doPlayPause();
             return true;
-        case KeyEvent.KEYCODE_V:
         case KeyEvent.KEYCODE_O:
         case KeyEvent.KEYCODE_BUTTON_Y:
             showAdvancedOptions(mAdvOptions);
             return true;
         case KeyEvent.KEYCODE_B:
+            selectAudioTrack();
+            break;
+        case KeyEvent.KEYCODE_V:
         case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
         case KeyEvent.KEYCODE_BUTTON_B:
             onAudioSubClick(mTracks);
@@ -890,9 +895,20 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 return navigateDvdMenu(keyCode);
             else
                 return super.onKeyDown(keyCode, event);
-        default:
-            return super.onKeyDown(keyCode, event);
+        case KeyEvent.KEYCODE_J:
+            delayAudio(-50000l);
+            break;
+        case KeyEvent.KEYCODE_K:
+            delayAudio(50000l);
+            break;
+        case KeyEvent.KEYCODE_G:
+            delaySubs(-50000l);
+            break;
+        case KeyEvent.KEYCODE_H:
+            delaySubs(50000l);
+            break;
         }
+        return super.onKeyDown(keyCode, event);
     }
 
     private boolean navigateDvdMenu(int keyCode) {
@@ -934,6 +950,98 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSarDen = sar_den;
         Message msg = mHandler.obtainMessage(SURFACE_LAYOUT);
         mHandler.sendMessage(msg);
+    }
+
+    @Override
+    public void showAudioDelaySetting() {
+        mDelay = DelayState.AUDIO;
+        showDelayControls();
+    }
+
+    @Override
+    public void showSubsDelaySetting() {
+        mDelay = DelayState.SUBS;
+        showDelayControls();
+    }
+
+    public void showDelayControls(){
+        mDelayMinus.setOnClickListener(mAudioDelayListener);
+        mDelayPlus.setOnClickListener(mAudioDelayListener);
+        mDelayMinus.setVisibility(View.VISIBLE);
+        mDelayPlus.setVisibility(View.VISIBLE);
+        initDelayInfo();
+    }
+
+    private void initDelayInfo() {
+        mInfo.setVisibility(View.VISIBLE);
+        String text = "";
+        if (mDelay == DelayState.AUDIO) {
+            text += getString(R.string.audio_delay)+"\n";
+            text += mLibVLC.getAudioDelay() / 1000l;
+        } else if (mDelay == DelayState.SUBS) {
+            text += getString(R.string.spu_delay)+"\n";
+            text += mLibVLC.getSpuDelay() / 1000l;
+        } else
+            text += "0";
+        text += " ms";
+        mInfo.setText(text);
+    }
+
+    @Override
+    public void endDelaySetting() {
+        mDelay = DelayState.OFF;
+        mDelayMinus.setOnClickListener(null);
+        mDelayPlus.setOnClickListener(null);
+        mDelayMinus.setVisibility(View.INVISIBLE);
+        mDelayPlus.setVisibility(View.INVISIBLE);
+        mInfo.setVisibility(View.INVISIBLE);
+        mInfo.setText("");
+        mHandler.removeMessages(END_DELAY_STATE);
+    }
+
+    private OnClickListener mAudioDelayListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.player_delay_minus:
+                    if (mDelay == DelayState.AUDIO)
+                        delayAudio(-50000);
+                    else if (mDelay == DelayState.SUBS)
+                        delaySubs(-50000);
+                    break;
+                case R.id.player_delay_plus:
+                    if (mDelay == DelayState.AUDIO)
+                        delayAudio(50000);
+                    else if (mDelay == DelayState.SUBS)
+                        delaySubs(50000);
+                    break;
+            }
+        }
+    };
+
+    public void delayAudio(long delta){
+        long delay = mLibVLC.getAudioDelay()+delta;
+        mLibVLC.setAudioDelay(delay);
+        mInfo.setText(getString(R.string.audio_delay)+"\n"+(delay/1000l)+" ms");
+        if (mDelay == DelayState.OFF) {
+            mDelay = DelayState.AUDIO;
+            initDelayInfo();
+        }
+        mHandler.removeMessages(END_DELAY_STATE);
+        mHandler.sendEmptyMessageDelayed(END_DELAY_STATE, 2000);
+    }
+
+    public void delaySubs(long delta){
+        Log.d(TAG, "delaySubs "+delta);
+        long delay = mLibVLC.getSpuDelay()+delta;
+        mLibVLC.setSpuDelay(delay);
+        mInfo.setText(getString(R.string.spu_delay)+"\n"+(delay/1000l)+" ms");
+        if (mDelay == DelayState.OFF) {
+            mDelay = DelayState.SUBS;
+            initDelayInfo();
+        }
+        mHandler.removeMessages(END_DELAY_STATE);
+        mHandler.sendEmptyMessageDelayed(END_DELAY_STATE, 2000);
     }
 
     private static class ConfigureSurfaceHolder {
@@ -1136,8 +1244,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        doPlayPause();
-        return true;
+        if (!mIsLocked) {
+            doPlayPause();
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -1263,6 +1374,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 case AUDIO_SERVICE_CONNECTION_FAILED:
                     activity.finish();
                     break;
+                case END_DELAY_STATE:
+                    activity.endDelaySetting();
             }
         }
     };
@@ -1487,6 +1600,10 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mDelay != DelayState.OFF){
+            endDelaySetting();
+            return true;
+        }
         if (mDetector.onTouchEvent(event))
             return true;
         if (mIsLocked) {
@@ -1507,12 +1624,20 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if (mSurfaceYDisplayRange == 0)
             mSurfaceYDisplayRange = Math.min(screen.widthPixels, screen.heightPixels);
 
-        float y_changed = event.getRawY() - mTouchY;
-        float x_changed = event.getRawX() - mTouchX;
+        float x_changed, y_changed;
+        if (mTouchX != -1 && mTouchY != -1) {
+            y_changed = event.getRawY() - mTouchY;
+            x_changed = event.getRawX() - mTouchX;
+        } else {
+            x_changed = 0f;
+            y_changed = 0f;
+        }
+
 
         // coef is the gradient's move to determine a neutral zone
         float coef = Math.abs (y_changed / x_changed);
         float xgesturesize = ((x_changed / screen.xdpi) * 2.54f);
+        float delta_y = Math.max(1f,((mInitTouchY - event.getRawY()) / screen.xdpi + 0.5f)*2f);
 
         /* Offset for Mouse Events */
         int[] offset = new int[2];
@@ -1524,7 +1649,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         case MotionEvent.ACTION_DOWN:
             // Audio
-            mTouchY = event.getRawY();
+            mTouchY = mInitTouchY = event.getRawY();
             mVol = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
             mTouchAction = TOUCH_NONE;
             // Seek
@@ -1539,7 +1664,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
             // No volume/brightness action if coef < 2 or a secondary display is connected
             //TODO : Volume action when a secondary display is connected
-            if (coef > 2 && mPresentation == null) {
+            if (mTouchAction != TOUCH_SEEK && coef > 2 && mPresentation == null) {
                 mTouchY = event.getRawY();
                 mTouchX = event.getRawX();
                 // Volume (Up or Down - Right side)
@@ -1552,7 +1677,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 }
             } else {
                 // Seek (Right or Left move)
-                doSeekTouch(coef, xgesturesize, false);
+                doSeekTouch(Math.round(delta_y), xgesturesize, false);
             }
             if (mTouchAction != TOUCH_NONE && mOverlayTimeout != OVERLAY_INFINITE)
                 showOverlayTimeout(OVERLAY_INFINITE);
@@ -1573,15 +1698,18 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 showOverlay(true);
             }
             // Seek
-            doSeekTouch(coef, xgesturesize, true);
+            if (mTouchAction == TOUCH_SEEK)
+                doSeekTouch(Math.round(delta_y), xgesturesize, true);
+            mTouchX = -1f;
+            mTouchY = -1f;
             break;
         }
         return mTouchAction != TOUCH_NONE;
     }
 
-    private void doSeekTouch(float coef, float gesturesize, boolean seek) {
+    private void doSeekTouch(int coef, float gesturesize, boolean seek) {
         // No seek action if coef > 0.5 and gesturesize < 1cm
-        if (coef > 0.5 || Math.abs(gesturesize) < 1 || !mCanSeek)
+        if (Math.abs(gesturesize) < 1 || !mCanSeek)
             return;
 
         if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_SEEK)
@@ -1592,7 +1720,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         long time = mLibVLC.getTime();
 
         // Size of the jump, 10 minutes max (600000), with a bi-cubic progression, for a 8cm gesture
-        int jump = (int) (Math.signum(gesturesize) * ((600000 * Math.pow((gesturesize / 8), 4)) + 3000));
+        int jump = (int) ((Math.signum(gesturesize) * ((600000 * Math.pow((gesturesize / 8), 4)) + 3000)) / coef);
 
         // Adjust the jump
         if ((jump > 0) && ((time + jump) > length))
@@ -1606,10 +1734,10 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         if (length > 0)
             //Show the jump's size
-            showInfo(String.format("%s%s (%s)",
+            showInfo(String.format("%s%s (%s) x%d",
                     jump >= 0 ? "+" : "",
                     Strings.millisToString(jump),
-                    Strings.millisToString(time + jump)), 1000);
+                    Strings.millisToString(time + jump), coef), 1000);
         else
             showInfo(R.string.unseekable_stream, 1000);
     }
@@ -1625,11 +1753,18 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
     }
 
-	private void setAudioVolume(int vol) {
-		mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
-		mTouchAction = TOUCH_VOLUME;
-		showInfo(getString(R.string.volume) + '\u00A0' + Integer.toString(vol),1000);
-	}
+    private void setAudioVolume(int vol) {
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, 0);
+
+        /* Since android 4.3, the safe volume warning dialog is displayed only with the FLAG_SHOW_UI flag.
+         * We don't want to always show the default UI volume, so show it only when volume is not set. */
+        int newVol = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        if (vol != newVol)
+            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, AudioManager.FLAG_SHOW_UI);
+
+        mTouchAction = TOUCH_VOLUME;
+        showInfo(getString(R.string.volume) + '\u00A0' + Integer.toString(vol),1000);
+    }
 
     private void updateMute () {
         if (!mMute) {
@@ -1682,14 +1817,14 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         changeBrightness(delta);
     }
 
-	private void changeBrightness(float delta) {
-		// Estimate and adjust Brightness
+    private void changeBrightness(float delta) {
+        // Estimate and adjust Brightness
         WindowManager.LayoutParams lp = getWindow().getAttributes();
         lp.screenBrightness =  Math.min(Math.max(lp.screenBrightness + delta, 0.01f), 1);
         // Set Brightness
         getWindow().setAttributes(lp);
         showInfo(getString(R.string.brightness) + '\u00A0' + Math.round(lp.screenBrightness * 15),1000);
-	}
+    }
 
     /**
      * handle changes of the seekbar (slicer)
@@ -1772,7 +1907,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void selectAudioTrack() {
-    	if (mAudioTracksList == null) return;
+        if (mAudioTracksList == null) return;
 
         final String[] arrList = new String[mAudioTracksList.size()];
         int i = 0;
@@ -1968,11 +2103,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             if(mLibVLC != null) {
                 final Surface newSurface = holder.getSurface();
                 if (mSurface != newSurface) {
-                    if (mSurface != null) {
-                        synchronized (mSurface) {
-                            mSurface.notifyAll();
-                        }
-                    }
                     mSurface = newSurface;
                     Log.d(TAG, "surfaceChanged: " + mSurface);
                     mLibVLC.attachSurface(mSurface, VideoPlayerActivity.this);
@@ -1988,9 +2118,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         public void surfaceDestroyed(SurfaceHolder holder) {
             Log.d(TAG, "surfaceDestroyed");
             if(mLibVLC != null) {
-                synchronized (mSurface) {
-                    mSurface.notifyAll();
-                }
                 mSurface = null;
                 mLibVLC.detachSurface();
             }
@@ -2003,11 +2130,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             if(mLibVLC != null) {
                 final Surface newSurface = holder.getSurface();
                 if (mSubtitleSurface != newSurface) {
-                    if (mSubtitleSurface != null) {
-                        synchronized (mSubtitleSurface) {
-                            mSubtitleSurface.notifyAll();
-                        }
-                    }
                     mSubtitleSurface = newSurface;
                     mLibVLC.attachSubtitlesSurface(mSubtitleSurface);
                 }
@@ -2021,9 +2143,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
             if(mLibVLC != null) {
-                synchronized (mSubtitleSurface) {
-                    mSubtitleSurface.notifyAll();
-                }
                 mSubtitleSurface = null;
                 mLibVLC.detachSubtitlesSurface();
             }
@@ -2168,13 +2287,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private void updateOverlayPausePlay() {
         if (mLibVLC == null)
             return;
-
-        if (mPresentation == null)
-            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
-                            : R.drawable.ic_play_circle);
-        else
-            mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle_big_o
-                            : R.drawable.ic_play_circle_big_o);
+        mPlayPause.setImageResource(mLibVLC.isPlaying() ? R.drawable.ic_pause_circle
+                : R.drawable.ic_play_circle);
     }
 
     /**
@@ -2256,7 +2370,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         boolean fromStart = false;
         Uri data;
         String itemTitle = null;
-        int itemPosition = -1; // Index in the media list as passed by AudioServer (used only for vout transition internally)
         long intentPosition = -1; // position passed in by intent (ms)
 
         if (getIntent().getAction() != null
@@ -2271,6 +2384,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 // Mail-based apps - download the stream to a temporary file and play it
                 if(data.getHost().equals("com.fsck.k9.attachmentprovider")
                        || data.getHost().equals("gmail-ls")) {
+                    InputStream is = null;
+                    OutputStream os = null;
                     try {
                         Cursor cursor = getContentResolver().query(data,
                                 new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null);
@@ -2280,20 +2395,21 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                             cursor.close();
                             Log.i(TAG, "Getting file " + filename + " from content:// URI");
 
-                            InputStream is = getContentResolver().openInputStream(data);
-                            OutputStream os = new FileOutputStream(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                            is = getContentResolver().openInputStream(data);
+                            os = new FileOutputStream(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
                             byte[] buffer = new byte[1024];
                             int bytesRead = 0;
                             while((bytesRead = is.read(buffer)) >= 0) {
                                 os.write(buffer, 0, bytesRead);
                             }
-                            os.close();
-                            is.close();
                             mLocation = LibVLC.PathToURI(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Couldn't download file from mail URI");
                         encounteredError();
+                    } finally {
+                        Util.close(is);
+                        Util.close(os);
                     }
                 }
                 // Media or MMS URI
@@ -2350,7 +2466,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mLocation = getIntent().getExtras().getString("itemLocation");
             itemTitle = getIntent().getExtras().getString("itemTitle");
             fromStart = getIntent().getExtras().getBoolean("fromStart");
-            itemPosition = getIntent().getExtras().getInt("itemPosition", -1);
         }
 
         mSurfaceView.setKeepScreenOn(true);
@@ -2440,20 +2555,22 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
              }
 
             // Get the title
-            try {
-                title = URLDecoder.decode(mLocation, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-            } catch (IllegalArgumentException e) {
+            if (itemTitle == null) {
+                try {
+                    title = URLDecoder.decode(mLocation, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                } catch (IllegalArgumentException e) {
+                }
+                if (title.startsWith("file:")) {
+                    title = new File(title).getName();
+                    int dotIndex = title.lastIndexOf('.');
+                    if (dotIndex != -1)
+                        title = title.substring(0, dotIndex);
+                }
             }
-            if (title.startsWith("file:")) {
-                title = new File(title).getName();
-                int dotIndex = title.lastIndexOf('.');
-                if (dotIndex != -1)
-                    title = title.substring(0, dotIndex);
-            }
-        } else if(itemTitle != null) {
-            title = itemTitle;
         }
+        if (itemTitle != null)
+            title = itemTitle;
         mTitle.setText(title);
     }
 
@@ -2590,7 +2707,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     };
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private final class SecondaryDisplay extends Presentation {
+    private static final class SecondaryDisplay extends Presentation {
         public final static String TAG = "VLC/SecondaryDisplay";
 
         private SurfaceView mSurfaceView;
@@ -2663,6 +2780,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mLoading.setVisibility(View.INVISIBLE);
         mLoading.clearAnimation();
         mLoadingText.setVisibility(View.GONE);
+        if (mPresentation != null) {
+            mTipsBackground.setVisibility(View.VISIBLE);
+        }
     }
 
     public void onClickOverlayTips(View v) {

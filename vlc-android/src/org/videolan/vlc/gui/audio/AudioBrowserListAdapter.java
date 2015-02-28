@@ -36,6 +36,7 @@ import org.videolan.vlc.util.Util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.util.SparseArray;
@@ -81,7 +82,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     private ContextPopupMenuListener mContextPopupMenuListener;
 
     // An item of the list: a media or a separator.
-    class ListItem {
+    static class ListItem {
         final public String mTitle;
         final public String mSubTitle;
         final public ArrayList<MediaWrapper> mMediaList;
@@ -113,7 +114,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     public void add(String title, String subTitle, MediaWrapper media) {
         if(title == null) return;
         title = title.trim();
-        final String titleKey = title.toLowerCase();
+        final String titleKey = title.toLowerCase(Locale.getDefault());
         if(subTitle != null) subTitle = subTitle.trim();
         if (mMediaItemMap.containsKey(titleKey))
             mMediaItemMap.get(titleKey).mMediaList.add(media);
@@ -211,7 +212,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     public void addSeparator(String title, MediaWrapper media) {
         if(title == null) return;
         title = title.trim();
-        final String titleKey = title.toLowerCase();
+        final String titleKey = title.toLowerCase(Locale.getDefault());
         if (mSeparatorItemMap.containsKey(titleKey))
             mSeparatorItemMap.get(titleKey).mMediaList.add(media);
         else {
@@ -522,5 +523,11 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
 
     void setContextPopupMenuListener(ContextPopupMenuListener l) {
         mContextPopupMenuListener = l;
+    }
+
+    @Override
+    public void unregisterDataSetObserver(DataSetObserver observer) {
+        if (observer != null)
+            super.unregisterDataSetObserver(observer);
     }
 }

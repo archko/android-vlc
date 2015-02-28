@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.util.Extensions;
-import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.util.AndroidDevices;
@@ -391,16 +390,7 @@ public class DirectoryAdapter extends BaseAdapter {
             holder = (DirectoryViewHolder) v.getTag();
 
         String holderText = "";
-        if(selectedNode.isFile()) {
-            Log.d(TAG, "Loading media " + selectedNode.name);
-            final Media media = new Media(LibVLC.getExistingInstance(), getMediaLocation(position));
-            media.parse(); // FIXME: parse should'nt be done asynchronously
-            media.release();
-            MediaWrapper mw = new MediaWrapper(media);
-            holder.title.setText(mw.getTitle());
-            holderText = Util.getMediaSubtitle(context, mw);
-        } else
-            holder.title.setText(selectedNode.getVisibleName());
+        holder.title.setText(selectedNode.getVisibleName());
 
         if(selectedNode.name.equals(".."))
             holderText = context.getString(R.string.parent_folder);

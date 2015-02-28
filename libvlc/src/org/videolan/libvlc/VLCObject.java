@@ -23,6 +23,8 @@ package org.videolan.libvlc;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.lang.ref.WeakReference;
+
 public abstract class VLCObject {
     private final static String TAG = "LibVLC/VlcObject";
 
@@ -136,10 +138,14 @@ public abstract class VLCObject {
 
     /**
      * Increment internal ref count of the native object.
+     * @return true if media is retained
      */
-    public synchronized final void retain() {
-        if (mNativeRefCount > 0)
+    public synchronized final boolean retain() {
+        if (mNativeRefCount > 0) {
             mNativeRefCount++;
+            return true;
+        } else
+            return false;
     }
 
     /**
@@ -172,6 +178,7 @@ public abstract class VLCObject {
 
     /**
      * Set an event listener.
+     * Events are sent via the android main thread.
      *
      * @param listener see {@link EventListener}
      */
@@ -210,4 +217,14 @@ public abstract class VLCObject {
             mHandler.post(new EventRunnable(mEventListener, event));
     }
     private final native void nativeDetachEvents();
+
+    /* used only before API 7: substitute for NewWeakGlobalRef */
+    private Object getWeakReference() {
+        return new WeakReference<VLCObject>(this);
+    }
+    private static void dispatchEventFromWeakNative(Object weak, int eventType, long arg1, long arg2) {
+        VLCObject obj = ((WeakReference<VLCObject>)weak).get();
+        if (obj != null)
+            obj.dispatchEventFromNative(eventType, arg1, arg2);
+    }
 }

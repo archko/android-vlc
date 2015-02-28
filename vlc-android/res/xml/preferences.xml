@@ -126,7 +126,8 @@
             </PreferenceCategory>
         </PreferenceScreen>
         <PreferenceScreen android:title="@string/advanced_prefs_category" >
-            <PreferenceCategory android:title="@string/advanced_prefs_category" >
+            <PreferenceCategory android:key="advanced_prefs_group"
+                                android:title="@string/advanced_prefs_category" >
                 <ListPreference
                     android:key="aout"
                     android:summary="@string/aout_summary"
@@ -181,11 +182,6 @@
                 <PreferenceScreen
                     android:key="debug_logs"
                     android:title="@string/debug_logs" />
-
-                <Preference
-                    android:enabled="true"
-                    android:key="dump_logcat"
-                    android:title="@string/dump_logcat" />
             </PreferenceCategory>
         </PreferenceScreen>
     </PreferenceCategory>

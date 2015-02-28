@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Logcat.java
  *****************************************************************************
- * Copyright © 2011-2014 VLC authors and VideoLAN
+ * Copyright © 2011-2015 VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,77 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class Logcat {
+public class Logcat implements Runnable {
     public final static String TAG = "VLC/Util/Logcat";
+    private Callback mCallback = null;
+    private Thread mThread = null;
+    private Process mProcess = null;
+    private boolean mRun = false;
+
+    public interface Callback {
+        public void onLog(String log);
+    }
+
+    public Logcat() {
+    }
+
+    @Override
+    public void run() {
+        final String[] args = { "logcat", "-v", "time" };
+        InputStreamReader input = null;
+        BufferedReader br = null;
+        try {
+            synchronized (this) {
+                if (!mRun)
+                    return;
+                mProcess = Runtime.getRuntime().exec(args);
+                input = new InputStreamReader(
+                        mProcess.getInputStream());
+            }
+            br = new BufferedReader(input);
+            String line;
+
+            while ((line = br.readLine()) != null)
+                mCallback.onLog(line);
+
+        } catch (IOException e) {
+        } finally {
+            Util.close(input);
+            Util.close(br);
+        }
+    }
+
+    /**
+     * Start a thread that will send logcat via a callback
+     * @param callback
+     */
+    public synchronized void start(Callback callback) {
+        if (callback == null)
+            throw new IllegalArgumentException("callback should not be null");
+        if (mThread != null || mProcess != null)
+            throw new IllegalStateException("logcat is already started");
+        mCallback = callback;
+        mRun = true;
+        mThread = new Thread(this);
+        mThread.start();
+    }
+
+    /**
+     * Stop the thread previously started
+     */
+    public synchronized void stop() {
+        mRun = false;
+        if (mProcess != null) {
+            mProcess.destroy();
+            mProcess = null;
+        }
+        try {
+            mThread.join();
+        } catch (InterruptedException e) {
+        }
+        mThread = null;
+        mCallback = null;
+    }
 
     /**
      * Writes the current app logcat to a file.
@@ -63,10 +132,10 @@ public class Logcat {
             }
         }catch(Exception e) {}
         finally {
-            bw.close();
-            output.close();
-            br.close();
-            input.close();
+            Util.close(bw);
+            Util.close(output);
+            Util.close(br);
+            Util.close(input);
         }
     }
 
@@ -89,10 +158,9 @@ public class Logcat {
         while ((line = br.readLine()) != null)
             log.append(line + "\n");
 
-        br.close();
-        input.close();
+        Util.close(br);
+        Util.close(input);
 
         return log.toString();
     }
-
 }

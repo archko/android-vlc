@@ -30,12 +30,11 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -59,10 +58,10 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
-import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaGroup;
 import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Thumbnailer;
 import org.videolan.vlc.audio.AudioServiceController;
@@ -105,7 +104,6 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     private LibVLC mLibVlc;
     private Thumbnailer mThumbnailer;
     private VideoGridAnimator mAnimator;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private AudioServiceController mAudioController;
     private boolean mReady = true;
@@ -129,18 +127,10 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         FragmentActivity activity = getActivity();
         if (activity != null)
             mThumbnailer = new Thumbnailer(activity, activity.getWindowManager().getDefaultDisplay());
-        try {
-            mLibVlc = LibVLC.getInstance();
-        } catch (LibVlcException e) {}
+        mLibVlc = LibVLC.getInstance();
     }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
-        if (mGroup == null)
-            actionBar.setTitle(R.string.video);
-        else
-            actionBar.setTitle(mGroup);
 
         View v = inflater.inflate(R.layout.video_grid, container, false);
 
@@ -178,7 +168,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         filter.addAction(Util.ACTION_SCAN_START);
         filter.addAction(Util.ACTION_SCAN_STOP);
         getActivity().registerReceiver(messageReceiverVideoListFragment, filter);
-        Log.i(TAG,"mMediaLibrary.isWorking() " + Boolean.toString(mMediaLibrary.isWorking()));
+        Log.i(TAG, "mMediaLibrary.isWorking() " + Boolean.toString(mMediaLibrary.isWorking()));
         if (mMediaLibrary.isWorking()) {
         	Util.actionScanStart();
         }
@@ -211,7 +201,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         mVideoAdapter.setTimes(times);
         mGridView.setSelection(mGVFirstVisiblePos);
         updateViewMode();
-        if (refresh)
+        if (mGroup == null && refresh)
             mAnimator.animate();
 
         /* Start the thumbnailer */
@@ -234,6 +224,13 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         mVideoAdapter.clear();
     }
 
+    protected String getTitle(){
+        if (mGroup == null)
+            return getString(R.string.video);
+        else
+            return mGroup;
+    }
+
     private void updateViewMode() {
         if (getView() == null || getActivity() == null) {
             Log.w(TAG, "Unable to setup the view");
@@ -246,37 +243,27 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         // Compute the left/right padding dynamically
         DisplayMetrics outMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
-        int sidePadding = (int) (outMetrics.widthPixels / 100. * Math.pow(outMetrics.density, 3) / 2.);
-        sidePadding = Math.max(0, Math.min(100, sidePadding));
-        mGridView.setPadding(sidePadding, mGridView.getPaddingTop(),
-                sidePadding, mGridView.getPaddingBottom());
+        int sidePadding;
 
         // Select between grid or list
         if (!listMode) {
+            sidePadding = (int) ((float)outMetrics.widthPixels / 100f * (float)Math.pow(outMetrics.density, 3) / 2f);
             mGridView.setNumColumns(GridView.AUTO_FIT);
             mGridView.setStretchMode(GRID_STRETCH_MODE);
             mGridView.setColumnWidth(res.getDimensionPixelSize(R.dimen.grid_card_width));
             mGridView.setVerticalSpacing(res.getDimensionPixelSize(R.dimen.grid_card_vertical_spacing));
             mVideoAdapter.setListMode(false);
         } else {
-            int padding = res.getDimensionPixelSize(R.dimen.listview_side_padding);
+            sidePadding = res.getDimensionPixelSize(R.dimen.listview_side_padding);
             mGridView.setNumColumns(1);
             mGridView.setStretchMode(LIST_STRETCH_MODE);
             mGridView.setVerticalSpacing(0);
             mGridView.setHorizontalSpacing(0);
-            mGridView.setPadding(padding,0,padding,0);
             mVideoAdapter.setListMode(true);
         }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ||
-            newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            updateViewMode();
-        }
+        sidePadding = Math.max(0, Math.min(100, sidePadding));
+        mGridView.setPadding(sidePadding, mGridView.getPaddingTop(),
+                sidePadding, mGridView.getPaddingBottom());
     }
 
     @Override
@@ -361,6 +348,8 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         if (media.getMeta(Media.Meta.Title) != null)
             hasInfo = true;
         menu.findItem(R.id.video_list_info).setVisible(hasInfo);
+        menu.findItem(R.id.video_list_delete).setVisible(!LibVlcUtil.isLolliPopOrLater() ||
+                mediaWrapper.getLocation().startsWith("file://"+ Environment.getExternalStorageDirectory().getPath()));
     }
 
     @Override
@@ -431,9 +420,9 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                 @Override
                 public void run() {
                     if (mGroup != null || itemList.size() <= 10) {
-                        mVideoAdapter.setNotifyOnChange(false);
                         for (MediaWrapper item : itemList) {
                             if (mGroup == null || item.getTitle().startsWith(mGroup)) {
+                                mVideoAdapter.setNotifyOnChange(false);
                                 mVideoAdapter.add(item);
                                 if (mThumbnailer != null)
                                     mThumbnailer.addJob(item);
@@ -442,8 +431,8 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                     }
                     else {
                         List<MediaGroup> groups = MediaGroup.group(itemList);
-                        mVideoAdapter.setNotifyOnChange(false);
                         for (MediaGroup item : groups) {
+                            mVideoAdapter.setNotifyOnChange(false);
                             mVideoAdapter.add(item.getMedia());
                             if (mThumbnailer != null)
                                 mThumbnailer.addJob(item);

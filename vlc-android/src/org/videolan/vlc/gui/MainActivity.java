@@ -20,33 +20,6 @@
 
 package org.videolan.vlc.gui;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import org.videolan.libvlc.LibVlcException;
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.vlc.MediaDatabase;
-import org.videolan.vlc.MediaLibrary;
-import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.audio.AudioService;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
-import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
-import org.videolan.vlc.gui.audio.AudioPlayer;
-import org.videolan.vlc.gui.audio.EqualizerFragment;
-import org.videolan.vlc.gui.video.MediaInfoFragment;
-import org.videolan.vlc.gui.video.VideoGridFragment;
-import org.videolan.vlc.gui.video.VideoListAdapter;
-import org.videolan.vlc.interfaces.IRefreshable;
-import org.videolan.vlc.interfaces.ISortable;
-import org.videolan.vlc.util.AndroidDevices;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.VLCInstance;
-import org.videolan.vlc.util.WeakHandler;
-import org.videolan.vlc.widget.SlidingPaneLayout;
-
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -54,9 +27,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -72,6 +42,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -86,6 +57,35 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.videolan.libvlc.LibVlcException;
+import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.vlc.BuildConfig;
+import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.R;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.audio.AudioService;
+import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
+import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
+import org.videolan.vlc.gui.audio.AudioPlayer;
+import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.network.NetworkFragment;
+import org.videolan.vlc.gui.video.MediaInfoFragment;
+import org.videolan.vlc.gui.video.VideoGridFragment;
+import org.videolan.vlc.gui.video.VideoListAdapter;
+import org.videolan.vlc.interfaces.IRefreshable;
+import org.videolan.vlc.interfaces.ISortable;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.VLCInstance;
+import org.videolan.vlc.util.WeakHandler;
+import org.videolan.vlc.widget.SlidingPaneLayout;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends ActionBarActivity implements OnItemClickListener {
     public final static String TAG = "VLC/MainActivity";
@@ -126,7 +126,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
     private int mVersionNumber = -1;
     private boolean mFirstRun = false;
-    private boolean mScanNeeded = true;
+    private boolean mScanNeeded = false;
 
     private Handler mHandler = new MainActivityHandler(this);
     private int mFocusedPrior = 0;
@@ -136,7 +136,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         /* Enable the indeterminate progress feature */
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         if (!LibVlcUtil.hasCompatibleCPU(this)) {
             Log.e(TAG, LibVlcUtil.getErrorMsg());
             Intent i = new Intent(this, CompatErrorActivity.class);
@@ -148,14 +148,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
         mContext = this;
         /* Get the current version from package */
-        PackageInfo pinfo = null;
-        try {
-            pinfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-        } catch (NameNotFoundException e) {
-            Log.e(TAG, "package info not found.");
-        }
-        if (pinfo != null)
-            mVersionNumber = pinfo.versionCode;
+        mVersionNumber = 01010100;//BuildConfig.VERSION_CODE;
 
         /* Get settings */
         mSettings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -183,43 +176,43 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         }
 
         /* Load media items from database and storage */
-        if (mScanNeeded)
-            MediaLibrary.getInstance().loadMediaItems();
+        MediaLibrary.getInstance().loadMediaItems();
+
+        /* Theme must be applied before super.onCreate */
+        applyTheme();
 
         super.onCreate(savedInstanceState);
 
         /*** Start initializing the UI ***/
 
+        setContentView(R.layout.main);
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
-        if (enableBlackTheme) {
-            setTheme(R.style.Theme_VLC_Black);
-            //We need to manually change statusbar color, otherwise, it remains orange.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                getWindow().setStatusBarColor(Color.DKGRAY);
-            }
-        }
+        Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(Util.getResourceFromAttribute(mContext, R.attr.font_actionbar_selected)));
+        setSupportActionBar(toolbar);
 
-        View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
-        setContentView(v_main);
-
-        mSlidingPane = (SlidingPaneLayout) v_main.findViewById(R.id.pane);
+        mSlidingPane = (SlidingPaneLayout) findViewById(R.id.pane);
         mSlidingPane.setPanelSlideListener(mPanelSlideListener);
 
-        mSideMenu = v_main.findViewById(R.id.side_menu);
-        mListView = (ListView)v_main.findViewById(R.id.sidelist);
+        mSideMenu = findViewById(R.id.side_menu);
+        mListView = (ListView)findViewById(R.id.sidelist);
         mListView.setFooterDividersEnabled(true);
         mSidebarAdapter = new SidebarAdapter(this);
         mListView.setAdapter(mSidebarAdapter);
 
+        if (savedInstanceState != null){
+            mCurrentFragment = savedInstanceState.getString("current");
+            if (mCurrentFragment != null)
+                mSidebarAdapter.setCurrentFragment(mCurrentFragment);
+        }
+
 
         /* Initialize UI variables */
-        mInfoLayout = v_main.findViewById(R.id.info_layout);
-        mInfoProgress = (ProgressBar) v_main.findViewById(R.id.info_progress);
-        mInfoText = (TextView) v_main.findViewById(R.id.info_text);
-        mAudioPlayerFilling = v_main.findViewById(R.id.audio_player_filling);
-        mRootContainer = (DrawerLayout) v_main.findViewById(R.id.root_container);
+        mInfoLayout = findViewById(R.id.info_layout);
+        mInfoProgress = (ProgressBar) findViewById(R.id.info_progress);
+        mInfoText = (TextView) findViewById(R.id.info_text);
+        mAudioPlayerFilling = findViewById(R.id.audio_player_filling);
+        mRootContainer = (DrawerLayout) findViewById(R.id.root_container);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -276,6 +269,19 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         reloadPreferences();
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void applyTheme() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme) {
+            setTheme(R.style.Theme_VLC_Black);
+            //We need to manually change statusbar color, otherwise, it remains orange.
+            if (LibVlcUtil.isLolliPopOrLater()) {
+                getWindow().setStatusBarColor(Color.DKGRAY);
+            }
+        }
+    }
+
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -300,6 +306,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         /* FIXME: this is used to avoid having MainActivity twice in the backstack */
         if (getIntent().hasExtra(AudioService.START_FROM_NOTIFICATION))
             getIntent().removeExtra(AudioService.START_FROM_NOTIFICATION);
+
+
+        /* Load media items from database and storage */
+        if (mScanNeeded)
+            MediaLibrary.getInstance().loadMediaItems();
    }
 
     @Override
@@ -314,20 +325,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             found = SidebarAdapter.sidebarFragments.contains(current.getTag());
         } else {
             found = true;
-        }
-
-        /**
-         * Let's see if Android recreated anything for us in the bundle.
-         * Prevent duplicate creation of fragments, since mSidebarAdapter might
-         * have been purged (losing state) when this activity was killed.
-         */
-        for(int i = 0; i < SidebarAdapter.entries.size(); i++) {
-            String fragmentTag = SidebarAdapter.entries.get(i).id;
-            Fragment fragment = getSupportFragmentManager().findFragmentByTag(fragmentTag);
-            if(fragment != null) {
-                Log.d(TAG, "Restoring automatically recreated fragment \"" + fragmentTag + "\"");
-                mSidebarAdapter.restoreFragment(fragmentTag, fragment);
-            }
         }
 
         /**
@@ -378,6 +375,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         mFocusedPrior = 0;
     }
 
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("current", mCurrentFragment);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -414,6 +416,13 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
                 if (!directoryView.isRootDirectory()) {
                     directoryView.showParentDirectory();
+                    return;
+                }
+            } else if (mCurrentFragment.equals(SidebarEntry.ID_NETWORK)){
+                NetworkFragment networkFragment = (NetworkFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.fragment_placeholder);
+                if (networkFragment !=null && !networkFragment.isRootDirectory()) {
+                    networkFragment.goBack();
                     return;
                 }
             }
@@ -552,16 +561,22 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         if (mCurrentFragment != null && mCurrentFragment.equals("search"))
             menu.findItem(R.id.search_clear_history).setVisible(true);
 
+        boolean networkSave = current instanceof NetworkFragment && !((NetworkFragment)current).isRootDirectory();
+        if (networkSave) {
+            MenuItem item = menu.findItem(R.id.ml_menu_save);
+            item.setVisible(true);
+            String mrl = ((NetworkFragment)current).mMrl;
+            item.setIcon(MediaDatabase.getInstance().networkFavExists(mrl) ?
+                    R.drawable.ic_menu_bookmark_w :
+                    R.drawable.ic_menu_bookmark_outline_w);
+
+        }
+        else
+            menu.findItem(R.id.ml_menu_save).setVisible(false);
         menu.findItem(R.id.ml_menu_clean).setVisible(SidebarEntry.ID_MRL.equals(mCurrentFragment));
         menu.findItem(R.id.ml_menu_last_playlist).setVisible(SidebarEntry.ID_AUDIO.equals(mCurrentFragment));
 
         return super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -632,6 +647,12 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             case R.id.search_clear_history:
                 MediaDatabase.getInstance().clearSearchHistory();
                 break;
+            case R.id.ml_menu_save:
+                if (current == null)
+                    break;
+                ((NetworkFragment)current).toggleFavorite();
+                item.setIcon(R.drawable.ic_menu_bookmark_w);
+                break;
         }
         mRootContainer.closeDrawer(mSideMenu);
         return super.onOptionsItemSelected(item);
@@ -684,17 +705,15 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         }
     }
 
-    public void setSearchAsFocusDown(boolean idIsEmpty, View parentView,
-        int id) {
+    public void setSearchAsFocusDown(boolean idIsEmpty, View parentView, int id) {
         View playPause = findViewById(R.id.header_play_pause);
-        View v_main = LayoutInflater.from(this).inflate(R.layout.main, null);
 
         if (!idIsEmpty) {
             View list = null;
             int pane = mSlidingPane.getState();
 
             if (parentView == null)
-                list = v_main.findViewById(id);
+                list = findViewById(id);
             else
 			    list = parentView.findViewById(id);
 
@@ -716,7 +735,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (mFocusedPrior == 0)
             setMenuFocusDown(true, 0);
-        mFocusedPrior = getCurrentFocus().getId();
+        if (getCurrentFocus() != null)
+            mFocusedPrior = getCurrentFocus().getId();
         return super.onKeyDown(keyCode, event);
     }
 
@@ -725,6 +745,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
 		View v = getCurrentFocus();
+        if (v == null)
+            return super.onKeyUp(keyCode, event);
         if ((mActionBarIconId == -1) &&
             (v.getId() == -1)  &&
             (v.getNextFocusDownId() == -1) &&
@@ -1012,7 +1034,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             ft.replace(R.id.fragment_placeholder, fragment, entry.id);
             ft.addToBackStack(mCurrentFragment);
             ft.commit();
-            supportInvalidateOptionsMenu();
             mCurrentFragment = entry.id;
             mSidebarAdapter.setCurrentFragment(mCurrentFragment);
 

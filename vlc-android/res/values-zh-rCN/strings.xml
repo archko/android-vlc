@@ -246,6 +246,17 @@
     <string name="sending_log">正在发送日志…</string>
     <string name="drawer_open">打开导航栏</string>
     <string name="drawer_close">关闭导航栏</string>
+    <string name="new_app">正式版应用发布啦</string>
+    <string name="new_app_msg">VLC for Android Beta 的测试使命已经完成。从现在开始，新版本将只通过正式版渠道发布。您正在使用的测试版将不再更新。</string>
+    <string name="new_app_go">去下载正式版</string>
+
+    <!-- custom prefs -->
+    <string name="show_media_only_category">show medias</string>
+    <string name="show_media_only_summary">show medias only</string>
+    <string name="show_media_only">show medias only</string>
+
+    <string name="show_hidden_summary">show hidden files</string>
+    <string name="show_hidden">show hidden files</string>
 
     <!-- custom prefs -->
     <string name="show_media_only_category">显示媒体文件</string>

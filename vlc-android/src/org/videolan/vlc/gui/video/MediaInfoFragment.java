@@ -22,9 +22,13 @@ package org.videolan.vlc.gui.video;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.util.Extensions;
@@ -35,7 +39,6 @@ import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.util.BitmapUtil;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
 import android.content.res.Configuration;
@@ -52,6 +55,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -67,7 +71,7 @@ public class MediaInfoFragment extends ListFragment {
     private TextView mSizeView;
     private TextView mPathView;
     private ImageButton mPlayButton;
-    private TextView mDelete;
+    private Button mDelete;
     private ImageView mSubtitles;
     private Media mMedia;
     private MediaInfoAdapter mAdapter;
@@ -77,6 +81,7 @@ public class MediaInfoFragment extends ListFragment {
     private final static int HIDE_DELETE = 3;
     private final static int EXIT = 4;
     private final static int SHOW_SUBTITLES = 5;
+    ExecutorService threadPoolExecutor;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -87,10 +92,10 @@ public class MediaInfoFragment extends ListFragment {
         mSizeView = (TextView) v.findViewById(R.id.size_value);
         mPathView = (TextView) v.findViewById(R.id.info_path);
         mPlayButton = (ImageButton) v.findViewById(R.id.play);
-        mDelete = (TextView) v.findViewById(R.id.info_delete);
+        mDelete = (Button) v.findViewById(R.id.info_delete);
         mSubtitles = (ImageView) v.findViewById(R.id.info_subtitles);
         if (!LibVlcUtil.isICSOrLater())
-            mDelete.setText(getString(R.string.delete).toUpperCase());
+            mDelete.setText(getString(R.string.delete).toUpperCase(Locale.getDefault()));
 
         mPathView.setText(Uri.decode(mItem.getLocation().substring(7)));
         mPlayButton.setOnClickListener(new OnClickListener() {
@@ -134,8 +139,14 @@ public class MediaInfoFragment extends ListFragment {
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(mItem.getTitle());
         mLengthView.setText(Strings.millisToString(mItem.getLength()));
 
-        new Thread(mLoadImage).start();
-        new Thread(mCheckFile).start();
+        threadPoolExecutor = Executors.newFixedThreadPool(2);
+        threadPoolExecutor.submit(mCheckFile);
+        threadPoolExecutor.submit(mLoadImage);
+    }
+
+    public void onStop(){
+        super.onStop();
+        threadPoolExecutor.shutdownNow();
     }
 
     public void setMediaLocation(String MRL) {
@@ -161,17 +172,25 @@ public class MediaInfoFragment extends ListFragment {
         videoName = videoName.substring(0, videoName.lastIndexOf('.'));
         String[] subFolders = {"/Subtitles", "/subtitles", "/Subs", "/subs"};
         String[] files = itemFile.getParentFile().list();
+        int filesLength = files == null ? 0 : files.length;
         for (int i = 0 ; i < subFolders.length ; ++i){
             File subFolder = new File(parentPath+subFolders[i]);
             if (!subFolder.exists())
                 continue;
             String[] subFiles = subFolder.list();
-            String[] newFiles = new String[files.length+subFiles.length];
-            System.arraycopy(subFiles, 0, newFiles, 0, subFiles.length);
-            System.arraycopy(files, 0, newFiles, subFiles.length, files.length);
+            int subFilesLength = 0;
+            String[] newFiles = new String[0];
+            if (subFiles != null) {
+                subFilesLength = subFiles.length;
+                newFiles = new String[filesLength+subFilesLength];
+                System.arraycopy(subFiles, 0, newFiles, 0, subFilesLength);
+            }
+            if (files != null)
+                System.arraycopy(files, 0, newFiles, subFilesLength, filesLength);
             files = newFiles;
+            filesLength = files.length;
         }
-        for (int i = 0; i<files.length ; ++i){
+        for (int i = 0; i<filesLength ; ++i){
             filename = Uri.decode(files[i]);
             int index = filename.lastIndexOf('.');
             if (index <= 0)
@@ -189,11 +208,7 @@ public class MediaInfoFragment extends ListFragment {
     Runnable mLoadImage = new Runnable() {
         @Override
         public void run() {
-            try {
-                mLibVlc = VLCInstance.getLibVlcInstance();
-            } catch (LibVlcException e) {
-                return;
-            }
+            mLibVlc = LibVLC.getInstance();
             mMedia = new Media(mLibVlc, mItem.getLocation());
             mMedia.parse();
             mMedia.release();
@@ -222,6 +237,9 @@ public class MediaInfoFragment extends ListFragment {
             if (b == null) // We were not able to create a thumbnail for this item.
                 return;
 
+            if (Thread.interrupted()) {
+                return;
+            }
             mImage.copyPixelsFromBuffer(ByteBuffer.wrap(b));
             mImage = BitmapUtil.cropBorders(mImage, width, height);
 

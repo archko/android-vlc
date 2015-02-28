@@ -63,8 +63,6 @@ public class DirectoryViewFragment extends BrowserFragment implements IRefreshab
 
     private DirectoryAdapter mDirectoryAdapter;
     private ListView mListView;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
-    private boolean mReady = true;
 
     /* All subclasses of Fragment must include a public empty constructor. */
     public DirectoryViewFragment() { }
@@ -98,24 +96,21 @@ public class DirectoryViewFragment extends BrowserFragment implements IRefreshab
 
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(R.string.directories);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
 
         View v = inflater.inflate(R.layout.directory_view, container, false);
         mListView = (ListView) v.findViewById(android.R.id.list);
         mListView.setOnItemClickListener(this);
         mDirectoryAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
         mListView.setAdapter(mDirectoryAdapter);
-        final ListView listView = (ListView)v.findViewById(android.R.id.list);
-        listView.setNextFocusUpId(R.id.ml_menu_search);
-        listView.setNextFocusLeftId(android.R.id.list);
-        listView.setNextFocusRightId(android.R.id.list);
+        mListView.setNextFocusUpId(R.id.ml_menu_search);
+        mListView.setNextFocusLeftId(android.R.id.list);
+        mListView.setNextFocusRightId(android.R.id.list);
         if (LibVlcUtil.isHoneycombOrLater())
-            listView.setNextFocusForwardId(android.R.id.list);
+            mListView.setNextFocusForwardId(android.R.id.list);
         focusHelper(mDirectoryAdapter.getCount() == 0);
-        listView.requestFocus();
-        listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+        mListView.requestFocus();
+        mListView.setOnItemLongClickListener(new OnItemLongClickListener() {
 
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View v, int position, long id) {
@@ -131,7 +126,7 @@ public class DirectoryViewFragment extends BrowserFragment implements IRefreshab
         mSwipeRefreshLayout.setColorSchemeResources(R.color.darkerorange);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {}
             @Override
@@ -140,7 +135,7 @@ public class DirectoryViewFragment extends BrowserFragment implements IRefreshab
             }
         });
 
-        registerForContextMenu(listView);
+        registerForContextMenu(mListView);
         return v;
     }
 
@@ -300,15 +295,20 @@ public class DirectoryViewFragment extends BrowserFragment implements IRefreshab
 
     @Override
     public void setReadyToDisplay(boolean ready) {
-        if (ready && !mReady)
+        if (ready && !mReadyToDisplay)
             display();
         else
-            mReady = ready;
+            mReadyToDisplay = ready;
     }
 
     @Override
     public void display() {
-        mReady = true;
+        mReadyToDisplay = true;
         refresh();
+    }
+
+    @Override
+    protected String getTitle() {
+        return getString(R.string.directories);
     }
 }

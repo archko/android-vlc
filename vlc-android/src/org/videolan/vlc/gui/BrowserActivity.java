@@ -49,6 +49,7 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -127,11 +128,7 @@ public class BrowserActivity extends ListActivity {
             @Override
             public boolean onMenuItemClick(MenuItem arg0) {
                 // remove any checkmarks of the custom item
-                final MediaDatabase dbManager = MediaDatabase.getInstance();
-                for(File f : dbManager.getMediaDirs()) {
-                    if(f.getPath().startsWith(item.getPath()))
-                        dbManager.removeDir(f.getPath());
-                }
+                MediaDatabase.getInstance().recursiveRemoveDir(item.getPath());
                 CustomDirectories.removeCustomDirectory(item.getPath());
                 refresh();
                 return true;
@@ -249,6 +246,11 @@ public class BrowserActivity extends ListActivity {
                     return true;
                 }
             }
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT){
+            CheckBox cb = (CheckBox) getListView().getSelectedView().findViewById(R.id.browser_item_selected);
+            if (cb != null)
+                cb.toggle();
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -280,7 +282,7 @@ public class BrowserActivity extends ListActivity {
     /**
      * Filter: accept only directories
      */
-    private class DirFilter implements FileFilter {
+    static private class DirFilter implements FileFilter {
 
         @Override
         public boolean accept(File f) {

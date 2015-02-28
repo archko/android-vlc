@@ -35,6 +35,7 @@ public class JumpToTimeDialog extends PickTimeFragment {
     public JumpToTimeDialog(){
         super();
         mLiveAction = false;
+        max = mLibVLC.getLength() * 1000l;
     }
 
     @Override
@@ -51,8 +52,9 @@ public class JumpToTimeDialog extends PickTimeFragment {
             view.findViewById(R.id.jump_hours_text).setVisibility(View.GONE);
             view.findViewById(R.id.jump_hours_container).setVisibility(View.GONE);
         }
-        mMinutes.setNextFocusLeftId(R.id.jump_minutes);
+        mMinutes.setNextFocusLeftId(R.id.jump_go);
         mSeconds.setNextFocusRightId(R.id.jump_go);
+        initTime(mLibVLC.getTime()*1000);
         return view;
     }
 

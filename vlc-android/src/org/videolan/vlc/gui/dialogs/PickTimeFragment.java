@@ -21,6 +21,7 @@
  */
 package org.videolan.vlc.gui.dialogs;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -29,12 +30,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.vlc.R;
+import org.videolan.vlc.util.AndroidDevices;
 
 public abstract class PickTimeFragment extends DialogFragment implements DialogInterface.OnKeyListener, View.OnClickListener, View.OnFocusChangeListener, TextView.OnEditorActionListener {
 
@@ -52,27 +55,26 @@ public abstract class PickTimeFragment extends DialogFragment implements DialogI
     protected static long HOURS_IN_MICROS = 60*MINUTES_IN_MICROS;
 
     protected LibVLC mLibVLC = null;
-    protected TextView mHours, mMinutes, mSeconds, mMillis;
-    protected Button mActionButton, mSign;
+    protected EditText mHours, mMinutes, mSeconds, mMillis;
+    protected TextView mSign;
+    protected Button mActionButton;
+    protected long max = -1;
 
-    public PickTimeFragment(){}
+    public PickTimeFragment(){
+        mLibVLC = LibVLC.getInstance();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        try {
-            mLibVLC = LibVLC.getInstance();
-        } catch (LibVlcException e) {
-            getDialog().dismiss();
-        }
         View view = inflater.inflate(R.layout.jump_to_time, container);
         ((TextView)view.findViewById(R.id.jump_dialog_title)).setText(getTitle());
-        mHours = (TextView) view.findViewById(R.id.jump_hours);
-        mMinutes = (TextView) view.findViewById(R.id.jump_minutes);
-        mSeconds = (TextView) view.findViewById(R.id.jump_seconds);
-        mMillis = (TextView) view.findViewById(R.id.jump_millis);
+        mHours = (EditText) view.findViewById(R.id.jump_hours);
+        mMinutes = (EditText) view.findViewById(R.id.jump_minutes);
+        mSeconds = (EditText) view.findViewById(R.id.jump_seconds);
+        mMillis = (EditText) view.findViewById(R.id.jump_millis);
         mActionButton = (Button) view.findViewById(R.id.jump_go);
-        mSign = (Button) view.findViewById(R.id.jump_sign);
+        mSign = (TextView) view.findViewById(R.id.jump_sign);
 
         mMinutes.setOnFocusChangeListener(this);
         mSeconds.setOnFocusChangeListener(this);
@@ -81,6 +83,7 @@ public abstract class PickTimeFragment extends DialogFragment implements DialogI
         mSeconds.setOnEditorActionListener(this);
 
         mActionButton.setOnClickListener(this);
+        mActionButton.setOnFocusChangeListener(this);
 
         mTextColor = mMinutes.getCurrentTextColor();
 
@@ -188,7 +191,9 @@ public abstract class PickTimeFragment extends DialogFragment implements DialogI
             case R.id.jump_millis:
                 slide = delta * MILLIS_IN_MICROS;
         }
-        initTime(getTime() + slide);
+        slide += getTime();
+        if (max == -1 || slide <= max)
+            initTime(slide);
         if (mLiveAction)
             executeAction();
     }
@@ -200,7 +205,6 @@ public abstract class PickTimeFragment extends DialogFragment implements DialogI
     }
 
     protected void initTime(long delay) {
-//        long delayToDisplay;
         if (delay < 0l){
             if ( mSign.getVisibility() == View.VISIBLE) {
                 delay = -delay;
@@ -210,7 +214,6 @@ public abstract class PickTimeFragment extends DialogFragment implements DialogI
             }
         } else {
             mSign.setText("+");
-            delay = delay;
         }
         long minutes = 0;
         long seconds = 0;
