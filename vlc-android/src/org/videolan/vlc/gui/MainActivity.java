@@ -21,12 +21,14 @@
 package org.videolan.vlc.gui;
 
 import android.annotation.TargetApi;
+import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,10 +40,11 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -52,6 +55,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -81,13 +85,14 @@ import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
+import org.videolan.vlc.widget.HackyDrawerLayout;
 import org.videolan.vlc.widget.SlidingPaneLayout;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends ActionBarActivity implements OnItemClickListener {
+public class MainActivity extends ActionBarActivity implements OnItemClickListener, SearchView.OnQueryTextListener, SearchSuggestionsAdapter.SuggestionDisplay {
     public final static String TAG = "VLC/MainActivity";
 
     protected static final String ACTION_SHOW_PROGRESSBAR = "org.videolan.vlc.gui.ShowProgressBar";
@@ -106,7 +111,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     private AudioPlayer mAudioPlayer;
     private AudioServiceController mAudioController;
     private SlidingPaneLayout mSlidingPane;
-    private DrawerLayout mRootContainer;
+    private HackyDrawerLayout mRootContainer;
     private ListView mListView;
     private ActionBarDrawerToggle mDrawerToggle;
     private View mSideMenu;
@@ -132,6 +137,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     private int mFocusedPrior = 0;
     private int mActionBarIconId = -1;
     Menu mMenu;
+    private SearchView mSearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,7 +194,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         setContentView(R.layout.main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        toolbar.setTitleTextColor(getResources().getColor(Util.getResourceFromAttribute(mContext, R.attr.font_actionbar_selected)));
         setSupportActionBar(toolbar);
 
         mSlidingPane = (SlidingPaneLayout) findViewById(R.id.pane);
@@ -212,7 +217,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         mInfoProgress = (ProgressBar) findViewById(R.id.info_progress);
         mInfoText = (TextView) findViewById(R.id.info_text);
         mAudioPlayerFilling = findViewById(R.id.audio_player_filling);
-        mRootContainer = (DrawerLayout) findViewById(R.id.root_container);
+        mRootContainer = (HackyDrawerLayout) findViewById(R.id.root_container);
 
         /* Set up the action bar */
         prepareActionBar();
@@ -398,10 +403,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
     @Override
     public void onBackPressed() {
-        if(mRootContainer.isDrawerOpen(mSideMenu)) {
             /* Close the menu first */
+        if(mRootContainer.isDrawerOpen(mSideMenu)) {
             if (mFocusedPrior != 0)
-                findViewById(R.id.ml_menu_search).requestFocus();
+                requestFocusOnSearch();
             mRootContainer.closeDrawer(mSideMenu);
             return;
         }
@@ -486,8 +491,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             f = new EqualizerFragment();
         } else if(id.equals("about")) {
             f = new AboutFragment();
-        } else if(id.equals("search")) {
-            f = new SearchFragment();
         } else if(id.equals("mediaInfo")) {
             f = new MediaInfoFragment();
         } else if(id.equals("videoGroupList")) {
@@ -533,6 +536,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
     /** Create menu from XML
      */
+    @TargetApi(Build.VERSION_CODES.FROYO)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         mMenu = menu;
@@ -542,6 +546,16 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
          */
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.media_library, menu);
+
+        if (LibVlcUtil.isFroyoOrLater()) {
+            SearchManager searchManager =
+                    (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+            mSearchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.ml_menu_search));
+            mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+            mSearchView.setOnQueryTextListener(this);
+            mSearchView.setSuggestionsAdapter(new SearchSuggestionsAdapter(this, null));
+        } else
+            menu.findItem(R.id.ml_menu_search).setVisible(false);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -557,9 +571,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             menu.findItem(R.id.ml_menu_sortby).setEnabled(true);
             menu.findItem(R.id.ml_menu_sortby).setVisible(true);
         }
-        // Enable the clear search history function for the search fragment.
-        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
-            menu.findItem(R.id.search_clear_history).setVisible(true);
 
         boolean networkSave = current instanceof NetworkFragment && !((NetworkFragment)current).isRootDirectory();
         if (networkSave) {
@@ -576,15 +587,9 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         menu.findItem(R.id.ml_menu_clean).setVisible(SidebarEntry.ID_MRL.equals(mCurrentFragment));
         menu.findItem(R.id.ml_menu_last_playlist).setVisible(SidebarEntry.ID_AUDIO.equals(mCurrentFragment));
 
-        return super.onPrepareOptionsMenu(menu);
-    }
 
-    @Override
-    public boolean onSearchRequested() {
-        if (mCurrentFragment != null && mCurrentFragment.equals("search"))
-            ((SearchFragment)fetchSecondaryFragment("search")).onSearchKeyPressed();
-        showSecondaryFragment("search");
-        return true;
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     /**
@@ -612,18 +617,17 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 break;
             // Refresh
             case R.id.ml_menu_refresh:
-                if(current != null && current instanceof IRefreshable)
-                    ((IRefreshable) current).refresh();
-                else
-                    MediaLibrary.getInstance().loadMediaItems(this, true);
+                if (!MediaLibrary.getInstance().isWorking()) {
+                    if(current != null && current instanceof IRefreshable)
+                        ((IRefreshable) current).refresh();
+                    else
+                        MediaLibrary.getInstance().loadMediaItems(this, true);
+                }
                 break;
             // Restore last playlist
             case R.id.ml_menu_last_playlist:
                 Intent i = new Intent(AudioService.ACTION_REMOTE_LAST_PLAYLIST);
                 sendBroadcast(i);
-                break;
-            case R.id.ml_menu_search:
-                onSearchRequested();
                 break;
             case android.R.id.home:
                 // Slide down the audio player.
@@ -643,9 +647,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             case R.id.ml_menu_clean:
                 if (getFragment(mCurrentFragment) instanceof MRLPanelFragment)
                     ((MRLPanelFragment)getFragment(mCurrentFragment)).clearHistory();
-                break;
-            case R.id.search_clear_history:
-                MediaDatabase.getInstance().clearSearchHistory();
                 break;
             case R.id.ml_menu_save:
                 if (current == null)
@@ -685,7 +686,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             R.id.ml_menu_open_mrl, R.id.ml_menu_sortby,
             R.id.ml_menu_last_playlist, R.id.ml_menu_refresh,
             mActionBarIconId};*/
-		int pane = mSlidingPane.getState();
+        int pane = mSlidingPane.getState();
         for(int r : menu_controls) {
             View v = findViewById(r);
             if (v != null) {
@@ -715,7 +716,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             if (parentView == null)
                 list = findViewById(id);
             else
-			    list = parentView.findViewById(id);
+                list = parentView.findViewById(id);
 
             if (list != null) {
                 if (pane == mSlidingPane.STATE_OPENED_ENTIRELY) {
@@ -733,6 +734,12 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     // Note. onKeyDown will not occur while moving within a list
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //Filter for LG devices, see https://code.google.com/p/android/issues/detail?id=78154
+        if ((keyCode == KeyEvent.KEYCODE_MENU) &&
+                (Build.VERSION.SDK_INT <= 16) &&
+                (Build.MANUFACTURER.compareTo("LGE") == 0)) {
+            return true;
+        }
         if (mFocusedPrior == 0)
             setMenuFocusDown(true, 0);
         if (getCurrentFocus() != null)
@@ -744,7 +751,14 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-		View v = getCurrentFocus();
+        //Filter for LG devices, see https://code.google.com/p/android/issues/detail?id=78154
+        if ((keyCode == KeyEvent.KEYCODE_MENU) &&
+                (Build.VERSION.SDK_INT <= 16) &&
+                (Build.MANUFACTURER.compareTo("LGE") == 0)) {
+            openOptionsMenu();
+            return true;
+        }
+        View v = getCurrentFocus();
         if (v == null)
             return super.onKeyUp(keyCode, event);
         if ((mActionBarIconId == -1) &&
@@ -770,14 +784,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     private void reloadPreferences() {
         SharedPreferences sharedPrefs = getSharedPreferences("MainActivity", MODE_PRIVATE);
         mCurrentFragment = sharedPrefs.getString("fragment", "video");
-    }
-
-    /**
-     * onClick event from xml
-     * @param view
-     */
-    public void searchClick(View view) {
-        onSearchRequested();
     }
 
     private final BroadcastReceiver messageReceiver = new BroadcastReceiver() {
@@ -818,6 +824,20 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         }
     };
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        if (newText.length() < 3)
+            return false;
+        Cursor cursor = MediaDatabase.getInstance().queryMedia(newText);
+        mSearchView.getSuggestionsAdapter().changeCursor(cursor);
+        return true;
+    }
+
     private static class MainActivityHandler extends WeakHandler<MainActivity> {
         public MainActivityHandler(MainActivity owner) {
             super(owner);
@@ -835,6 +855,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             }
         }
     };
+
+    public void hideKeyboard(){
+        ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(
+                getWindow().getDecorView().getRootView().getWindowToken(), 0);
+    }
 
     public static void showProgressBar() {
         Intent intent = new Intent();
@@ -865,6 +890,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
      * Show the audio player.
      */
     public void showAudioPlayer() {
+        mActionBar.collapseActionView();
         // Open the pane only if is entirely opened.
         if (mSlidingPane.getState() == mSlidingPane.STATE_OPENED_ENTIRELY)
             mSlidingPane.openPane();
@@ -872,8 +898,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     }
 
     public int  getSlidingPaneState() {
-			return mSlidingPane.getState();
-	}
+            return mSlidingPane.getState();
+    }
 
     /**
      * Slide down the audio player.
@@ -926,7 +952,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 if (resId != 0)
                     mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
-                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_UNLOCKED);
                 removeTipViewIfDisplayed();
                 mAudioPlayer.showAudioPlayerTips();
             }
@@ -934,13 +960,13 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             @Override
             public void onPanelOpenedEntirely() {
                 mSlidingPane.setShadowDrawable(null);
-                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_UNLOCKED);
             }
 
             @Override
             public void onPanelClosed() {
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
-                mRootContainer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+                mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                 mAudioPlayer.showPlaylistTips();
             }
 
@@ -956,8 +982,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             removeTipViewIfDisplayed();
             View v = LayoutInflater.from(this).inflate(layoutId, null);
             mRootContainer.addView(v,
-                    new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT,
-                    		DrawerLayout.LayoutParams.MATCH_PARENT));
+                    new HackyDrawerLayout.LayoutParams(HackyDrawerLayout.LayoutParams.MATCH_PARENT,
+                            HackyDrawerLayout.LayoutParams.MATCH_PARENT));
 
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -1012,7 +1038,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
         if(current == null || (entry != null && current.getTag().equals(entry.id))) { /* Already selected */
             if (mFocusedPrior != 0)
-                findViewById(R.id.ml_menu_search).requestFocus();
+                requestFocusOnSearch();
             mRootContainer.closeDrawer(mSideMenu);
             return;
         }
@@ -1038,10 +1064,16 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             mSidebarAdapter.setCurrentFragment(mCurrentFragment);
 
             if (mFocusedPrior != 0)
-                findViewById(R.id.ml_menu_search).requestFocus();
+                requestFocusOnSearch();
             mRootContainer.closeDrawer(mSideMenu);
         }else if (entry.attributeID == R.attr.ic_menu_preferences){
             startActivityForResult(new Intent(mContext, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
         }
+    }
+
+    private void requestFocusOnSearch() {
+        View search = findViewById(R.id.ml_menu_search);
+        if (search != null)
+            search.requestFocus();
     }
 }

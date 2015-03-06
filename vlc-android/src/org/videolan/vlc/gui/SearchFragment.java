@@ -105,7 +105,7 @@ public class SearchFragment extends ListFragment {
         mResultAdapter.clear();
         new Thread(new Runnable() {
             public void run() {
-                final ArrayList<MediaWrapper> mediaList = MediaLibrary.getInstance().searchMedia(key, type);
+                final ArrayList<MediaWrapper> mediaList = MediaLibrary.getInstance().searchMedia(key);
                 mHandler.post(new Runnable() {
                     public void run() {
                         int count = mediaList.size();

@@ -1,5 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
+ANDROID_PRIVATE_LIBDIR := $(LOCAL_PATH)/../../android-libs
 
 LOCAL_MODULE    := libvlcjni
 
@@ -8,12 +9,12 @@ LOCAL_SRC_FILES += libvlcjni-equalizer.c
 LOCAL_SRC_FILES += libvlcjni-vlcobject.c
 LOCAL_SRC_FILES += java_event_thread.c
 LOCAL_SRC_FILES += libvlcjni-media.c libvlcjni-medialist.c libvlcjni-mediadiscoverer.c
-LOCAL_SRC_FILES += aout.c vout.c native_crash_handler.c thumbnailer.c
-ifneq ($(ANDROID_API),android-21)
+LOCAL_SRC_FILES += vout.c native_crash_handler.c thumbnailer.c
+ifneq ($(APP_PLATFORM),android-21)
 # compat functions not needed after android-21
 LOCAL_SRC_FILES += compat/pthread-condattr.c compat/pthread-rwlocks.c
 LOCAL_SRC_FILES += compat/pthread-once.c compat/eventfd.c compat/sem.c compat/pipe2.c
-endif
+LOCAL_SRC_FILES += compat/localtime.c
 LOCAL_SRC_FILES += compat/wchar/wcpcpy.c
 LOCAL_SRC_FILES += compat/wchar/wcpncpy.c
 LOCAL_SRC_FILES += compat/wchar/wcscasecmp.c
@@ -44,13 +45,11 @@ LOCAL_SRC_FILES += compat/wchar/wmemcmp.c
 LOCAL_SRC_FILES += compat/wchar/wmemcpy.c
 LOCAL_SRC_FILES += compat/wchar/wmemmove.c
 LOCAL_SRC_FILES += compat/wchar/wmemset.c
-
+endif
 
 LOCAL_C_INCLUDES := $(VLC_SRC_DIR)/include
 
-ARCH=$(ANDROID_ABI)
-
-CPP_STATIC=$(ANDROID_NDK)/sources/cxx-stl/gnu-libstdc++$(CXXSTL)/libs/$(ARCH)/libgnustl_static.a
+ARCH=$(APP_ABI)
 
 LOCAL_CFLAGS := -std=gnu99
 ifeq ($(ARCH), armeabi)
@@ -62,9 +61,7 @@ endif
 ifeq ($(ARCH), armeabi-v7a)
 	LOCAL_CFLAGS += -DHAVE_ARMEABI_V7A
 endif
-ifneq (,$(wildcard $(LOCAL_PATH)/../$(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c))
 	LOCAL_CFLAGS += -DHAVE_IOMX_DR
-endif
 LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	$(VLC_MODULES) \
 	$(VLC_BUILD_DIR)/lib/.libs/libvlc.a \
@@ -85,11 +82,35 @@ LOCAL_LDLIBS := -L$(VLC_CONTRIB)/lib \
 	-ldsm -ltasn1 \
 	-lmad \
 	-lzvbi \
-	$(CPP_STATIC)
+	-lssh2 \
+	$(EXTRA_LDFLAGS)
 
+$(TARGET_OUT)/$(LOCAL_MODULE).so: $(ANDROID_PRIVATE_LIBS)
 include $(BUILD_SHARED_LIBRARY)
 
-# libiomx-* build
+################
+# PRIVATE LIBS #
+################
+
+ANDROID_PRIVATE_LIBS=$(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libstagefright.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libmedia.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libutils.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libcutils.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libbinder.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libui.so \
+					 $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/libhardware.so
+
+$(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)/%.so: $(ANDROID_PRIVATE_LIBDIR)/%.c
+	mkdir -p $(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE)
+	$(GEN)$(TARGET_TUPLE)-gcc $< -shared -o $@ --sysroot=$(SYSROOT)
+
+$(ANDROID_PRIVATE_LIBDIR)/%.c: $(ANDROID_PRIVATE_LIBDIR)/%.symbols
+	$(VERBOSE)rm -f $@ && touch $@
+	$(GEN)for s in `cat $<`; do echo "void $$s() {}" >> $@; done
+
+###########
+# libiOMX #
+###########
 
 LIBIOMX_INCLUDES_COMMON := $(VLC_SRC_DIR)/modules/codec/omxil
 
@@ -132,32 +153,34 @@ LIBIOMX_INCLUDES_21 := $(LIBIOMX_INCLUDES_COMMON) \
 define build_iomx
 include $(CLEAR_VARS)
 LOCAL_MODULE := $(1)
-LOCAL_SRC_FILES  := ../$(VLC_SRC_DIR)/modules/codec/omxil/iomx.cpp
+LOCAL_SRC_FILES  := $(VLC_SRC_DIR)/modules/codec/omxil/iomx.cpp
 LOCAL_C_INCLUDES := $(LIBIOMX_INCLUDES_$(2))
-LOCAL_LDLIBS     := -L$(ANDROID_LIBS) -lgcc -lstagefright -lmedia -lutils -lbinder -llog -lcutils -lui
+LOCAL_LDLIBS     := -L$(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE) -lgcc -lstagefright -lmedia -lutils -lbinder -llog -lcutils -lui
 LOCAL_CFLAGS     := -Wno-psabi -DANDROID_API=$(2)
+$(TARGET_OUT)/$(1).so: $(ANDROID_PRIVATE_LIBS)
 include $(BUILD_SHARED_LIBRARY)
 endef
 
-# call build_iomx for each libiomx-* in LIBVLC_LIBS
-$(foreach IOMX_MODULE,$(filter libiomx.%,$(LIBVLC_LIBS)), \
+# call build_iomx for each libiomx-* in LIBIOMX_LIBS
+$(foreach IOMX_MODULE, $(LIBIOMX_LIBS), \
 	$(eval $(call build_iomx,$(IOMX_MODULE),$(subst libiomx.,,$(IOMX_MODULE)))))
 
-LIBANW_SRC_FILES_COMMON += ../$(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c
-# Once we always build this with a version of vlc that contains nativewindowpriv.c,
-# we can remove this condition
-ifneq (,$(wildcard $(LOCAL_PATH)/$(LIBANW_SRC_FILES_COMMON)))
+
+#######
+# ANW #
+#######
+LIBANW_SRC_FILES_COMMON += $(VLC_SRC_DIR)/modules/video_output/android/nativewindowpriv.c
 
 define build_anw
 include $(CLEAR_VARS)
 LOCAL_MODULE := $(1)
 LOCAL_SRC_FILES  := $(LIBANW_SRC_FILES_COMMON)
 LOCAL_C_INCLUDES := $(LIBIOMX_INCLUDES_$(2))
-LOCAL_LDLIBS     := -L$(ANDROID_LIBS) -llog -lhardware
+LOCAL_LDLIBS     := -L$(ANDROID_PRIVATE_LIBDIR)/$(TARGET_TUPLE) -llog -lhardware
 LOCAL_CFLAGS     := $(LIBIOMX_CFLAGS_COMMON) -DANDROID_API=$(2)
+$(TARGET_OUT)/$(1).so: $(ANDROID_PRIVATE_LIBS)
 include $(BUILD_SHARED_LIBRARY)
 endef
 
-$(foreach ANW_MODULE,$(filter libanw.%,$(LIBVLC_LIBS)), \
+$(foreach ANW_MODULE,$(LIBANW_LIBS), \
     $(eval $(call build_anw,$(ANW_MODULE),$(subst libanw.,,$(ANW_MODULE)))))
-endif

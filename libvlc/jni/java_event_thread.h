@@ -35,9 +35,12 @@ struct java_event
     long arg2;
 };
 
-java_event_thread *JavaEventThread_create(jweak jobj);
+/* if b_sync is true, calls to JavaEventThread_add will return only when events
+ * are handled by Java Side */
+java_event_thread *JavaEventThread_create(jweak jweak, jobject jweakCompat,
+                                          bool b_sync);
 void JavaEventThread_destroy(java_event_thread *p_java_event_thread);
-void JavaEventThread_add(java_event_thread *p_java_event_thread,
+int  JavaEventThread_add(java_event_thread *p_java_event_thread,
                          java_event *p_java_event);
 
 #endif // JAVA_EVENT_THREAD_H

@@ -63,7 +63,6 @@ public class MRLPanelFragment extends Fragment implements View.OnKeyListener, Te
         mRecyclerView = (RecyclerView) v.findViewById(R.id.mrl_list);
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
         mAdapter = new MRLAdapter(mHistory);
         mRecyclerView.setAdapter(mAdapter);
 
@@ -73,6 +72,7 @@ public class MRLPanelFragment extends Fragment implements View.OnKeyListener, Te
     public void onStart(){
         super.onStart();
         getActivity().supportInvalidateOptionsMenu();
+        focusHelper(mAdapter.isEmpty());
     }
 
     private void updateHistory() {
@@ -111,5 +111,13 @@ public class MRLPanelFragment extends Fragment implements View.OnKeyListener, Te
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
         return false;
+    }
+
+    private void focusHelper(boolean idIsEmpty) {
+        View parent = View.inflate(getActivity(),
+            R.layout.directory_view, null);
+        MainActivity main = (MainActivity)getActivity();
+        main.setMenuFocusDown(idIsEmpty, R.id.mrl_list);
+        main.setSearchAsFocusDown(idIsEmpty, parent, R.id.mrl_list);
     }
 }

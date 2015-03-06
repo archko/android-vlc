@@ -1,5 +1,5 @@
 /*****************************************************************************
- * VideoBrowserInterface.java
+ * IVideoBrowser.java
  *****************************************************************************
  * Copyright © 2014-2015 VLC authors and VideoLAN
  *
@@ -26,11 +26,11 @@ import org.videolan.vlc.MediaWrapper;
 
 public interface IVideoBrowser {
 
-	public void resetBarrier();
-	public void setItemToUpdate(MediaWrapper item);
-	public void await() throws InterruptedException, BrokenBarrierException;
-	public void updateItem();
-	public void updateList();
+    public void resetBarrier();
+    public void setItemToUpdate(MediaWrapper item);
+    public void await() throws InterruptedException, BrokenBarrierException;
+    public void updateItem();
+    public void updateList();
     public void showProgressBar();
     public void hideProgressBar();
     public void clearTextInfo();

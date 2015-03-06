@@ -43,26 +43,33 @@ typedef TAILQ_HEAD(, event_queue_elm) EVENT_QUEUE;
 
 struct java_event_thread {
     bool b_run;
+    bool b_sync;
     pthread_mutex_t lock;
     pthread_cond_t cond;
     pthread_t thread;
     EVENT_QUEUE queue;
-    jweak jobj;
+    jweak jweak;
+    jobject jweakCompat;
 };
 
 static void *
 JavaEventThread_thread(void *data)
 {
-    JNIEnv *env;
+    JNIEnv *env = NULL;
+    event_queue_elm *event_elm, *event_elm_next;
     java_event_thread *p_java_event_thread = data;
 
+
     if (jni_attach_thread(&env, THREAD_NAME) < 0)
-        return NULL;
+    {
+        pthread_mutex_lock(&p_java_event_thread->lock);
+        goto end;
+    }
 
     pthread_mutex_lock(&p_java_event_thread->lock);
+
     while (p_java_event_thread->b_run)
     {
-        event_queue_elm *event_elm;
         java_event *p_jevent;
 
         while (p_java_event_thread->b_run &&
@@ -74,50 +81,26 @@ JavaEventThread_thread(void *data)
             continue;
 
         p_jevent = &event_elm->event;
-        TAILQ_REMOVE(&p_java_event_thread->queue, event_elm, next);
 
         pthread_mutex_unlock(&p_java_event_thread->lock);
 
-        (*env)->CallVoidMethod(env, p_java_event_thread->jobj,
-                               fields.VLCObject.dispatchEventFromNativeID,
-                               p_jevent->type, p_jevent->arg1, p_jevent->arg2);
-
-        free(event_elm);
+        if (p_java_event_thread->jweak)
+            (*env)->CallVoidMethod(env, p_java_event_thread->jweak,
+                                   fields.VLCObject.dispatchEventFromNativeID,
+                                   p_jevent->type, p_jevent->arg1, p_jevent->arg2);
+        else
+            (*env)->CallStaticVoidMethod(env, fields.VLCObject.clazz,
+                                         fields.VLCObject.dispatchEventFromWeakNativeID,
+                                         p_java_event_thread->jweakCompat,
+                                         p_jevent->type, p_jevent->arg1, p_jevent->arg2);
 
         pthread_mutex_lock(&p_java_event_thread->lock);
+
+        TAILQ_REMOVE(&p_java_event_thread->queue, event_elm, next);
+        free(event_elm);
+        pthread_cond_signal(&p_java_event_thread->cond);
     }
-    pthread_mutex_unlock(&p_java_event_thread->lock);
-
-    jni_detach_thread();
-
-    return NULL;
-}
-
-java_event_thread *
-JavaEventThread_create(jweak jobj)
-{
-    java_event_thread *p_java_event_thread = calloc(1, sizeof(java_event_thread));
-    if (!p_java_event_thread)
-        return NULL;
-
-    pthread_mutex_init(&p_java_event_thread->lock, NULL);
-    pthread_cond_init(&p_java_event_thread->cond, NULL);
-    TAILQ_INIT(&p_java_event_thread->queue);
-
-    p_java_event_thread->jobj = jobj;
-    p_java_event_thread->b_run = true;
-    pthread_create(&p_java_event_thread->thread, NULL,
-                   JavaEventThread_thread, p_java_event_thread);
-
-    return p_java_event_thread;
-}
-
-void
-JavaEventThread_destroy(java_event_thread *p_java_event_thread)
-{
-    event_queue_elm *event_elm, *event_elm_next;
-
-    pthread_mutex_lock(&p_java_event_thread->lock);
+end:
     p_java_event_thread->b_run = false;
 
     for (event_elm = TAILQ_FIRST(&p_java_event_thread->queue);
@@ -127,10 +110,60 @@ JavaEventThread_destroy(java_event_thread *p_java_event_thread)
         TAILQ_REMOVE(&p_java_event_thread->queue, event_elm, next);
         free(event_elm);
     }
-    pthread_cond_signal(&p_java_event_thread->cond);
     pthread_mutex_unlock(&p_java_event_thread->lock);
 
-    pthread_join(p_java_event_thread->thread, NULL);
+    if (env)
+        jni_detach_thread();
+
+    return NULL;
+}
+
+java_event_thread *
+JavaEventThread_create(jweak jweak, jobject jweakCompat, bool b_sync)
+{
+    java_event_thread *p_java_event_thread;
+
+    if (!jweak && !jweakCompat)
+        return NULL;
+
+    p_java_event_thread = calloc(1, sizeof(java_event_thread));
+    if (!p_java_event_thread)
+        return NULL;
+
+    pthread_mutex_init(&p_java_event_thread->lock, NULL);
+    pthread_cond_init(&p_java_event_thread->cond, NULL);
+    TAILQ_INIT(&p_java_event_thread->queue);
+
+    pthread_mutex_lock(&p_java_event_thread->lock);
+    p_java_event_thread->jweak = jweak;
+    p_java_event_thread->jweakCompat = jweakCompat;
+    p_java_event_thread->b_run = true;
+    p_java_event_thread->b_sync = b_sync;
+    if (pthread_create(&p_java_event_thread->thread, NULL,
+                       JavaEventThread_thread, p_java_event_thread) != 0)
+    {
+        p_java_event_thread->b_run = false;
+        pthread_mutex_unlock(&p_java_event_thread->lock);
+        JavaEventThread_destroy(p_java_event_thread);
+        p_java_event_thread = NULL;
+    } else
+        pthread_mutex_unlock(&p_java_event_thread->lock);
+
+    return p_java_event_thread;
+}
+
+void
+JavaEventThread_destroy(java_event_thread *p_java_event_thread)
+{
+    pthread_mutex_lock(&p_java_event_thread->lock);
+    if (p_java_event_thread->b_run)
+    {
+        p_java_event_thread->b_run = false;
+        pthread_cond_signal(&p_java_event_thread->cond);
+        pthread_mutex_unlock(&p_java_event_thread->lock);
+        pthread_join(p_java_event_thread->thread, NULL);
+    } else
+        pthread_mutex_unlock(&p_java_event_thread->lock);
 
     pthread_mutex_destroy(&p_java_event_thread->lock);
     pthread_cond_destroy(&p_java_event_thread->cond);
@@ -138,17 +171,38 @@ JavaEventThread_destroy(java_event_thread *p_java_event_thread)
     free(p_java_event_thread);
 }
 
-void
+int
 JavaEventThread_add(java_event_thread *p_java_event_thread,
                     java_event *p_java_event)
 {
-    event_queue_elm *event_elm = calloc(1, sizeof(event_queue_elm));
-    if (!event_elm)
-        return;
-    event_elm->event = *p_java_event;
+    event_queue_elm *event_elm;
 
     pthread_mutex_lock(&p_java_event_thread->lock);
-    TAILQ_INSERT_TAIL(&p_java_event_thread->queue, event_elm, next);
+
+    if (!p_java_event_thread->b_run)
+        goto error;
+
+    event_elm = calloc(1, sizeof(event_queue_elm));
+    if (!event_elm)
+        goto error;
+    event_elm->event = *p_java_event;
+
+    if (p_java_event_thread->b_sync)
+        TAILQ_INSERT_HEAD(&p_java_event_thread->queue, event_elm, next);
+    else
+        TAILQ_INSERT_TAIL(&p_java_event_thread->queue, event_elm, next);
     pthread_cond_signal(&p_java_event_thread->cond);
+
+    if (p_java_event_thread->b_sync) {
+        while (p_java_event_thread->b_run &&
+               (event_elm == TAILQ_FIRST(&p_java_event_thread->queue)))
+            pthread_cond_wait(&p_java_event_thread->cond,
+                              &p_java_event_thread->lock);
+    }
+
     pthread_mutex_unlock(&p_java_event_thread->lock);
+    return 0;
+error:
+    pthread_mutex_unlock(&p_java_event_thread->lock);
+    return -1;
 }

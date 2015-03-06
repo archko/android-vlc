@@ -21,7 +21,12 @@
 #ifndef LIBVLCJNI_UTILS_H
 #define LIBVLCJNI_UTILS_H
 
+#include <vlc/vlc.h>
+#include <vlc/libvlc_media.h>
+#include <vlc/libvlc_media_list.h>
+
 struct fields {
+    jint SDK_INT;
     struct {
         jclass clazz;
     } IllegalStateException;
@@ -33,8 +38,14 @@ struct fields {
     } String;
     struct {
         jclass clazz;
+        jmethodID onNativeCrashID;
+    } LibVLC;
+    struct {
+        jclass clazz;
         jfieldID mInstanceID;
         jmethodID dispatchEventFromNativeID;
+        jmethodID getWeakReferenceID;
+        jmethodID dispatchEventFromWeakNativeID;
     } VLCObject;
     struct {
         struct {
@@ -73,7 +84,5 @@ void arrayListGetIDs(JNIEnv *env, jclass* p_class, jmethodID* p_add, jmethodID* 
 void arrayListStringAdd(JNIEnv *env, jclass class, jmethodID methodID, jobject arrayList, const char* str);
 
 jobject getEventHandlerReference(JNIEnv *env, jobject thiz, jobject eventHandler);
-
-void debug_log(void *data, int level, const libvlc_log_t *ctx, const char *fmt, va_list ap);
 
 #endif // LIBVLCJNI_UTILS_H

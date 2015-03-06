@@ -50,19 +50,20 @@ public class MediaDatabase {
 
     private SQLiteDatabase mDb;
     private static final String DB_NAME = "vlc_database";
-    private static final int DB_VERSION = 15;
+    private static final int DB_VERSION = 17;
     private static final int CHUNK_SIZE = 50;
 
     private static final String DIR_TABLE_NAME = "directories_table";
     private static final String DIR_ROW_PATH = "path";
 
     private static final String MEDIA_TABLE_NAME = "media_table";
-    private static final String MEDIA_LOCATION = "location";
+    private static final String MEDIA_VIRTUAL_TABLE_NAME = "media_table_fts";
+    public static final String MEDIA_LOCATION = "_id"; //standard key for primary key, needed for search suggestions
     private static final String MEDIA_TIME = "time";
     private static final String MEDIA_LENGTH = "length";
     private static final String MEDIA_TYPE = "type";
     private static final String MEDIA_PICTURE = "picture";
-    private static final String MEDIA_TITLE = "title";
+    public static final String MEDIA_TITLE = "title";
     private static final String MEDIA_ARTIST = "artist";
     private static final String MEDIA_GENRE = "genre";
     private static final String MEDIA_ALBUM = "album";
@@ -185,6 +186,29 @@ public class MediaDatabase {
                     + MEDIA_DISCNUMBER + " INTEGER"
                     + ");";
             db.execSQL(query);
+            db.execSQL("PRAGMA recursive_triggers='ON'"); //Needed for delete trigger
+            query = "CREATE VIRTUAL TABLE "
+                    + MEDIA_VIRTUAL_TABLE_NAME + " USING FTS3 ("
+                    + MEDIA_LOCATION + ", "
+                    + MEDIA_TITLE + ", "
+                    + MEDIA_ARTIST + ", "
+                    + MEDIA_GENRE + ", "
+                    + MEDIA_ALBUM + ", "
+                    + MEDIA_ALBUMARTIST
+                    + ");";
+            db.execSQL(query);
+            query = " CREATE TRIGGER media_insert_trigger AFTER INSERT ON "+
+                    MEDIA_TABLE_NAME+ " BEGIN "+
+                        "INSERT INTO "+MEDIA_VIRTUAL_TABLE_NAME+" ("+MEDIA_LOCATION+", "+MEDIA_TITLE+
+                        ", "+MEDIA_ARTIST+", "+MEDIA_GENRE+", "+MEDIA_ALBUM+", "+MEDIA_ALBUMARTIST+" )"+
+                        " VALUES (new."+MEDIA_LOCATION+", new."+MEDIA_TITLE+", new."+MEDIA_ARTIST+
+                        ", new."+MEDIA_GENRE+", new."+MEDIA_ALBUM+", new."+MEDIA_ALBUMARTIST+
+                        "); END;";
+            db.execSQL(query);
+            query = " CREATE TRIGGER media_delete_trigger AFTER DELETE ON "+MEDIA_TABLE_NAME+ " BEGIN "+
+                        "DELETE FROM "+MEDIA_VIRTUAL_TABLE_NAME+" WHERE "+MEDIA_LOCATION+" = old."+MEDIA_LOCATION+";"+
+                        " END;";
+            db.execSQL(query);
         }
 
         private void createPlaylistTablesQuery(SQLiteDatabase db) {
@@ -210,10 +234,11 @@ public class MediaDatabase {
                     MRL_URI + " TEXT PRIMARY KEY NOT NULL,"+
                     MRL_DATE + " DATETIME NOT NULL"
                     +");";
-            createMrlTableQuery += " CREATE TRIGGER mrl_history_trigger AFTER INSERT ON "+
+            db.execSQL(createMrlTableQuery);
+            createMrlTableQuery = " CREATE TRIGGER mrl_history_trigger AFTER INSERT ON "+
                     MRL_TABLE_NAME+ " BEGIN "+
                     " DELETE FROM "+MRL_TABLE_NAME+" where "+MRL_URI+" NOT IN (SELECT "+MRL_URI+
-                    " from "+MRL_TABLE_NAME+" ORDER BY insertion_date DESC LIMIT "+MRL_TABLE_SIZE+");"+
+                    " from "+MRL_TABLE_NAME+" ORDER BY "+MRL_DATE+" DESC LIMIT "+MRL_TABLE_SIZE+");"+
                     " END";
             db.execSQL(createMrlTableQuery);
         }
@@ -286,6 +311,9 @@ public class MediaDatabase {
                 case 13:
                     createNetworkFavTableQuery(db);
                     break;
+                    case 17:
+                        dropMRLTableQuery(db);
+                        createMRLTableQuery(db);
                 default:
                     break;
                 }
@@ -571,25 +599,20 @@ public class MediaDatabase {
         return files;
     }
 
-    public synchronized ArrayList<String> searchMedia(String filter, int type){
+    public synchronized Cursor queryMedia(String query){
+        String[] queryColumns = new String[]{MEDIA_LOCATION, MEDIA_TITLE};
+        return mDb.query(MEDIA_VIRTUAL_TABLE_NAME, queryColumns, MEDIA_VIRTUAL_TABLE_NAME+" MATCH ?",
+                new String[]{query + "*"}, null, null, null, null);
+    }
+
+    public synchronized ArrayList<String> searchMedia(String filter){
 
         ArrayList<String> mediaList = new ArrayList<String>();
-
-        String[] queryColumns = new String[]{MEDIA_LOCATION, MEDIA_TITLE, MEDIA_ALBUM, MEDIA_ARTIST, MEDIA_TYPE};
-        String queryString = MEDIA_TITLE+" LIKE ? OR "+MEDIA_ALBUM+" LIKE ? OR "+MEDIA_ARTIST+" LIKE ?";
-        String [] queryArgs;
-        if (type != MediaWrapper.TYPE_ALL) {
-            queryString = "( " + queryString + " ) AND " + MEDIA_TYPE + "=?";
-            queryArgs = new String[]{"%"+filter+"%", "%"+filter+"%", "%"+filter+"%", String.valueOf(type)};
-        } else
-            queryArgs = new String[]{"%"+filter+"%", "%"+filter+"%", "%"+filter+"%"};
-
-        Cursor cursor = mDb.query(MEDIA_TABLE_NAME,
-                queryColumns, queryString, queryArgs, null, null, null, null);
+        Cursor cursor = queryMedia(filter);
         if (cursor.moveToFirst()){
             do {
                 mediaList.add(cursor.getString(0));
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
         cursor.close();
         return mediaList;
@@ -830,7 +853,7 @@ public class MediaDatabase {
             default:
                 return;
         }
-        mDb.update(MEDIA_TABLE_NAME, values, MEDIA_LOCATION + "=?", new String[] { location });
+        mDb.update(MEDIA_TABLE_NAME, values, MEDIA_LOCATION + "=?", new String[]{location});
     }
 
     /**
@@ -852,7 +875,7 @@ public class MediaDatabase {
      * @param path
      */
     public synchronized void removeDir(String path) {
-        mDb.delete(DIR_TABLE_NAME, DIR_ROW_PATH + "=?", new String[] { path });
+        mDb.delete(DIR_TABLE_NAME, DIR_ROW_PATH + "=?", new String[]{path});
     }
 
     /**
@@ -924,7 +947,7 @@ public class MediaDatabase {
         ArrayList<String> history = new ArrayList<String>();
 
         Cursor cursor = mDb.query(SEARCHHISTORY_TABLE_NAME,
-                new String[] { SEARCHHISTORY_KEY },
+                new String[]{SEARCHHISTORY_KEY},
                 null, null, null, null,
                 SEARCHHISTORY_DATE + " DESC",
                 Integer.toString(size));
@@ -970,7 +993,7 @@ public class MediaDatabase {
     }
 
     public synchronized void deleteMrlUri(String uri) {
-        mDb.delete(MRL_TABLE_NAME, MRL_URI + "=?", new String[] { uri });
+        mDb.delete(MRL_TABLE_NAME, MRL_URI + "=?", new String[]{uri});
     }
 
     public synchronized void clearMrlHistory() {

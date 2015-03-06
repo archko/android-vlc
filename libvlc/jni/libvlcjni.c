@@ -36,7 +36,6 @@
 #include <android/api-level.h>
 
 #include "libvlcjni.h"
-#include "aout.h"
 #include "vout.h"
 #include "utils.h"
 #include "native_crash_handler.h"
@@ -44,6 +43,9 @@
 #define VOUT_ANDROID_SURFACE 0
 #define VOUT_OPENGLES2       1
 #define VOUT_ANDROID_WINDOW  2
+
+#define AOUT_AUDIOTRACK      0
+#define AOUT_OPENSLES        1
 
 #define LOG_TAG "VLC/JNI/main"
 #include "log.h"
@@ -222,16 +224,18 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     pthread_mutex_init(&vout_android_lock, NULL);
     pthread_cond_init(&vout_android_surf_attached, NULL);
 
-#define GET_CLASS(clazz, str) do { \
+#define GET_CLASS(clazz, str, b_globlal) do { \
     (clazz) = (*env)->FindClass(env, (str)); \
     if (!(clazz)) { \
         LOGE("FindClass(%s) failed", (str)); \
         return -1; \
     } \
-    (clazz) = (jclass) (*env)->NewGlobalRef(env, (clazz)); \
-    if (!(clazz)) { \
-        LOGE("NewGlobalRef(%s) failed", (str)); \
-        return -1; \
+    if (b_globlal) { \
+        (clazz) = (jclass) (*env)->NewGlobalRef(env, (clazz)); \
+        if (!(clazz)) { \
+            LOGE("NewGlobalRef(%s) failed", (str)); \
+            return -1; \
+        } \
     } \
 } while (0)
 
@@ -243,18 +247,33 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     } \
 } while (0)
 
+    jclass Version_clazz;
+    jfieldID SDK_INT_fieldID;
+
+    GET_CLASS(Version_clazz, "android/os/Build$VERSION", false);
+    GET_ID(GetStaticFieldID, SDK_INT_fieldID, Version_clazz, "SDK_INT", "I");
+    fields.SDK_INT = (*env)->GetStaticIntField(env, Version_clazz,
+                                               SDK_INT_fieldID);
+
     GET_CLASS(fields.IllegalStateException.clazz,
-              "java/lang/IllegalStateException");
+              "java/lang/IllegalStateException", true);
     GET_CLASS(fields.IllegalArgumentException.clazz,
-              "java/lang/IllegalArgumentException");
+              "java/lang/IllegalArgumentException", true);
     GET_CLASS(fields.String.clazz,
-              "java/lang/String");
+              "java/lang/String", true);
+    GET_CLASS(fields.LibVLC.clazz,
+              "org/videolan/libvlc/LibVLC", true);
     GET_CLASS(fields.VLCObject.clazz,
-              "org/videolan/libvlc/VLCObject");
+              "org/videolan/libvlc/VLCObject", true);
     GET_CLASS(fields.Media.clazz,
-              "org/videolan/libvlc/Media");
+              "org/videolan/libvlc/Media", true);
     GET_CLASS(fields.Media.Track.clazz,
-              "org/videolan/libvlc/Media$Track");
+              "org/videolan/libvlc/Media$Track", true);
+
+    GET_ID(GetStaticMethodID,
+           fields.LibVLC.onNativeCrashID,
+           fields.LibVLC.clazz,
+           "onNativeCrash", "()V");
 
     GET_ID(GetFieldID,
            fields.VLCObject.mInstanceID,
@@ -265,6 +284,23 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
            fields.VLCObject.dispatchEventFromNativeID,
            fields.VLCObject.clazz,
            "dispatchEventFromNative", "(IJJ)V");
+
+    if (fields.SDK_INT <= 7)
+    {
+        LOGE("fields.SDK_INT is less than 7: using compat WeakReference");
+        GET_ID(GetMethodID,
+               fields.VLCObject.getWeakReferenceID,
+               fields.VLCObject.clazz,
+               "getWeakReference", "()Ljava/lang/Object;");
+        GET_ID(GetStaticMethodID,
+               fields.VLCObject.dispatchEventFromWeakNativeID,
+               fields.VLCObject.clazz,
+               "dispatchEventFromWeakNative", "(Ljava/lang/Object;IJJ)V");
+    } else
+    {
+        fields.VLCObject.getWeakReferenceID = NULL;
+        fields.VLCObject.dispatchEventFromWeakNativeID = NULL;
+    }
 
     GET_ID(GetStaticMethodID,
            fields.Media.createAudioTrackFromNativeID,
@@ -290,6 +326,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 #undef GET_CLASS
 #undef GET_ID
 
+    init_native_crash_handler();
+
     LOGD("JNI interface loaded.");
     return VLC_JNI_VERSION;
 }
@@ -300,6 +338,8 @@ void JNI_OnUnload(JavaVM* vm, void* reserved)
 
     pthread_mutex_destroy(&vout_android_lock);
     pthread_cond_destroy(&vout_android_surf_attached);
+
+    destroy_native_crash_handler();
 
     if ((*vm)->GetEnv(vm, (void**) &env, VLC_JNI_VERSION) != JNI_OK)
         return;
@@ -333,9 +373,6 @@ int jni_get_env(JNIEnv **env)
 {
     return (*myVm)->GetEnv(myVm, (void **)env, VLC_JNI_VERSION) == JNI_OK ? 0 : -1;
 }
-
-// FIXME: use atomics
-static bool verbosity;
 
 void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
 {
@@ -381,7 +418,7 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
     LOGD("Subtitle encoding set to \"%s\"", subsencodingstr);
 
     methodId = (*env)->GetMethodID(env, cls, "isVerboseMode", "()Z");
-    verbosity = (*env)->CallBooleanMethod(env, thiz, methodId);
+    bool b_verbose = (*env)->CallBooleanMethod(env, thiz, methodId);
 
     methodId = (*env)->GetMethodID(env, cls, "isDirectRendering", "()Z");
     bool direct_rendering = (*env)->CallBooleanMethod(env, thiz, methodId);
@@ -397,7 +434,7 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         (*env)->ReleaseStringUTFChars(env, cachePath, cache_path);
     }
 
-#define MAX_ARGV 18
+#define MAX_ARGV 19
     const char *argv[MAX_ARGV];
     int argc = 0;
 
@@ -436,6 +473,8 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         argv[argc++] = "--no-omxil-dr";
 #endif
     }
+    argv[argc++] = b_verbose ? "-vvv" : "-vv";
+
     /* Reconnect on lost HTTP streams, e.g. network change */
     if (enable_http_reconnect)
         argv[argc++] = "--http-reconnect";
@@ -455,23 +494,16 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
     }
 
     LOGI("LibVLC initialized: %p", instance);
-
-    libvlc_log_set(instance, debug_log, &verbosity);
-
-    init_native_crash_handler(env, thiz);
 }
 
 void Java_org_videolan_libvlc_LibVLC_nativeDestroy(JNIEnv *env, jobject thiz)
 {
-    destroy_native_crash_handler(env);
-
     releaseMediaPlayer(env, thiz);
     jlong libVlcInstance = getLong(env, thiz, "mLibVlcInstance");
     if (!libVlcInstance)
         return; // Already destroyed
 
     libvlc_instance_t *instance = (libvlc_instance_t*)(intptr_t) libVlcInstance;
-    libvlc_log_unset(instance);
     libvlc_release(instance);
 
     setLong(env, thiz, "mLibVlcInstance", 0);
@@ -498,6 +530,7 @@ void Java_org_videolan_libvlc_LibVLC_setEventHandler(JNIEnv *env, jobject thiz, 
 void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz,
                                              jstring mrl, jobjectArray mediaOptions)
 {
+    jclass cls;
     /* Release previous media player, if any */
     releaseMediaPlayer(env, thiz);
 
@@ -507,16 +540,6 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz,
     libvlc_media_player_t *mp = libvlc_media_player_new(p_instance);
     libvlc_media_player_set_video_title_display(mp, libvlc_position_disable, 0);
     jobject myJavaLibVLC = (*env)->NewGlobalRef(env, thiz); // freed in aout_close
-
-    // If AOUT_AUDIOTRACK_JAVA, use amem
-    jclass cls = (*env)->GetObjectClass(env, thiz);
-    jmethodID methodId = (*env)->GetMethodID(env, cls, "getAout", "()I");
-    if ( (*env)->CallIntMethod(env, thiz, methodId) == AOUT_AUDIOTRACK_JAVA )
-    {
-        libvlc_audio_set_callbacks(mp, aout_play, aout_pause, NULL, NULL, NULL,
-                                   (void*) myJavaLibVLC);
-        libvlc_audio_set_format_callbacks(mp, aout_open, aout_close);
-    }
 
     /* Connect the event manager */
     libvlc_event_manager_t *ev = libvlc_media_player_event_manager(mp);
@@ -817,4 +840,16 @@ int jni_GetWindowSize(int *width, int *height)
     *height = i_window_height;
     pthread_mutex_unlock(&vout_android_lock);
     return 0;
+}
+
+/* used by opensles module */
+int aout_get_native_sample_rate(void)
+{
+    JNIEnv *p_env;
+    jni_attach_thread (&p_env, THREAD_NAME);
+    jclass cls = (*p_env)->FindClass (p_env, "android/media/AudioTrack");
+    jmethodID method = (*p_env)->GetStaticMethodID (p_env, cls, "getNativeOutputSampleRate", "(I)I");
+    int sample_rate = (*p_env)->CallStaticIntMethod (p_env, cls, method, 3); // AudioManager.STREAM_MUSIC
+    jni_detach_thread ();
+    return sample_rate;
 }
