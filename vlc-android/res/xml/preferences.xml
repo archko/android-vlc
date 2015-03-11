@@ -88,12 +88,12 @@
                     android:summary="@string/enable_steal_remote_control_summary"
                     android:title="@string/enable_steal_remote_control" />
                 <ListPreference
-		            android:defaultValue="0"
-		            android:entries="@array/audio_title_alignment_list"
-		            android:entryValues="@array/audio_title_alignment_values"
-		            android:key="audio_title_alignment"
-		            android:persistent="true"
-		            android:title="@string/audio_title_alignment" />
+                    android:defaultValue="0"
+                    android:entries="@array/audio_title_alignment_list"
+                    android:entryValues="@array/audio_title_alignment_values"
+                    android:key="audio_title_alignment"
+                    android:persistent="true"
+                    android:title="@string/audio_title_alignment" />
             </PreferenceCategory>
         </PreferenceScreen>
         <PreferenceScreen android:title="@string/performance_prefs_category" >
@@ -132,10 +132,10 @@
                     android:key="aout"
                     android:summary="@string/aout_summary"
                     android:title="@string/aout" />
-                <ListPreference
-                    android:key="vout"
-                    android:summary="@string/vout_summary"
-                    android:title="@string/vout" />
+                <!--<ListPreference-->
+                    <!--android:key="vout"-->
+                    <!--android:summary="@string/vout_summary"-->
+                    <!--android:title="@string/vout" />-->
 
                 <Preference
                     android:enabled="true"

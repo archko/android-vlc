@@ -84,6 +84,9 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /* Theme must be applied before super.onCreate */
+        applyTheme();
+
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
 
@@ -149,6 +152,9 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         setResult(RESULT_RESTART);
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
                         return true;
                     }
                 });
@@ -238,13 +244,14 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
             group.removePreference(aoutPref);
         }
         // Video output
-        ListPreference voutPref = (ListPreference) findPreference("vout");
-        int voutEntriesId = LibVlcUtil.isGingerbreadOrLater() ? R.array.vouts : R.array.vouts_froyo;
-        int voutEntriesIdValues = LibVlcUtil.isGingerbreadOrLater() ? R.array.vouts_values : R.array.vouts_values_froyo;
-        voutPref.setEntries(voutEntriesId);
-        voutPref.setEntryValues(voutEntriesIdValues);
-        if (voutPref.getValue() == null)
-            voutPref.setValue("0" /* VOUT_ANDROID_SURFACE */);
+//        FIXME : This setting is disable until OpenGL it's fixed
+//        ListPreference voutPref = (ListPreference) findPreference("vout");
+//        int voutEntriesId = LibVlcUtil.isGingerbreadOrLater() ? R.array.vouts : R.array.vouts_froyo;
+//        int voutEntriesIdValues = LibVlcUtil.isGingerbreadOrLater() ? R.array.vouts_values : R.array.vouts_values_froyo;
+//        voutPref.setEntries(voutEntriesId);
+//        voutPref.setEntryValues(voutEntriesIdValues);
+//        if (voutPref.getValue() == null)
+//            voutPref.setValue("0"  VOUT_ANDROID_SURFACE );
         // Set locale
         EditTextPreference setLocalePref = (EditTextPreference) findPreference("set_locale");
         setLocalePref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
@@ -277,6 +284,14 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
         /*** SharedPreferences Listener to apply changes ***/
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    private void applyTheme() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme) {
+            setTheme(R.style.Theme_VLC_Black);
+        }
     }
 
     @Override
