@@ -76,6 +76,8 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     public final static String VIDEO_RESUME_TIME = "VideoResumeTime";
     public final static String VIDEO_PAUSED = "VideoPaused";
     public final static String VIDEO_SUBTITLE_FILES = "VideoSubtitleFiles";
+    public final static String VIDEO_LAST = "VideoLastPlayed";
+    public final static String VIDEO_SPEED = "VideoSpeed";
     public final static int RESULT_RESCAN = RESULT_FIRST_USER + 1;
     public final static int RESULT_RESTART = RESULT_FIRST_USER + 2;
 
@@ -193,6 +195,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                         MediaDatabase.getInstance().emptyDatabase();
                         BitmapCache.getInstance().clear();
                         AudioUtil.clearCacheFolders();
+                        setResult(RESULT_RESCAN);
                         Toast.makeText(getBaseContext(), R.string.media_db_cleared, Toast.LENGTH_SHORT).show();
                         return true;
                     }
@@ -350,7 +353,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 || key.equalsIgnoreCase("network_caching")
                 || key.equalsIgnoreCase("dev_hardware_decoder")) {
             VLCInstance.updateLibVlcSettings(sharedPreferences);
-            LibVLC.restart(this);
+            VLCInstance.restart(this);
         }
     }
 

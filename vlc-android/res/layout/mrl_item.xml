@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="50dp"
     card_view:cardUseCompatPadding="true"
+    card_view:cardPreventCornerOverlap="false"
     card_view:cardElevation="1sp">
 
     <RelativeLayout
@@ -20,6 +21,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="10dp"
             android:singleLine="true"
+            android:fontFamily="sans-serif-light"
             android:textColor="?attr/font_default" />
         <ImageView
             android:id="@+id/mrl_item_delete"

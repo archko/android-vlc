@@ -30,7 +30,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -50,7 +49,9 @@ import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.interfaces.IRefreshable;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
+import org.videolan.vlc.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 
@@ -60,6 +61,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
 
     public static final String SMB_ROOT = "smb";
     public static final String KEY_MRL = "key_mrl";
+    public static final String KEY_MEDIA = "key_media";
     public static final String KEY_POSITION = "key_list";
 
     private NetworkFragmentHandler mHandler;
@@ -70,16 +72,23 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
     private LinearLayoutManager mLayoutManager;
     TextView mEmptyView;
     public String mMrl;
+    private MediaWrapper mCurrentMedia;
     private int mSavedPosition = -1, mFavorites = 0;
     private boolean mRoot;
-    LibVLC mLibVLC = LibVLC.getExistingInstance();
+    private LibVLC mLibVLC;
 
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
+        mLibVLC = VLCInstance.get();
+
         if (bundle == null)
             bundle = getArguments();
         if (bundle != null){
-            mMrl = bundle.getString(KEY_MRL);
+            mCurrentMedia = bundle.getParcelable(KEY_MEDIA);
+            if (mCurrentMedia != null)
+                mMrl = mCurrentMedia.getLocation();
+            else
+                mMrl = bundle.getString(KEY_MRL);
             mSavedPosition = bundle.getInt(KEY_POSITION);
         }
         if (mMrl == null)
@@ -100,7 +109,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         mRecyclerView.setOnScrollListener(mScrollListener);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
-        mSwipeRefreshLayout.setColorSchemeResources(R.color.darkerorange);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.orange700);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         return v;
     }
@@ -130,7 +139,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         if (mRoot)
             return getString(R.string.network_browsing);
         else
-            return Strings.getName(mMrl);
+            return mCurrentMedia != null ? mCurrentMedia.getTitle() : mMrl;
     }
 
     public boolean isRootDirectory(){
@@ -145,7 +154,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
         Fragment next = new NetworkFragment();
         Bundle args = new Bundle();
-        args.putString(KEY_MRL, media.getLocation());
+        args.putParcelable(KEY_MEDIA, media);
         next.setArguments(args);
         ft.replace(R.id.fragment_placeholder, next, media.getLocation());
         ft.addToBackStack(mMrl);
@@ -241,11 +250,11 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
     public void refresh() {
         mAdapter.clear();
         if (mRoot){
-            ArrayList<String> favs = MediaDatabase.getInstance().getAllNetworkFav();
+            ArrayList<MediaWrapper> favs = MediaDatabase.getInstance().getAllNetworkFav();
             if (!favs.isEmpty()) {
                 mFavorites = favs.size();
-                for (String fav : favs) {
-                    mAdapter.addItem(new MediaWrapper(fav), false, true);
+                for (MediaWrapper fav : favs) {
+                    mAdapter.addItem(fav, false, true);
                     mAdapter.notifyDataSetChanged();
                 }
                 mAdapter.addItem("Network favorites", false, true);
@@ -259,7 +268,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
     }
 
     private void updateFavorites(){
-        ArrayList<String> favs = MediaDatabase.getInstance().getAllNetworkFav();
+        ArrayList<MediaWrapper> favs = MediaDatabase.getInstance().getAllNetworkFav();
         int newSize = favs.size(), totalSize = mAdapter.getItemCount();
 
         if (newSize == 0 && mFavorites == 0)
@@ -272,8 +281,8 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         else {
             if (mFavorites == 0)
                 mAdapter.addItem("Network favorites", false, false); //add header if needed
-            for (String fav : favs)
-                mAdapter.addItem(new MediaWrapper(fav), false, false); //add new favorites
+            for (MediaWrapper fav : favs)
+                mAdapter.addItem(fav, false, false); //add new favorites
         }
         mFavorites = newSize; //update count
     }
@@ -283,7 +292,7 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         if (db.networkFavExists(mMrl))
             db.deleteNetworkFav(mMrl);
         else
-            db.addNetworkFavItem(mMrl);
+            db.addNetworkFavItem(mMrl, mCurrentMedia.getTitle());
         getActivity().supportInvalidateOptionsMenu();
     }
 
@@ -326,5 +335,9 @@ public class NetworkFragment extends BrowserFragment implements IRefreshable, Me
         MainActivity main = (MainActivity)getActivity();
         main.setMenuFocusDown(idIsEmpty, R.id.network_list);
         main.setSearchAsFocusDown(idIsEmpty, parent, R.id.network_list);
+    }
+
+    public void clear(){
+        mAdapter.clear();
     }
 }

@@ -38,7 +38,7 @@
                     android:layout_gravity="center"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
-                    android:background="?attr/playlist_item_footer" />
+                    android:background="?attr/item_footer" />
             </LinearLayout>
 
             <LinearLayout
@@ -66,6 +66,7 @@
                         android:ellipsize="middle"
                         android:text="@string/title"
                         android:textColor="?attr/list_title"
+                        android:fontFamily="sans-serif-light"
                         android:textSize="16sp" />
 
                     <TextView
@@ -79,6 +80,7 @@
                         android:ellipsize="middle"
                         android:text="@string/artist"
                         android:textColor="?attr/list_subtitle"
+                        android:fontFamily="sans-serif-light"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -88,7 +90,7 @@
                     android:layout_gravity="center"
                     android:layout_marginBottom="8dp"
                     android:layout_marginTop="8dp"
-                    android:background="?attr/playlist_item_footer" />
+                    android:background="?attr/item_footer" />
 
                 <ImageButton
                     android:id="@+id/move"
@@ -115,6 +117,6 @@
         android:layout_gravity="center"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:background="?attr/playlist_item_footer" />
+        android:background="?attr/item_footer" />
 
 </LinearLayout>

@@ -51,6 +51,7 @@ import org.videolan.vlc.gui.dialogs.TimePickerDialogFragment;
 import org.videolan.vlc.interfaces.IDelayController;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.VLCInstance;
 
 import java.util.Calendar;
 
@@ -150,6 +151,11 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         mHandler.sendEmptyMessage(TOGGLE_CANCEL);
         mTextColor = mSleepTitle.getCurrentTextColor();
 
+        double speed = VLCInstance.get().getRate();
+        if (speed != 1.0d) {
+            speed = 100 * (1 + Math.log(speed) / Math.log(4));
+            mSeek.setProgress((int) speed);
+        }
         return root;
     }
 
@@ -158,7 +164,7 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             float rate = (float) Math.pow(4, ((double) progress / (double) 100) - 1);
             mHandler.obtainMessage(SPEED_TEXT, Strings.formatRateString(rate)).sendToTarget();
-            LibVLC.getExistingInstance().setRate(rate);
+            VLCInstance.get().setRate(rate);
         }
 
         public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -169,7 +175,7 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         @Override
         public void onClick(View v) {
             mSeek.setProgress(100);
-            LibVLC.getExistingInstance().setRate(1);
+            VLCInstance.get().setRate(1);
         }
     };
 
@@ -214,7 +220,7 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         public void onFocusChange(View v, boolean hasFocus) {
             if (v instanceof TextView)
                 ((TextView) v).setTextColor(v.hasFocus() ?
-                        sInstance.getResources().getColor(R.color.darkorange) : mTextColor);
+                        sInstance.getResources().getColor(R.color.orange500) : mTextColor);
         }
     };
 

@@ -190,6 +190,11 @@ static void vlc_event_callback(const libvlc_event_t *ev, void *data)
         (*env)->DeleteLocalRef(env, item_uri_value);
         (*env)->DeleteLocalRef(env, item_index);
         free(mrl);
+    } else if(ev->type == libvlc_MediaPlayerESAdded ||
+              ev->type == libvlc_MediaPlayerESDeleted ) {
+        jstring sData = (*env)->NewStringUTF(env, "data");
+        (*env)->CallVoidMethod(env, bundle, putInt, sData, ev->u.media_player_es_changed.i_type);
+        (*env)->DeleteLocalRef(env, sData);
     }
 
     /* Get the object class */
@@ -434,7 +439,7 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         (*env)->ReleaseStringUTFChars(env, cachePath, cache_path);
     }
 
-#define MAX_ARGV 19
+#define MAX_ARGV 20
     const char *argv[MAX_ARGV];
     int argc = 0;
 
@@ -473,6 +478,7 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         argv[argc++] = "--no-omxil-dr";
 #endif
     }
+    argv[argc++] = "--spdif";
     argv[argc++] = b_verbose ? "-vvv" : "-vv";
 
     /* Reconnect on lost HTTP streams, e.g. network change */
@@ -551,7 +557,9 @@ void Java_org_videolan_libvlc_LibVLC_playMRL(JNIEnv *env, jobject thiz,
         libvlc_MediaPlayerVout,
         libvlc_MediaPlayerPositionChanged,
         libvlc_MediaPlayerTimeChanged,
-        libvlc_MediaPlayerEncounteredError
+        libvlc_MediaPlayerEncounteredError,
+        libvlc_MediaPlayerESAdded,
+        libvlc_MediaPlayerESDeleted,
     };
     for(int i = 0; i < (sizeof(mp_events) / sizeof(*mp_events)); i++)
         libvlc_event_attach(ev, mp_events[i], vlc_event_callback, myVm);

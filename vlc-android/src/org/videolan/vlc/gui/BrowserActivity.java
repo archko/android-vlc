@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Stack;
 
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
@@ -41,10 +43,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -78,6 +83,7 @@ public class BrowserActivity extends ListActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applyTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.browser);
         mAdapter = new BrowserAdapter(this);
@@ -95,6 +101,14 @@ public class BrowserActivity extends ListActivity {
         openStorageDevices(mRoots);
 
         registerForContextMenu(getListView());
+    }
+
+    private void applyTheme() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
+        if (enableBlackTheme) {
+            setTheme(R.style.Theme_VLC_Black);
+        }
     }
 
     private void refreshRoots() {
@@ -179,6 +193,9 @@ public class BrowserActivity extends ListActivity {
         if(file.getPath().equals(BrowserAdapter.ADD_ITEM_PATH)) {
             AlertDialog.Builder b = new AlertDialog.Builder(this);
             final EditText input = new EditText(this);
+            if (!LibVlcUtil.isHoneycombOrLater()) {
+                input.setTextColor(getResources().getColor(R.color.grey50));
+            }
             input.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
             b.setTitle(R.string.add_custom_path);
             b.setMessage(R.string.add_custom_path_description);

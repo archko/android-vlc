@@ -421,17 +421,15 @@ public class DirectoryAdapter extends BaseAdapter {
         else
             holder.icon.setImageResource(R.drawable.ic_menu_folder);
 
-        if (isChildFile(position)) {
-            holder.more.setVisibility(View.VISIBLE);
-            holder.more.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mContextPopupMenuListener != null)
-                        mContextPopupMenuListener.onPopupMenu(v, position);
-                }
-            });
-        } else
-            holder.more.setVisibility(View.GONE);
+        holder.more.setVisibility(Util.canWrite(mCurrentDir+"/"+selectedNode.name) ? View.VISIBLE : View.INVISIBLE);
+        holder.more.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mContextPopupMenuListener != null)
+                    mContextPopupMenuListener.onPopupMenu(v, position);
+            }
+        });
+
         return v;
     }
 

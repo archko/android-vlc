@@ -20,27 +20,6 @@
 
 package org.videolan.vlc.gui.video;
 
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
-import org.videolan.libvlc.util.Extensions;
-import org.videolan.vlc.MediaWrapper;
-import org.videolan.vlc.MediaLibrary;
-import org.videolan.vlc.R;
-import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.util.BitmapUtil;
-import org.videolan.vlc.util.Strings;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.WeakHandler;
-
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -55,15 +34,31 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.util.Extensions;
+import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.R;
+import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.util.BitmapUtil;
+import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.VLCInstance;
+import org.videolan.vlc.util.WeakHandler;
+
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class MediaInfoFragment extends ListFragment {
 
     public final static String TAG = "VLC/MediaInfoFragment";
-    LibVLC mLibVlc = null;
 
     private MediaWrapper mItem;
     private Bitmap mImage;
@@ -81,7 +76,7 @@ public class MediaInfoFragment extends ListFragment {
     private final static int HIDE_DELETE = 3;
     private final static int EXIT = 4;
     private final static int SHOW_SUBTITLES = 5;
-    ExecutorService threadPoolExecutor;
+    ExecutorService mThreadPoolExecutor;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -94,6 +89,10 @@ public class MediaInfoFragment extends ListFragment {
         mPlayButton = (ImageButton) v.findViewById(R.id.play);
         mDelete = (ImageButton) v.findViewById(R.id.info_delete);
         mSubtitles = (ImageView) v.findViewById(R.id.info_subtitles);
+
+        mThreadPoolExecutor = Executors.newFixedThreadPool(2);
+        mThreadPoolExecutor.submit(mCheckFile);
+        mThreadPoolExecutor.submit(mLoadImage);
 
         mPathView.setText(mItem == null ? "" : Uri.decode(mItem.getLocation().substring(7)));
         mPlayButton.setOnClickListener(new OnClickListener() {
@@ -136,15 +135,12 @@ public class MediaInfoFragment extends ListFragment {
 
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(mItem.getTitle());
         mLengthView.setText(Strings.millisToString(mItem.getLength()));
-
-        threadPoolExecutor = Executors.newFixedThreadPool(2);
-        threadPoolExecutor.submit(mCheckFile);
-        threadPoolExecutor.submit(mLoadImage);
     }
 
     public void onStop(){
         super.onStop();
-        threadPoolExecutor.shutdownNow();
+        if (mThreadPoolExecutor != null)
+            mThreadPoolExecutor.shutdownNow();
     }
 
     public void setMediaLocation(String MRL) {
@@ -206,8 +202,10 @@ public class MediaInfoFragment extends ListFragment {
     Runnable mLoadImage = new Runnable() {
         @Override
         public void run() {
-            mLibVlc = LibVLC.getInstance();
-            mMedia = new Media(mLibVlc, mItem.getLocation());
+            final LibVLC libVlc = VLCInstance.get();
+            if (libVlc == null)
+                return;
+            mMedia = new Media(libVlc, mItem.getLocation());
             mMedia.parse();
             mMedia.release();
             int videoHeight = mItem.getHeight();
@@ -230,7 +228,7 @@ public class MediaInfoFragment extends ListFragment {
             // Get the thumbnail.
             mImage = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 
-            byte[] b = mLibVlc.getThumbnail(mItem.getLocation(), width, height);
+            byte[] b = libVlc.getThumbnail(mItem.getLocation(), width, height);
 
             if (b == null) // We were not able to create a thumbnail for this item.
                 return;
@@ -271,7 +269,7 @@ public class MediaInfoFragment extends ListFragment {
             mAdapter.add(track);
         }
         if (mAdapter.isEmpty()) {
-            ((MainActivity) getActivity()).popSecondaryFragment();
+            getActivity().finish();
             return;
         }
         if (hasSubs)
@@ -308,7 +306,7 @@ public class MediaInfoFragment extends ListFragment {
                     fragment.mDelete.setVisibility(View.GONE);
                     break;
                 case EXIT:
-                    ((MainActivity) fragment.getActivity()).popSecondaryFragment();
+                    fragment.getActivity().finish();
                     MediaLibrary.getInstance().loadMediaItems(fragment.getActivity(), true);
                     break;
                 case SHOW_SUBTITLES:

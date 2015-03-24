@@ -26,7 +26,6 @@ import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -58,6 +57,7 @@ import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCRunnable;
+import org.videolan.vlc.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,7 +145,7 @@ public class AudioAlbumsSongsFragment extends BrowserFragment implements SwipeRe
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
 
-        mSwipeRefreshLayout.setColorSchemeResources(R.color.darkerorange);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.orange700);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
         songsList.setOnScrollListener(mScrollListener);
@@ -177,11 +177,13 @@ public class AudioAlbumsSongsFragment extends BrowserFragment implements SwipeRe
     @Override
     public void onPause() {
         super.onPause();
+        AudioServiceController.getInstance().unbindAudioService(getActivity());
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        AudioServiceController.getInstance().bindAudioService(getActivity());
     }
 
     @Override
@@ -377,4 +379,9 @@ public class AudioAlbumsSongsFragment extends BrowserFragment implements SwipeRe
             return false;
         }
     };
+
+    public void clear(){
+        mAlbumsAdapter.clear();
+        mSongsAdapter.clear();
+    }
 }

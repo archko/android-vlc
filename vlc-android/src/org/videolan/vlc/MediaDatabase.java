@@ -50,7 +50,7 @@ public class MediaDatabase {
 
     private SQLiteDatabase mDb;
     private static final String DB_NAME = "vlc_database";
-    private static final int DB_VERSION = 17;
+    private static final int DB_VERSION = 19;
     private static final int CHUNK_SIZE = 50;
 
     private static final String DIR_TABLE_NAME = "directories_table";
@@ -96,6 +96,7 @@ public class MediaDatabase {
 
     private static final String NETWORK_FAV_TABLE_NAME = "fav_table";
     private static final String NETWORK_FAV_URI = "uri";
+    private static final String NETWORK_FAV_TITLE = "title";
 
     public enum mediaColumn {
         MEDIA_TABLE_NAME, MEDIA_PATH, MEDIA_TIME, MEDIA_LENGTH,
@@ -160,8 +161,15 @@ public class MediaDatabase {
         }
 
         public void dropMediaTableQuery(SQLiteDatabase db) {
-            String query = "DROP TABLE " + MEDIA_TABLE_NAME + ";";
-            db.execSQL(query);
+            try {
+                String query = "DROP TABLE " + MEDIA_TABLE_NAME + ";";
+                db.execSQL(query);
+                query = "DROP TABLE " + MEDIA_VIRTUAL_TABLE_NAME + ";";
+                db.execSQL(query);
+            } catch(SQLiteException e)
+            {
+                Log.w(TAG, "SQLite tables could not be dropped! Maybe they were missing...");
+            }
         }
 
         public void createMediaTableQuery(SQLiteDatabase db) {
@@ -244,20 +252,31 @@ public class MediaDatabase {
         }
 
         public void dropMRLTableQuery(SQLiteDatabase db) {
-            String query = "DROP TABLE " + MRL_TABLE_NAME + ";";
-            db.execSQL(query);
+            try {
+                String query = "DROP TABLE " + MRL_TABLE_NAME + ";";
+                db.execSQL(query);
+            } catch(SQLiteException e)
+            {
+                Log.w(TAG, "SQLite tables could not be dropped! Maybe they were missing...");
+            }
         }
 
         private void createNetworkFavTableQuery(SQLiteDatabase db) {
             String createMrlTableQuery = "CREATE TABLE IF NOT EXISTS " +
                     NETWORK_FAV_TABLE_NAME + " (" +
-                    MRL_URI + " TEXT PRIMARY KEY NOT NULL);";
+                    NETWORK_FAV_URI + " TEXT PRIMARY KEY NOT NULL, " +
+                    NETWORK_FAV_TITLE + " TEXT NOT NULL" +
+                    ");";
             db.execSQL(createMrlTableQuery);
         }
 
         public void dropNetworkFavTableQuery(SQLiteDatabase db) {
-            String query = "DROP TABLE " + NETWORK_FAV_TABLE_NAME + ";";
-            db.execSQL(query);
+            try {
+                String query = "DROP TABLE " + NETWORK_FAV_TABLE_NAME + ";";
+                db.execSQL(query);
+            } catch(SQLiteException e) {
+                Log.w(TAG, "SQLite tables could not be dropped! Maybe they were missing...");
+            }
         }
 
         @Override
@@ -311,9 +330,14 @@ public class MediaDatabase {
                 case 13:
                     createNetworkFavTableQuery(db);
                     break;
-                    case 17:
-                        dropMRLTableQuery(db);
-                        createMRLTableQuery(db);
+                case 17:
+                    dropMRLTableQuery(db);
+                    createMRLTableQuery(db);
+                    break;
+                case 18:
+                    dropNetworkFavTableQuery(db);
+                    createNetworkFavTableQuery(db);
+                    break;
                 default:
                     break;
                 }
@@ -1001,9 +1025,10 @@ public class MediaDatabase {
     }
 
 
-    public synchronized void addNetworkFavItem(String mrl) {
+    public synchronized void addNetworkFavItem(String mrl, String title) {
         ContentValues values = new ContentValues();
         values.put(NETWORK_FAV_URI, Uri.encode(mrl));
+        values.put(NETWORK_FAV_TITLE, Uri.encode(title));
         mDb.replace(NETWORK_FAV_TABLE_NAME, null, values);
     }
 
@@ -1018,15 +1043,18 @@ public class MediaDatabase {
         return exists;
     }
 
-    public synchronized ArrayList<String> getAllNetworkFav() {
-        ArrayList<String> favs = new ArrayList<String>();
+    public synchronized ArrayList<MediaWrapper> getAllNetworkFav() {
+        ArrayList<MediaWrapper> favs = new ArrayList<MediaWrapper>();
 
+        MediaWrapper mw;
         Cursor cursor = mDb.query(NETWORK_FAV_TABLE_NAME,
-                new String[] { NETWORK_FAV_URI },
+                new String[] { NETWORK_FAV_URI , NETWORK_FAV_TITLE},
                 null, null, null, null, null);
 
         while (cursor.moveToNext()) {
-            favs.add(Uri.decode(cursor.getString(0)));
+            mw = new MediaWrapper(Uri.decode(cursor.getString(0)));
+            mw.setTitle(Uri.decode(cursor.getString(1)));
+            favs.add(mw);
         }
         cursor.close();
 

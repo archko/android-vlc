@@ -47,9 +47,12 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -155,12 +158,14 @@ public class AudioService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // Get libVLC instance
-        try {
-            mLibVLC = VLCInstance.getLibVlcInstance();
-        } catch (LibVlcException e) {
-            e.printStackTrace();
+        if (!VLCInstance.testCompatibleCPU(this)) {
+            stopSelf();
+            return;
         }
+
+        // Get libVLC instance
+        mLibVLC = VLCInstance.get();
+
         mMediaListPlayer = MediaWrapperListPlayer.getInstance(mLibVLC);
 
         mCallback = new HashMap<IAudioServiceCallback, Integer>();
@@ -317,12 +322,11 @@ public class AudioService extends Service {
             audioFocusListener = new OnAudioFocusChangeListener() {
                 @Override
                 public void onAudioFocusChange(int focusChange) {
-                    LibVLC libVLC = LibVLC.getExistingInstance();
                     switch (focusChange)
                     {
                         case AudioManager.AUDIOFOCUS_LOSS:
-                            if (libVLC.isPlaying())
-                                libVLC.pause();
+                            if (mLibVLC.isPlaying())
+                                mLibVLC.pause();
                             break;
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -330,12 +334,12 @@ public class AudioService extends Service {
                              * Lower the volume to 36% to "duck" when an alert or something
                              * needs to be played.
                              */
-                            libVLC.setVolume(36);
+                            mLibVLC.setVolume(36);
                             break;
                         case AudioManager.AUDIOFOCUS_GAIN:
                         case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
                         case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
-                            libVLC.setVolume(100);
+                            mLibVLC.setVolume(100);
                             break;
                     }
                 }
@@ -364,8 +368,8 @@ public class AudioService extends Service {
              * Incoming Call : Pause if VLC is playing audio or video. 
              */
             if (action.equalsIgnoreCase(VLCApplication.INCOMING_CALL_INTENT)) {
-                mWasPlayingAudio = mLibVLC.isPlaying() && mLibVLC.getVideoTracksCount() < 1;
-                if (mLibVLC.isPlaying())
+                mWasPlayingAudio = mLibVLC.isPlaying() && hasCurrentMedia();
+                if (mWasPlayingAudio)
                     pause();
             }
 
@@ -649,6 +653,7 @@ public class AudioService extends Service {
      *
      * @return The current media or null if there is not any.
      */
+    @Nullable
     private MediaWrapper getCurrentMedia() {
         return mMediaListPlayer.getMediaList().getMedia(mCurrentIndex);
     }
@@ -709,12 +714,17 @@ public class AudioService extends Service {
                 album = "";
             }
 
+            //Watch notification dismissed
+            PendingIntent piStop = PendingIntent.getBroadcast(this, 0,
+                    new Intent(ACTION_REMOTE_STOP), PendingIntent.FLAG_UPDATE_CURRENT);
+
             // add notification to status bar
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_stat_vlc)
                 .setTicker(title + " - " + artist)
-                .setAutoCancel(false)
-                .setOngoing(true);
+                .setAutoCancel(!mLibVLC.isPlaying())
+                .setOngoing(mLibVLC.isPlaying())
+                .setDeleteIntent(piStop);
 
             Intent notificationIntent = new Intent(this, MainActivity.class);
             notificationIntent.setAction(MainActivity.ACTION_SHOW_PLAYER);
@@ -726,11 +736,9 @@ public class AudioService extends Service {
                 Intent iBackward = new Intent(ACTION_REMOTE_BACKWARD);
                 Intent iPlay = new Intent(ACTION_REMOTE_PLAYPAUSE);
                 Intent iForward = new Intent(ACTION_REMOTE_FORWARD);
-                Intent iStop = new Intent(ACTION_REMOTE_STOP);
                 PendingIntent piBackward = PendingIntent.getBroadcast(this, 0, iBackward, PendingIntent.FLAG_UPDATE_CURRENT);
                 PendingIntent piPlay = PendingIntent.getBroadcast(this, 0, iPlay, PendingIntent.FLAG_UPDATE_CURRENT);
                 PendingIntent piForward = PendingIntent.getBroadcast(this, 0, iForward, PendingIntent.FLAG_UPDATE_CURRENT);
-                PendingIntent piStop = PendingIntent.getBroadcast(this, 0, iStop, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 RemoteViews view = new RemoteViews(/*BuildConfig.APPLICATION_ID*/"org.videolan.vlc", R.layout.notification);
                 view.setImageViewBitmap(R.id.cover, cover == null ? BitmapFactory.decodeResource(getResources(), R.drawable.icon) : cover);
@@ -754,8 +762,14 @@ public class AudioService extends Service {
                 view_expanded.setOnClickPendingIntent(R.id.stop, piStop);
                 view_expanded.setOnClickPendingIntent(R.id.content, pendingIntent);
 
-                if (LibVlcUtil.isLolliPopOrLater())
+                if (LibVlcUtil.isLolliPopOrLater()){
+                    //Hide stop button on pause, we swipe notification to stop
+                    view.setViewVisibility(R.id.stop, mLibVLC.isPlaying() ? View.VISIBLE : View.INVISIBLE);
+                    view_expanded.setViewVisibility(R.id.stop, mLibVLC.isPlaying() ? View.VISIBLE : View.INVISIBLE);
+                    //Make notification appear on lockscreen
                     builder.setVisibility(Notification.VISIBILITY_PUBLIC);
+                }
+
                 notification = builder.build();
                 notification.contentView = view;
                 notification.bigContentView = view_expanded;
@@ -771,7 +785,12 @@ public class AudioService extends Service {
             }
 
             startService(new Intent(this, AudioService.class));
-            startForeground(3, notification);
+            if (!LibVlcUtil.isLolliPopOrLater() || mLibVLC.isPlaying())
+                startForeground(3, notification);
+            else {
+                stopForeground(false);
+                NotificationManagerCompat.from(this).notify(3, notification);
+            }
         }
         catch (NoSuchMethodError e){
             // Compat library is wrong on 3.2
@@ -935,9 +954,12 @@ public class AudioService extends Service {
             editor.putString(MediaMetadataRetriever.METADATA_KEY_GENRE, Util.getMediaGenre(this, media));
             editor.putString(MediaMetadataRetriever.METADATA_KEY_TITLE, media.getTitle());
             editor.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, media.getLength());
+
             // Copy the cover bitmap because the RemonteControlClient can recycle its artwork bitmap.
-            Bitmap cover = getCover();
-            editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, ((cover != null) ? cover.copy(cover.getConfig(), false) : null));
+            Bitmap cover = AudioUtil.getCover(this, media, 512);
+            if (cover != null && cover.getConfig() != null) //In case of format not supported
+                editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, (cover.copy(cover.getConfig(), false)));
+
             editor.apply();
         }
 
@@ -987,11 +1009,6 @@ public class AudioService extends Service {
         mRepeating = RepeatType.values()[t];
         saveCurrentMedia();
         determinePrevAndNextIndices();
-    }
-
-    private Bitmap getCover() {
-        MediaWrapper media = getCurrentMedia();
-        return media != null ? AudioUtil.getCover(this, media, 512) : null;
     }
 
     private final IAudioService.Stub mInterface = new IAudioService.Stub() {
@@ -1093,7 +1110,7 @@ public class AudioService extends Service {
         @Override
         public Bitmap getCover() {
             if (hasCurrentMedia()) {
-                return AudioService.this.getCover();
+                return AudioUtil.getCover(AudioService.this, getCurrentMedia(), 512);
             }
             return null;
         }

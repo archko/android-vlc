@@ -24,12 +24,11 @@ import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.interfaces.IRefreshable;
+import org.videolan.vlc.widget.SwipeRefreshLayout;
 
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -86,7 +85,7 @@ public class HistoryFragment extends BrowserFragment implements IRefreshable, Sw
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
 
-        mSwipeRefreshLayout.setColorSchemeColors(R.color.darkerorange/*, R.attr.colorPrimary, R.attr.colorPrimaryDark*/);
+        mSwipeRefreshLayout.setColorSchemeColors(R.color.orange700/*, R.attr.colorPrimary, R.attr.colorPrimaryDark*/);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
         mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -181,4 +180,6 @@ public class HistoryFragment extends BrowserFragment implements IRefreshable, Sw
     protected String getTitle() {
         return getString(R.string.history);
     }
+
+    public void clear(){}
 }

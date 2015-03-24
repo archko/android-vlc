@@ -21,6 +21,7 @@
 package org.videolan.vlc.gui.video;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,7 +35,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -68,10 +68,13 @@ import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.BrowserFragment;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.gui.SecondaryActivity;
 import org.videolan.vlc.interfaces.ISortable;
 import org.videolan.vlc.interfaces.IVideoBrowser;
 import org.videolan.vlc.util.Util;
+import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.VLCRunnable;
+import org.videolan.vlc.widget.SwipeRefreshLayout;
 
 import java.util.HashMap;
 import java.util.List;
@@ -101,7 +104,6 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
 
     private VideoListAdapter mVideoAdapter;
     private MediaLibrary mMediaLibrary;
-    private LibVLC mLibVlc;
     private Thumbnailer mThumbnailer;
     private VideoGridAnimator mAnimator;
 
@@ -127,7 +129,6 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         FragmentActivity activity = getActivity();
         if (activity != null)
             mThumbnailer = new Thumbnailer(activity, activity.getWindowManager().getDefaultDisplay());
-        mLibVlc = LibVLC.getInstance();
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -141,7 +142,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         mGridView = (GridView) v.findViewById(android.R.id.list);
         mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipeLayout);
 
-        mSwipeRefreshLayout.setColorSchemeResources(R.color.darkerorange);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.orange700);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -275,10 +276,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             return;
         if (media instanceof MediaGroup) {
             MainActivity activity = (MainActivity)getActivity();
-            VideoGridFragment frag = (VideoGridFragment)activity.showSecondaryFragment("videoGroupList");
-            if (frag != null) {
-                frag.setGroup(media.getTitle());
-            }
+            activity.showSecondaryFragment("videoGroupList", media.getTitle());
         }
         else
             playVideo(media, false);
@@ -305,10 +303,14 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             playAudio(media);
             return true;
         case R.id.video_list_info:
-            MainActivity activity = (MainActivity)getActivity();
-            MediaInfoFragment frag = (MediaInfoFragment)activity.showSecondaryFragment("mediaInfo");
-            if (frag != null) {
-                frag.setMediaLocation(media.getLocation());
+            Activity activity = getActivity();
+            if (activity instanceof MainActivity)
+                ((MainActivity)activity).showSecondaryFragment("mediaInfo", media.getLocation());
+            else {
+                Intent i = new Intent(activity, SecondaryActivity.class);
+                i.putExtra("fragment", "mediaInfo");
+                i.putExtra("param", media.getLocation());
+                startActivity(i);
             }
             return true;
         case R.id.video_list_delete:
@@ -321,7 +323,8 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                             MediaWrapper media = (MediaWrapper) o;
                             mMediaLibrary.getMediaItems().remove(media);
                             mVideoAdapter.remove(media);
-                            mAudioController.removeLocation(media.getLocation());
+                            if (mAudioController.getMediaLocations().contains(media.getLocation()))
+                                mAudioController.removeLocation(media.getLocation());
                         }
                     });
             alertDialog.show();
@@ -348,7 +351,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             menu.findItem(R.id.video_list_play_from_start).setVisible(true);
 
         boolean hasInfo = false;
-        final Media media = new Media(mLibVlc, mediaWrapper.getLocation());
+        final Media media = new Media(VLCInstance.get(), mediaWrapper.getLocation());
         media.parse();
         media.release();
         if (media.getMeta(Media.Meta.Title) != null)
@@ -404,10 +407,12 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     }
     private void focusHelper(boolean idIsEmpty) {
         View parent = getView();
-        MainActivity main = (MainActivity)getActivity();
-        main.setMenuFocusDown(idIsEmpty, android.R.id.list);
-        main.setSearchAsFocusDown(idIsEmpty, parent,
-                    android.R.id.list);
+        if (getActivity() == null || !(getActivity() instanceof MainActivity))
+            return;
+        MainActivity activity = (MainActivity)getActivity();
+        activity.setMenuFocusDown(idIsEmpty, android.R.id.list);
+        activity.setSearchAsFocusDown(idIsEmpty, parent,
+                android.R.id.list);
         }
 
     public void updateList() {
@@ -420,8 +425,8 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         else
             Log.w(TAG, "Can't generate thumbnails, the thumbnailer is missing");
 
+        mVideoAdapter.setNotifyOnChange(true);
         mVideoAdapter.clear();
-        mVideoAdapter.notifyDataSetChanged();
 
         if (itemList.size() > 0) {
             new Thread(new Runnable() {
@@ -457,22 +462,26 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
 
     @Override
     public void showProgressBar() {
-        MainActivity.showProgressBar();
+        if (getActivity() instanceof MainActivity)
+            MainActivity.showProgressBar();
     }
 
     @Override
     public void hideProgressBar() {
-        MainActivity.hideProgressBar();
+        if (getActivity() instanceof MainActivity)
+            MainActivity.hideProgressBar();
     }
 
     @Override
     public void clearTextInfo() {
-        MainActivity.clearTextInfo();
+        if (getActivity() instanceof MainActivity)
+            MainActivity.clearTextInfo();
     }
 
     @Override
     public void sendTextInfo(String info, int progress, int max) {
-        MainActivity.sendTextInfo(info, progress, max);
+        if (getActivity() instanceof MainActivity)
+            MainActivity.sendTextInfo(info, progress, max);
     }
 
     @Override
@@ -546,5 +555,9 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                     focusHelper(false);
                 }
             });
+    }
+
+    public void clear(){
+        mVideoAdapter.clear();
     }
 }
