@@ -22,6 +22,7 @@ package org.videolan.vlc.gui.audio;
 
 import java.util.List;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -34,6 +35,7 @@ import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
+import org.videolan.vlc.gui.dialogs.SavePlaylist;
 import org.videolan.vlc.interfaces.IAudioPlayer;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
@@ -42,9 +44,11 @@ import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -65,7 +69,7 @@ import android.widget.ViewSwitcher;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
-public class AudioPlayer extends Fragment implements IAudioPlayer {
+public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickListener {
     public static final String TAG = "VLC/AudioPlayer";
 
     private ProgressBar mProgressBar;
@@ -81,7 +85,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     private ImageButton mShuffle;
     private ImageButton mRepeat;
     private ImageButton mAdvFunc;
-    private ImageButton mPlaylistSwitch;
+    private ImageButton mPlaylistSwitch, mPlaylistSave;
     private SeekBar mTimeline;
     private AudioPlaylistView mSongsList;
 
@@ -95,6 +99,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
     private boolean mAdvFuncVisible;
     private boolean mPlaylistSwitchVisible;
+    private boolean mPlaylistSaveVisible;
     private boolean mHeaderPlayPauseVisible;
     private boolean mProgressBarVisible;
     private boolean mHeaderTimeVisible;
@@ -134,6 +139,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         mRepeat = (ImageButton) v.findViewById(R.id.repeat);
         mAdvFunc = (ImageButton) v.findViewById(R.id.adv_function);
         mPlaylistSwitch = (ImageButton) v.findViewById(R.id.playlist_switch);
+        mPlaylistSave = (ImageButton) v.findViewById(R.id.playlist_save);
         mTimeline = (SeekBar) v.findViewById(R.id.timeline);
 
         mSongsList = (AudioPlaylistView) v.findViewById(R.id.songs_list);
@@ -145,6 +151,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
 
         mAdvFuncVisible = false;
         mPlaylistSwitchVisible = false;
+        mPlaylistSaveVisible = false;
         mHeaderPlayPauseVisible = true;
         mProgressBarVisible = true;
         mHeaderTimeVisible = true;
@@ -212,6 +219,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
                 showAdvancedOptions(v);
             }
         });
+        mPlaylistSave.setOnClickListener(this);
         mPlaylistSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -500,18 +508,20 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
      */
     public void setHeaderVisibilities(boolean advFuncVisible, boolean playlistSwitchVisible,
                                       boolean headerPlayPauseVisible, boolean progressBarVisible,
-                                      boolean headerTimeVisible) {
+                                      boolean headerTimeVisible, boolean playlistSaveVisible) {
         mAdvFuncVisible = advFuncVisible;
         mPlaylistSwitchVisible = playlistSwitchVisible;
         mHeaderPlayPauseVisible = headerPlayPauseVisible;
         mProgressBarVisible = progressBarVisible;
         mHeaderTimeVisible = headerTimeVisible;
+        mPlaylistSaveVisible = playlistSaveVisible;
         restoreHedaderButtonVisibilities();
     }
 
     private void restoreHedaderButtonVisibilities() {
         mAdvFunc.setVisibility(mAdvFuncVisible ? ImageButton.VISIBLE : ImageButton.GONE);
         mPlaylistSwitch.setVisibility(mPlaylistSwitchVisible ? ImageButton.VISIBLE : ImageButton.GONE);
+        mPlaylistSave.setVisibility(mPlaylistSaveVisible ? ImageButton.VISIBLE : ImageButton.GONE);
         mHeaderPlayPause.setVisibility(mHeaderPlayPauseVisible ? ImageButton.VISIBLE : ImageButton.GONE);
         mProgressBar.setVisibility(mProgressBarVisible ? ProgressBar.VISIBLE : ProgressBar.GONE);
         mHeaderTime.setVisibility(mHeaderTimeVisible ? TextView.VISIBLE : TextView.GONE);
@@ -520,6 +530,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
     private void hideHedaderButtons() {
         mAdvFunc.setVisibility(ImageButton.GONE);
         mPlaylistSwitch.setVisibility(ImageButton.GONE);
+        mPlaylistSave.setVisibility(ImageButton.GONE);
         mHeaderPlayPause.setVisibility(ImageButton.GONE);
         mHeaderTime.setVisibility(TextView.GONE);
     }
@@ -577,6 +588,20 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
         public void onTouchClick() {}
     };
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.playlist_save:
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                SavePlaylist savePlaylistDialog = new SavePlaylist();
+                Bundle args = new Bundle();
+                args.putParcelableArrayList(SavePlaylist.KEY_TRACKS, mSongsListAdapter.getItems());
+                savePlaylistDialog.setArguments(args);
+                savePlaylistDialog.show(fm, "fragment_save_playlist");
+                break;
+        }
+    }
+
     class LongSeekListener implements View.OnTouchListener {
         boolean forward;
         int normal, pressed;
@@ -595,10 +620,11 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
             @Override
             public void run() {
                 if(!vibrated) {
-                    ((android.os.Vibrator) AudioPlayer.this.getActivity()
-                            .getSystemService(Context.VIBRATOR_SERVICE))
-                            .vibrate(80);
-                    ;
+                    Activity activity = AudioPlayer.this.getActivity();
+                    if (activity != null) {
+                        ((android.os.Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE))
+                                .vibrate(80);
+                    }
                     vibrated = true;
                 }
 
@@ -618,7 +644,9 @@ public class AudioPlayer extends Fragment implements IAudioPlayer {
                 h.postDelayed(seekRunnable, 50);
             }
         };
+
         Handler h = new Handler();
+
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             switch(event.getAction()) {

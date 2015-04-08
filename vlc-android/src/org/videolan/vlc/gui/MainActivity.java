@@ -91,15 +91,15 @@ import org.videolan.vlc.widget.SlidingPaneLayout;
 public class MainActivity extends ActionBarActivity implements OnItemClickListener, SearchSuggestionsAdapter.SuggestionDisplay, FilterQueryProvider {
     public final static String TAG = "VLC/MainActivity";
 
-    protected static final String ACTION_SHOW_PROGRESSBAR = "org.videolan.vlc.gui.ShowProgressBar";
-    protected static final String ACTION_HIDE_PROGRESSBAR = "org.videolan.vlc.gui.HideProgressBar";
-    protected static final String ACTION_SHOW_TEXTINFO = "org.videolan.vlc.gui.ShowTextInfo";
     public static final String ACTION_SHOW_PLAYER = "org.videolan.vlc.gui.ShowPlayer";
 
     private static final String PREF_FIRST_RUN = "first_run";
 
     private static final int ACTIVITY_RESULT_PREFERENCES = 1;
     private static final int ACTIVITY_SHOW_INFOLAYOUT = 2;
+    private static final int ACTIVITY_SHOW_PROGRESSBAR = 3;
+    private static final int ACTIVITY_HIDE_PROGRESSBAR = 4;
+    private static final int ACTIVITY_SHOW_TEXTINFO = 5;
 
     private ActionBar mActionBar;
     private SidebarAdapter mSidebarAdapter;
@@ -236,9 +236,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
         /* Prepare the progressBar */
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_SHOW_PROGRESSBAR);
-        filter.addAction(ACTION_HIDE_PROGRESSBAR);
-        filter.addAction(ACTION_SHOW_TEXTINFO);
         filter.addAction(ACTION_SHOW_PLAYER);
         registerReceiver(messageReceiver, filter);
 
@@ -487,8 +484,24 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             menu.findItem(R.id.ml_menu_sortby).setVisible(false);
         }
         else {
+            ISortable sortable = (ISortable) current;
             menu.findItem(R.id.ml_menu_sortby).setEnabled(true);
             menu.findItem(R.id.ml_menu_sortby).setVisible(true);
+            MenuItem item = menu.findItem(R.id.ml_menu_sortby_name);
+                if (sortable.sortDirection(VideoListAdapter.SORT_BY_TITLE) == 1)
+                    item.setTitle(R.string.sortby_name_desc);
+                else
+                    item.setTitle(R.string.sortby_name);
+            item = menu.findItem(R.id.ml_menu_sortby_length);
+                if (sortable.sortDirection(VideoListAdapter.SORT_BY_LENGTH) == 1)
+                    item.setTitle(R.string.sortby_length_desc);
+                else
+                    item.setTitle(R.string.sortby_length);
+            item = menu.findItem(R.id.ml_menu_sortby_date);
+                if (sortable.sortDirection(VideoListAdapter.SORT_BY_DATE) == 1)
+                    item.setTitle(R.string.sortby_date_desc);
+                else
+                    item.setTitle(R.string.sortby_date);
         }
 
         boolean networkSave = current instanceof NetworkFragment && !((NetworkFragment)current).isRootDirectory();
@@ -526,12 +539,18 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         switch (item.getItemId()) {
             case R.id.ml_menu_sortby_name:
             case R.id.ml_menu_sortby_length:
+            case R.id.ml_menu_sortby_date:
                 if (current == null)
                     break;
-                if (current instanceof ISortable)
-                    ((ISortable) current).sortBy(item.getItemId() == R.id.ml_menu_sortby_name
-                    ? VideoListAdapter.SORT_BY_TITLE
-                    : VideoListAdapter.SORT_BY_LENGTH);
+                if (current instanceof ISortable) {
+                    int sortBy = VideoListAdapter.SORT_BY_TITLE;
+                    if (item.getItemId() == R.id.ml_menu_sortby_length)
+                        sortBy = VideoListAdapter.SORT_BY_LENGTH;
+                    else if(item.getItemId() == R.id.ml_menu_sortby_date)
+                        sortBy = VideoListAdapter.SORT_BY_DATE;
+                    ((ISortable) current).sortBy(sortBy);
+                    supportInvalidateOptionsMenu();
+                }
                 break;
             case R.id.ml_menu_equalizer:
                 showSecondaryFragment("equalizer");
@@ -712,34 +731,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (action.equalsIgnoreCase(ACTION_SHOW_PROGRESSBAR)) {
-                setSupportProgressBarIndeterminateVisibility(true);
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            } else if (action.equalsIgnoreCase(ACTION_HIDE_PROGRESSBAR)) {
-                setSupportProgressBarIndeterminateVisibility(false);
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            } else if (action.equalsIgnoreCase(ACTION_SHOW_TEXTINFO)) {
-                String info = intent.getStringExtra("info");
-                int max = intent.getIntExtra("max", 0);
-                int progress = intent.getIntExtra("progress", 100);
-                mInfoText.setText(info);
-                mInfoProgress.setMax(max);
-                mInfoProgress.setProgress(progress);
-
-                if (info == null) {
-                    /* Cancel any upcoming visibility change */
-                    mHandler.removeMessages(ACTIVITY_SHOW_INFOLAYOUT);
-                    mInfoLayout.setVisibility(View.GONE);
-                }
-                else {
-                    /* Slightly delay the appearance of the progress bar to avoid unnecessary flickering */
-                    if (!mHandler.hasMessages(ACTIVITY_SHOW_INFOLAYOUT)) {
-                        Message m = new Message();
-                        m.what = ACTIVITY_SHOW_INFOLAYOUT;
-                        mHandler.sendMessageDelayed(m, 300);
-                    }
-                }
-            } else if (action.equalsIgnoreCase(ACTION_SHOW_PLAYER)) {
+            if (action.equalsIgnoreCase(ACTION_SHOW_PLAYER)) {
                 showAudioPlayer();
             }
         }
@@ -764,6 +756,36 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 case ACTIVITY_SHOW_INFOLAYOUT:
                     ma.mInfoLayout.setVisibility(View.VISIBLE);
                     break;
+                case ACTIVITY_SHOW_PROGRESSBAR:
+                    ma.setSupportProgressBarIndeterminateVisibility(true);
+                    ma.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    break;
+                case ACTIVITY_HIDE_PROGRESSBAR:
+                    ma.setSupportProgressBarIndeterminateVisibility(false);
+                    ma.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    break;
+                case ACTIVITY_SHOW_TEXTINFO:
+                    String info = (String) msg.obj;
+                    int max = msg.arg1;
+                    int progress = msg.arg2;
+                    ma.mInfoText.setText(info);
+                    ma.mInfoProgress.setMax(max);
+                    ma.mInfoProgress.setProgress(progress);
+
+                    if (info == null) {
+                    /* Cancel any upcoming visibility change */
+                        removeMessages(ACTIVITY_SHOW_INFOLAYOUT);
+                        ma.mInfoLayout.setVisibility(View.GONE);
+                    }
+                    else {
+                    /* Slightly delay the appearance of the progress bar to avoid unnecessary flickering */
+                        if (!hasMessages(ACTIVITY_SHOW_INFOLAYOUT)) {
+                            Message m = new Message();
+                            m.what = ACTIVITY_SHOW_INFOLAYOUT;
+                            sendMessageDelayed(m, 300);
+                        }
+                    }
+                    break;
             }
         }
     };
@@ -773,29 +795,20 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 getWindow().getDecorView().getRootView().getWindowToken(), 0);
     }
 
-    public static void showProgressBar() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SHOW_PROGRESSBAR);
-        VLCApplication.getAppContext().sendBroadcast(intent);
+    public void showProgressBar() {
+        mHandler.obtainMessage(ACTIVITY_SHOW_PROGRESSBAR).sendToTarget();
     }
 
-    public static void hideProgressBar() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_HIDE_PROGRESSBAR);
-        VLCApplication.getAppContext().sendBroadcast(intent);
+    public void hideProgressBar() {
+        mHandler.obtainMessage(ACTIVITY_HIDE_PROGRESSBAR).sendToTarget();
     }
 
-    public static void sendTextInfo(String info, int progress, int max) {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SHOW_TEXTINFO);
-        intent.putExtra("info", info);
-        intent.putExtra("progress", progress);
-        intent.putExtra("max", max);
-        VLCApplication.getAppContext().sendBroadcast(intent);
+    public void sendTextInfo(String info, int progress, int max) {
+        mHandler.obtainMessage(ACTIVITY_SHOW_TEXTINFO, max, progress, info).sendToTarget();
     }
 
-    public static void clearTextInfo() {
-        sendTextInfo(null, 0, 100);
+    public void clearTextInfo() {
+        mHandler.obtainMessage(ACTIVITY_SHOW_TEXTINFO, 0, 100, null).sendToTarget();
     }
 
     /**
@@ -860,10 +873,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
             @Override
             public void onPanelOpened() {
-                int resId = Util.getResourceFromAttribute(MainActivity.this, R.attr.mini_player_top_shadow);
+                int resId = Util.getResourceFromAttribute(MainActivity.this, R.attr.shadow_bottom_9patch);
                 if (resId != 0)
                     mSlidingPane.setShadowResource(resId);
-                mAudioPlayer.setHeaderVisibilities(false, false, true, true, true);
+                mAudioPlayer.setHeaderVisibilities(false, false, true, true, true, false);
                 mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_UNLOCKED);
                 removeTipViewIfDisplayed();
                 mAudioPlayer.showAudioPlayerTips();
@@ -877,7 +890,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
             @Override
             public void onPanelClosed() {
-                mAudioPlayer.setHeaderVisibilities(true, true, false, false, false);
+                mAudioPlayer.setHeaderVisibilities(true, true, false, false, false, true);
                 mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                 mAudioPlayer.showPlaylistTips();
             }

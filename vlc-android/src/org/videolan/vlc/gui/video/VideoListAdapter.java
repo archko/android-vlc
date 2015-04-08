@@ -35,8 +35,6 @@ import org.videolan.vlc.util.Util;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,6 +50,7 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
 
     public final static int SORT_BY_TITLE = 0;
     public final static int SORT_BY_LENGTH = 1;
+    public final static int SORT_BY_DATE = 2;
     private int mSortDirection = 1;
     private int mSortBy = SORT_BY_TITLE;
     private boolean mListMode = false;
@@ -89,6 +88,13 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
             notifyDataSetChanged();
     }
 
+    public int sortDirection(int sortby) {
+        if (sortby == mSortBy)
+            return  mSortDirection;
+        else
+            return -1;
+    }
+
     public void sortBy(int sortby) {
         switch (sortby) {
             case SORT_BY_TITLE:
@@ -107,6 +113,14 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
                     mSortDirection *= 1;
                 }
                 break;
+            case SORT_BY_DATE:
+                if (mSortBy == SORT_BY_DATE)
+                    mSortDirection *= -1;
+                else {
+                    mSortBy = SORT_BY_DATE;
+                    mSortDirection *= 1;
+                }
+                break;
             default:
                 mSortBy = SORT_BY_TITLE;
                 mSortDirection = 1;
@@ -116,7 +130,10 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
     }
 
     public void sort() {
-        super.sort(this);
+        if (!isEmpty())
+            try {
+                super.sort(this);
+            } catch (ArrayIndexOutOfBoundsException e) {} //Exception happening on Android 2.x
     }
 
     @Override
@@ -129,6 +146,9 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
                 break;
             case SORT_BY_LENGTH:
                 compare = ((Long) item1.getLength()).compareTo(item2.getLength());
+                break;
+            case SORT_BY_DATE:
+                compare = ((Long) item1.getLastModified()).compareTo(item2.getLastModified());
                 break;
         }
         return mSortDirection * compare;

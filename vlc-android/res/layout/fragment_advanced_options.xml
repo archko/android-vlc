@@ -9,6 +9,18 @@
 
     <!-- Playback speed -->
 
+    <TextView
+        android:id="@+id/playback_switch_audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="5dp"
+        android:nextFocusDown="@+id/playback_speed_reset"
+        android:gravity="left"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="@string/play_as_audio"/>
+
     <LinearLayout
         android:id="@+id/playback_speed"
         android:layout_width="match_parent"
@@ -72,6 +84,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
                     android:focusable="true"
+                    android:nextFocusUp="@+id/playback_speed_reset"
                     android:indeterminate="false"
                     android:max="200"
                     android:maxHeight="@dimen/seekbar_height"
@@ -150,15 +163,33 @@
     </LinearLayout>
 
     <!-- Jump to position -->
-    <TextView
-        android:id="@+id/jump_title"
+
+    <LinearLayout
+        android:id="@+id/time_travel_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:text="@string/jump_to_time"
-        android:drawableLeft="@drawable/ic_jumpto_normal_w"/>
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/jump_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:text="@string/jump_to_time"
+            android:drawableLeft="@drawable/ic_jumpto_normal_w"/>
+        <TextView
+            android:id="@+id/jump_chapter_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="@string/go_to_chapter"/>
+        <Spinner
+            android:id="@+id/jump_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 
     <!-- Tracks delay -->
     <LinearLayout

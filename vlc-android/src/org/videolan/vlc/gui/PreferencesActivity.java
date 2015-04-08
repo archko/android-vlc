@@ -20,17 +20,16 @@
 
 package org.videolan.vlc.gui;
 
+import org.videolan.libvlc.HWDecoderUtil;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.audio.AudioService;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.BitmapCache;
-import org.videolan.vlc.util.Logcat;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 
@@ -41,11 +40,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable.ConstantState;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -57,7 +54,6 @@ import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v7.widget.Toolbar;
-import android.text.format.DateFormat;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -227,7 +223,12 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
         // Audio output
         ListPreference aoutPref = (ListPreference) findPreference("aout");
-        if (LibVlcUtil.isGingerbreadOrLater()) {
+        final HWDecoderUtil.AudioOutput aout = HWDecoderUtil.getAudioOutputFromDevice();
+        if (aout == HWDecoderUtil.AudioOutput.AUDIOTRACK || aout == HWDecoderUtil.AudioOutput.OPENSLES) {
+            /* no AudioOutput choice */
+            PreferenceGroup group = (PreferenceGroup) findPreference("advanced_prefs_group");
+            group.removePreference(aoutPref);
+        } else {
             int aoutEntriesId = R.array.aouts;
             int aoutEntriesIdValues = R.array.aouts_values;
             aoutPref.setEntries(aoutEntriesId);
@@ -241,10 +242,6 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 if (intValue != LibVLC.AOUT_AUDIOTRACK && intValue != LibVLC.AOUT_OPENSLES)
                     aoutPref.setValue(String.valueOf(LibVLC.AOUT_AUDIOTRACK));
             }
-        } else {
-            /* only audiotrack before gingerbread */
-            PreferenceGroup group = (PreferenceGroup) findPreference("advanced_prefs_group");
-            group.removePreference(aoutPref);
         }
         // Video output
 //        FIXME : This setting is disable until OpenGL it's fixed

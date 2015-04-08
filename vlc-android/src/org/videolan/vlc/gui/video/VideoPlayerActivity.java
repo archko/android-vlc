@@ -21,7 +21,9 @@
 package org.videolan.vlc.gui.video;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.app.Presentation;
 import android.content.ActivityNotFoundException;
@@ -52,6 +54,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -86,6 +89,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -95,7 +99,6 @@ import android.widget.Toast;
 import org.videolan.libvlc.EventHandler;
 import org.videolan.libvlc.IVideoPlayer;
 import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaDatabase;
@@ -140,6 +143,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     // external intent.
     public final static String PLAY_FROM_VIDEOGRID = "org.videolan.vlc.gui.video.PLAY_FROM_VIDEOGRID";
 
+    public final static String PLAY_EXTRA_ITEM_LOCATION = "item_location";
+    public final static String PLAY_EXTRA_SUBTITLES_LOCATION = "subtitles_location";
+    public final static String PLAY_EXTRA_ITEM_TITLE = "item_title";
+    public final static String PLAY_EXTRA_FROM_START = "from_start";
+
     private SurfaceView mSurfaceView;
     private SurfaceView mSubtitlesSurfaceView;
     private SurfaceHolder mSurfaceHolder;
@@ -154,6 +162,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private LibVLC mLibVLC;
     private MediaWrapperListPlayer mMediaListPlayer;
     private String mLocation;
+    private boolean mAskResume = true;
     private GestureDetectorCompat mDetector;
 
     private static final int SURFACE_BEST_FIT = 0;
@@ -192,6 +201,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private TextView mTime;
     private TextView mLength;
     private TextView mInfo;
+    private View mVerticalBar;
+    private View mVerticalBarProgress;
     private ImageView mLoading;
     private TextView mLoadingText;
     private ImageView mTipsBackground;
@@ -274,7 +285,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
      * Flag to indicate whether the media should be paused once loaded
      * (e.g. lock screen, or to restore the pause state)
      */
-    private boolean mPauseOnLoaded = false;
     private boolean mPlaybackStarted = false;
 
     /**
@@ -394,6 +404,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         // the info textView is not on the overlay
         mInfo = (TextView) findViewById(R.id.player_overlay_info);
+        mVerticalBar = findViewById(R.id.verticalbar);
+        mVerticalBarProgress = findViewById(R.id.verticalbar_progress);
 
         mEnableBrightnessGesture = mSettings.getBoolean("enable_brightness_gesture", true);
         mScreenOrientation = Integer.valueOf(
@@ -445,6 +457,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mHardwareAccelerationError = false;
         mEndReached = false;
 
+        mAskResume = mSettings.getBoolean("dialog_confirm_resume", false);
         // Clear the resume time, since it is only used for resumes in external
         // videos.
         SharedPreferences.Editor editor = mSettings.edit();
@@ -600,7 +613,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     protected void onResume() {
         super.onResume();
         mSwitchingView = false;
-        mPauseOnLoaded = false;
 
         bindAudioService();
 
@@ -642,17 +654,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mSurfaceFrame.addOnLayoutChangeListener(mOnLayoutChangeListener);
         }
         setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
-
-        /*
-         * If the activity has been paused by pressing the power button, then
-         * pressing it again will show the lock screen.
-         * But onResume will also be called, even if vlc-android is still in
-         * the background.
-         * To workaround this, pause playback if the lockscreen is displayed.
-         */
-        KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
-        if(km.inKeyguardRestrictedInputMode())
-            mPauseOnLoaded = true;
 
         if (mMediaRouter != null) {
             // Listen for changes to media routes.
@@ -804,9 +805,9 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     public static void start(Context context, String location, String title, boolean fromStart, boolean newTask) {
         Intent intent = new Intent(context, VideoPlayerActivity.class);
         intent.setAction(VideoPlayerActivity.PLAY_FROM_VIDEOGRID);
-        intent.putExtra("itemLocation", location);
-        intent.putExtra("itemTitle", title);
-        intent.putExtra("fromStart", fromStart);
+        intent.putExtra(PLAY_EXTRA_ITEM_LOCATION, location);
+        intent.putExtra(PLAY_EXTRA_ITEM_TITLE, title);
+        intent.putExtra(PLAY_EXTRA_FROM_START, fromStart);
 
         if (newTask)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
@@ -932,18 +933,15 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             return true;
         case KeyEvent.KEYCODE_O:
         case KeyEvent.KEYCODE_BUTTON_Y:
+        case KeyEvent.KEYCODE_MENU:
             showAdvancedOptions(mAdvOptions);
             return true;
-//            case KeyEvent.KEYCODE_BUTTON_X:
-//            selectAudioTrack();
-//            return true;
         case KeyEvent.KEYCODE_V:
         case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
         case KeyEvent.KEYCODE_BUTTON_X:
             onAudioSubClick(mTracks);
             return true;
         case KeyEvent.KEYCODE_N:
-        case KeyEvent.KEYCODE_MENU:
             showNavMenu();
             return true;
         case KeyEvent.KEYCODE_A:
@@ -1206,11 +1204,26 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     /**
+     * Show text in the info view and vertical progress bar for "duration" milliseconds
+     * @param text
+     * @param duration
+     * @param barNewValue new volume/brightness value (range: 0 - 15)
+     */
+    private void showInfoWithVerticalBar(String text, int duration, int barNewValue) {
+        showInfo(text, duration);
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mVerticalBarProgress.getLayoutParams();
+        layoutParams.weight = barNewValue;
+        mVerticalBarProgress.setLayoutParams(layoutParams);
+        mVerticalBar.setVisibility(View.VISIBLE);
+    }
+
+    /**
      * Show text in the info view for "duration" milliseconds
      * @param text
      * @param duration
      */
     private void showInfo(String text, int duration) {
+        mVerticalBar.setVisibility(View.INVISIBLE);
         mInfo.setVisibility(View.VISIBLE);
         mInfo.setText(text);
         mHandler.removeMessages(FADE_OUT_INFO);
@@ -1218,6 +1231,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void showInfo(int textid, int duration) {
+        mVerticalBar.setVisibility(View.INVISIBLE);
         mInfo.setVisibility(View.VISIBLE);
         mInfo.setText(textid);
         mHandler.removeMessages(FADE_OUT_INFO);
@@ -1229,6 +1243,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
      * @param text
      */
     private void showInfo(String text) {
+        mVerticalBar.setVisibility(View.INVISIBLE);
         mHandler.removeMessages(FADE_OUT_INFO);
         mInfo.setVisibility(View.VISIBLE);
         mInfo.setText(text);
@@ -1255,6 +1270,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mInfo.startAnimation(AnimationUtils.loadAnimation(
                     VideoPlayerActivity.this, android.R.anim.fade_out));
         mInfo.setVisibility(View.INVISIBLE);
+
+        if (mVerticalBar.getVisibility() == View.VISIBLE)
+            mVerticalBar.startAnimation(AnimationUtils.loadAnimation(
+                    VideoPlayerActivity.this, android.R.anim.fade_out));
+        mVerticalBar.setVisibility(View.INVISIBLE);
     }
 
     private OnAudioFocusChangeListener mAudioFocusListener = !LibVlcUtil.isFroyoOrLater() ? null :
@@ -1356,12 +1376,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                     break;
                 case EventHandler.MediaPlayerPlaying:
                     Log.i(TAG, "MediaPlayerPlaying");
-                    // Handle pause flag
-                    if(activity.mPauseOnLoaded) {
-                        activity.mPauseOnLoaded = false;
-                        activity.mLibVLC.pause();
-                        activity.setOverlayProgress();
-                    }
                     activity.stopLoadingAnimation();
                     activity.showOverlay();
                     activity.setESTracks();
@@ -1549,7 +1563,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         }
     }
 
-    private void switchToAudioMode() {
+    public void switchToAudioMode() {
         if (mHardwareAccelerationError)
             return;
         mSwitchingView = true;
@@ -1557,6 +1571,13 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if (getIntent().getAction() != null
             && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
             Intent i = new Intent(this, MainActivity.class);
+            if (!Util.isCallable(i)){
+                try {
+                    i = new Intent(this, Class.forName("org.videolan.vlc.gui.tv.audioplayer.AudioPlayerActivity"));
+                } catch (ClassNotFoundException e) {
+                    return;
+                }
+            }
             startActivity(i);
         }
         finish();
@@ -1754,19 +1775,19 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 mTouchY = event.getRawY();
                 mTouchX = event.getRawX();
                 // Volume (Up or Down - Right side)
-                if (!mEnableBrightnessGesture || (int)mTouchX > (screen.widthPixels / 2)){
+                if (!mEnableBrightnessGesture || (int)mTouchX > (3 * screen.widthPixels / 5)){
                     doVolumeTouch(y_changed);
+                    hideOverlay(true);
                 }
                 // Brightness (Up or Down - Left side)
-                if (mEnableBrightnessGesture && (int)mTouchX < (screen.widthPixels / 2)){
+                if (mEnableBrightnessGesture && (int)mTouchX < (2 * screen.widthPixels / 5)){
                     doBrightnessTouch(y_changed);
+                    hideOverlay(true);
                 }
             } else {
                 // Seek (Right or Left move)
                 doSeekTouch(Math.round(delta_y), xgesturesize, false);
             }
-            if (mTouchAction != TOUCH_NONE && mOverlayTimeout != OVERLAY_INFINITE)
-                showOverlayTimeout(OVERLAY_INFINITE);
             break;
 
         case MotionEvent.ACTION_UP:
@@ -1779,9 +1800,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 } else {
                     hideOverlay(true);
                 }
-            } else {
-                // We were in gesture mode, re-init the overlay timeout
-                showOverlay(true);
             }
             // Seek
             if (mTouchAction == TOUCH_SEEK)
@@ -1816,7 +1834,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
         //Jump !
         if (seek && length > 0)
-            seek(time + jump);
+            seek(time + jump, length);
 
         if (length > 0)
             //Show the jump's size
@@ -1831,7 +1849,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private void doVolumeTouch(float y_changed) {
         if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_VOLUME)
             return;
-        float delta = - ((y_changed * 2f / mSurfaceYDisplayRange) * mAudioMax);
+        float delta = - ((y_changed / mSurfaceYDisplayRange) * mAudioMax);
         mVol += delta;
         int vol = (int) Math.min(Math.max(mVol, 0), mAudioMax);
         if (delta != 0f) {
@@ -1849,7 +1867,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, vol, AudioManager.FLAG_SHOW_UI);
 
         mTouchAction = TOUCH_VOLUME;
-        showInfo(getString(R.string.volume) + '\u00A0' + Integer.toString(vol),1000);
+        vol = vol * 100 / mAudioMax;
+        showInfoWithVerticalBar(getString(R.string.volume) + '\u00A0' + Integer.toString(vol) + '%', 1000, vol);
     }
 
     private void mute(boolean mute) {
@@ -1896,7 +1915,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mTouchAction = TOUCH_BRIGHTNESS;
 
         // Set delta : 2f is arbitrary for now, it possibly will change in the future
-        float delta = - y_changed / mSurfaceYDisplayRange * 2f;
+        float delta = - y_changed / mSurfaceYDisplayRange;
 
         changeBrightness(delta);
     }
@@ -1907,7 +1926,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         lp.screenBrightness =  Math.min(Math.max(lp.screenBrightness + delta, 0.01f), 1);
         // Set Brightness
         getWindow().setAttributes(lp);
-        showInfo(getString(R.string.brightness) + '\u00A0' + Math.round(lp.screenBrightness * 15),1000);
+        int brightness = Math.round(lp.screenBrightness * 100);
+        showInfoWithVerticalBar(getString(R.string.brightness) + '\u00A0' + brightness + '%', 1000, brightness);
     }
 
     /**
@@ -2119,9 +2139,16 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     }
 
     private void seek(long position) {
+        seek(position, mLibVLC.getLength());
+    }
+
+    private void seek(long position, float length) {
         mForcedTime = position;
         mLastTime = mLibVLC.getTime();
-        mLibVLC.setTime(position);
+        if (length == 0f)
+            mLibVLC.setTime(position);
+        else
+            mLibVLC.setPosition(position / length);
     }
 
     private void seekDelta(int delta) {
@@ -2474,6 +2501,16 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mSurfaceView.setKeepScreenOn(false);
     }
 
+    /*
+     * Additionnal method to prevent alert dialog to pop up
+     */
+    @SuppressWarnings({ "unchecked" })
+    private void loadMedia(boolean fromStart) {
+        mAskResume = false;
+        getIntent().putExtra(PLAY_EXTRA_FROM_START, fromStart);
+        loadMedia();
+    }
+
     /**
      * External extras:
      * - position (long) - position of the video to start with (in ms)
@@ -2486,6 +2523,23 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         Uri data;
         String itemTitle = null;
         long intentPosition = -1; // position passed in by intent (ms)
+        long mediaLength = 0l;
+
+        boolean wasPaused;
+        /*
+         * If the activity has been paused by pressing the power button, then
+         * pressing it again will show the lock screen.
+         * But onResume will also be called, even if vlc-android is still in
+         * the background.
+         * To workaround this, pause playback if the lockscreen is displayed.
+         */
+        final KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
+        if (km.inKeyguardRestrictedInputMode())
+            wasPaused = true;
+        else
+            wasPaused = mSettings.getBoolean(PreferencesActivity.VIDEO_PAUSED, false);
+        if (wasPaused)
+            Log.d(TAG, "Video was previously paused, resuming in paused mode");
 
         if (getIntent().getAction() != null
                 && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
@@ -2580,9 +2634,12 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         else if(getIntent().getAction() != null
                 && getIntent().getAction().equals(PLAY_FROM_VIDEOGRID)
                 && getIntent().getExtras() != null) {
-            mLocation = getIntent().getExtras().getString("itemLocation");
-            itemTitle = getIntent().getExtras().getString("itemTitle");
-            fromStart = getIntent().getExtras().getBoolean("fromStart");
+            mLocation = getIntent().getExtras().getString(PLAY_EXTRA_ITEM_LOCATION);
+            itemTitle = getIntent().getExtras().getString(PLAY_EXTRA_ITEM_TITLE);
+            fromStart = getIntent().getExtras().getBoolean(PLAY_EXTRA_FROM_START);
+            if (getIntent().hasExtra(PLAY_EXTRA_SUBTITLES_LOCATION))
+                mSubtitleSelectedFiles.add(getIntent().getExtras().getString(PLAY_EXTRA_SUBTITLES_LOCATION));
+            mAskResume &= !fromStart;
         }
 
         /* WARNING: hack to avoid a crash in mediacodec on KitKat.
@@ -2600,19 +2657,15 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             }
         }
 
-        /* Start / resume playback */
-        if (savedIndexPosition > -1) {
-            AudioServiceController.getInstance().stop(); // Stop the previous playback.
-            mMediaListPlayer.playIndex(savedIndexPosition);
-        } else if (mLocation != null && mLocation.length() > 0) {
-            AudioServiceController.getInstance().stop(); // Stop the previous playback.
+        /* prepare playback */
+        AudioServiceController.getInstance().stop(); // Stop the previous playback.
+        if (savedIndexPosition == -1 && mLocation != null && mLocation.length() > 0) {
             mMediaListPlayer.getMediaList().clear();
             final Media media = new Media(mLibVLC, mLocation);
             media.parse(); // FIXME: parse should'nt be done asynchronously
             media.release();
             mMediaListPlayer.getMediaList().add(new MediaWrapper(media));
             savedIndexPosition = mMediaListPlayer.getMediaList().size() - 1;
-            mMediaListPlayer.playIndex(savedIndexPosition);
         }
         mCanSeek = false;
 
@@ -2621,33 +2674,47 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             MediaWrapper media = MediaDatabase.getInstance().getMedia(mLocation);
             if(media != null) {
                 // in media library
-                if(media.getTime() > 0 && !fromStart)
-                    seek(media.getTime());
+                if(media.getTime() > 0 && !fromStart) {
+                    if (mAskResume) {
+                        showConfirmResumeDialog();
+                        return;
+                    } else {
+                        intentPosition = media.getTime();
+                        mediaLength = media.getLength();
+                    }
+                }
                 // Consume fromStart option after first use to prevent
                 // restarting again when playback is paused.
-                getIntent().putExtra("fromStart", false);
+                getIntent().putExtra(PLAY_EXTRA_FROM_START, false);
 
                 mLastAudioTrack = media.getAudioTrack();
                 mLastSpuTrack = media.getSpuTrack();
             } else {
                 // not in media library
-                long rTime = mSettings.getLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
-                Editor editor = mSettings.edit();
-                editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
-                Util.commitPreferences(editor);
-                if(rTime > 0)
-                    seek(rTime);
 
-                if(intentPosition > 0)
-                    seek(intentPosition);
+                if (intentPosition > 0 && mAskResume) {
+                    showConfirmResumeDialog();
+                    return;
+                } else {
+                    long rTime = mSettings.getLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
+                    if (rTime > 0 && !fromStart) {
+                        if (mAskResume) {
+                            showConfirmResumeDialog();
+                            return;
+                        } else {
+                            Editor editor = mSettings.edit();
+                            editor.putLong(PreferencesActivity.VIDEO_RESUME_TIME, -1);
+                            Util.commitPreferences(editor);
+                            intentPosition = rTime;
+                        }
+                    }
+                }
             }
 
-            // Paused flag
-            boolean wasPaused = mSettings.getBoolean(PreferencesActivity.VIDEO_PAUSED, false);
-            if(wasPaused) {
-                Log.d(TAG, "Video was previously paused, resuming in paused mode");
-                mPauseOnLoaded = true;
-            }
+            // Start playback & seek
+            mMediaListPlayer.playIndex(savedIndexPosition, wasPaused);
+            seek(intentPosition, mediaLength);
+
 
             // Get possible subtitles
             String subtitleList_serialized = mSettings.getString(PreferencesActivity.VIDEO_SUBTITLE_FILES, null);
@@ -2756,6 +2823,27 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 return 0;
             }
         }
+    }
+
+    public void showConfirmResumeDialog() {
+        if (isFinishing())
+            return;
+        pause();
+        /* Encountered Error, exit player with a message */
+        mAlertDialog = new AlertDialog.Builder(VideoPlayerActivity.this)
+                .setMessage(R.string.confirm_resume)
+                .setPositiveButton(R.string.resume_from_position, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        loadMedia(false);
+                    }
+                })
+                .setNegativeButton(R.string.play_from_start, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        loadMedia(true);
+                    }
+                })
+                .create();
+        mAlertDialog.show();
     }
 
     public void showAdvancedOptions(View v) {

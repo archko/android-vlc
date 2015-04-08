@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.videolan.vlc"
     android:installLocation="auto"
-    android:versionCode="01010600"
-    android:versionName="1.1.6" >
+    android:versionCode="01020500"
+    android:versionName="1.2.5" >
     <!--
          versionCode scheme is T M NN RR AA
          T: Target/Flavour (0 for Android, 1 for ATV, 2 for Chrome?)
@@ -208,6 +208,7 @@
                 <data android:pathPattern=".*\\.mp2v" />
                 <data android:pathPattern=".*\\.mp4" />
                 <data android:pathPattern=".*\\.mp4v" />
+                <data android:pathPattern=".*\\.m4v" />
                 <data android:pathPattern=".*\\.mpe" />
                 <data android:pathPattern=".*\\.mpeg" />
                 <data android:pathPattern=".*\\.mpeg1" />
@@ -267,6 +268,7 @@
                 <data android:pathPattern=".*\\.MP2V" />
                 <data android:pathPattern=".*\\.MP4" />
                 <data android:pathPattern=".*\\.MP4V" />
+                <data android:pathPattern=".*\\.M4V" />
                 <data android:pathPattern=".*\\.MPE" />
                 <data android:pathPattern=".*\\.MPEG" />
                 <data android:pathPattern=".*\\.MPEG1" />

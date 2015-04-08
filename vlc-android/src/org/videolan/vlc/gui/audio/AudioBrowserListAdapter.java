@@ -22,6 +22,7 @@ package org.videolan.vlc.gui.audio;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +58,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     public final static int TYPE_ALBUMS = 1;
     public final static int TYPE_SONGS = 2;
     public final static int TYPE_GENRES = 3;
+    public final static int TYPE_PLAYLISTS = 4;
 
     // Key: the item title, value: ListItem of only media item (no separator).
     private Map<String, ListItem> mMediaItemMap;
@@ -82,7 +84,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
     private ContextPopupMenuListener mContextPopupMenuListener;
 
     // An item of the list: a media or a separator.
-    static class ListItem {
+    public static class ListItem {
         final public String mTitle;
         final public String mSubTitle;
         final public ArrayList<MediaWrapper> mMediaList;
@@ -111,16 +113,32 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
         mAlignMode = Integer.valueOf(preferences.getString("audio_title_alignment", "0"));
     }
 
+    public void addAll(List<ListItem> items) {
+        for (ListItem item : items) {
+            mMediaItemMap.put(item.mTitle, item);
+            mItems.add(item);
+        }
+        Collections.sort(mItems, mItemsComparator);
+    }
+
     public void add(String title, String subTitle, MediaWrapper media) {
+        add(title, subTitle, media, null);
+    }
+
+    public void add(String title, String subTitle, MediaWrapper media, String key) {
         if(title == null) return;
         title = title.trim();
-        final String titleKey = title.toLowerCase(Locale.getDefault());
+        String mediaKey;
+        if (key == null)
+            mediaKey = title.toLowerCase(Locale.getDefault());
+        else
+            mediaKey = key.trim().toLowerCase(Locale.getDefault());
         if(subTitle != null) subTitle = subTitle.trim();
-        if (mMediaItemMap.containsKey(titleKey))
-            mMediaItemMap.get(titleKey).mMediaList.add(media);
+        if (mMediaItemMap.containsKey(mediaKey))
+            mMediaItemMap.get(mediaKey).mMediaList.add(media);
         else {
             ListItem item = new ListItem(title, subTitle, media, false);
-            mMediaItemMap.put(titleKey, item);
+            mMediaItemMap.put(mediaKey, item);
             mItems.add(item);
         }
     }
@@ -130,27 +148,36 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String title, subTitle;
+                String title, subTitle, key;
                 for (MediaWrapper media : list) {
                     switch (type){
                         case TYPE_ALBUMS:
                             title = Util.getMediaAlbum(mContext, media);
                             subTitle = Util.getMediaReferenceArtist(mContext, media);
+                            key = null;
                             break;
                         case TYPE_ARTISTS:
                             title = Util.getMediaReferenceArtist(mContext, media);
                             subTitle = null;
+                            key = null;
                             break;
                         case TYPE_GENRES:
                             title = Util.getMediaGenre(mContext, media);
                             subTitle = null;
+                            key = null;
+                            break;
+                        case TYPE_PLAYLISTS:
+                            title = media.getTitle();
+                            subTitle = null;
+                            key = null;
                             break;
                         case TYPE_SONGS:
                         default:
                             title = media.getTitle();
                             subTitle = Util.getMediaArtist(mContext, media);
+                            key = media.getLocation();
                     }
-                    add(title, subTitle, media);
+                    add(title, subTitle, media, key);
                 }
                 calculateSections(type);
             }
@@ -228,7 +255,7 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
             mItems.add(album);
             Collections.sort(album.mMediaList, MediaComparators.byTrackNumber);
             for (MediaWrapper media : album.mMediaList)
-                add(media.getTitle(), null, media);
+                add(media.getTitle(), null, media, media.getLocation());
         }
     }
 
@@ -333,13 +360,16 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
         holder.footer.setVisibility(isMediaItemAboveASeparator(position) ? View.GONE : View.VISIBLE);
 
         final int pos = position;
-        holder.more.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mContextPopupMenuListener != null)
-                    mContextPopupMenuListener.onPopupMenu(v, pos);
-            }
-        });
+        if (mContextPopupMenuListener != null)
+            holder.more.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mContextPopupMenuListener != null)
+                        mContextPopupMenuListener.onPopupMenu(v, pos);
+                }
+            });
+        else
+            holder.more.setVisibility(View.GONE);
 
         return v;
     }
@@ -539,4 +569,11 @@ public class AudioBrowserListAdapter extends BaseAdapter implements SectionIndex
         if (observer != null)
             super.unregisterDataSetObserver(observer);
     }
+
+    private Comparator<ListItem> mItemsComparator = new Comparator<ListItem>() {
+        @Override
+        public int compare(ListItem lhs, ListItem rhs) {
+            return String.CASE_INSENSITIVE_ORDER.compare(lhs.mTitle, rhs.mTitle);
+        }
+    };
 }

@@ -107,6 +107,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     private Thumbnailer mThumbnailer;
     private VideoGridAnimator mAnimator;
 
+    private MainActivity mMainActivity;
     private AudioServiceController mAudioController;
     private boolean mReady = true;
 
@@ -169,7 +170,6 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
         filter.addAction(Util.ACTION_SCAN_START);
         filter.addAction(Util.ACTION_SCAN_STOP);
         getActivity().registerReceiver(messageReceiverVideoListFragment, filter);
-        Log.i(TAG, "mMediaLibrary.isWorking() " + Boolean.toString(mMediaLibrary.isWorking()));
         if (mMediaLibrary.isWorking()) {
             Util.actionScanStart();
         }
@@ -180,7 +180,10 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     @Override
     public void onPause() {
         super.onPause();
+        if (!(getActivity() instanceof MainActivity))
+            AudioServiceController.getInstance().unbindAudioService(getActivity());
         mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
+        mMediaLibrary.setBrowser(null);
         mMediaLibrary.removeUpdateHandler(mHandler);
 
         /* Stop the thumbnailer */
@@ -191,6 +194,11 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     @Override
     public void onResume() {
         super.onResume();
+        if (!(getActivity() instanceof MainActivity))
+            AudioServiceController.getInstance().bindAudioService(getActivity());
+        else
+            mMainActivity = (MainActivity) getActivity();
+        mMediaLibrary.setBrowser(this);
         mMediaLibrary.addUpdateHandler(mHandler);
         final boolean refresh = mVideoAdapter.isEmpty();
         if (refresh)
@@ -462,31 +470,36 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
 
     @Override
     public void showProgressBar() {
-        if (getActivity() instanceof MainActivity)
-            MainActivity.showProgressBar();
+        if (mMainActivity != null)
+            mMainActivity.showProgressBar();
     }
 
     @Override
     public void hideProgressBar() {
-        if (getActivity() instanceof MainActivity)
-            MainActivity.hideProgressBar();
+        if (mMainActivity != null)
+            mMainActivity.hideProgressBar();
     }
 
     @Override
     public void clearTextInfo() {
-        if (getActivity() instanceof MainActivity)
-            MainActivity.clearTextInfo();
+        if (mMainActivity != null)
+            mMainActivity.clearTextInfo();
     }
 
     @Override
     public void sendTextInfo(String info, int progress, int max) {
-        if (getActivity() instanceof MainActivity)
-            MainActivity.sendTextInfo(info, progress, max);
+        if (mMainActivity != null)
+            mMainActivity.sendTextInfo(info, progress, max);
     }
 
     @Override
     public void sortBy(int sortby) {
         mVideoAdapter.sortBy(sortby);
+    }
+
+    @Override
+    public int sortDirection(int sortby) {
+        return mVideoAdapter.sortDirection(sortby);
     }
 
     public void setItemToUpdate(MediaWrapper item) {
@@ -547,8 +560,8 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                 public void run() {
                     mViewNomedia.setVisibility(mVideoAdapter.getCount()>0 ? View.GONE : View.VISIBLE);
                     mReady = true;
+                    mVideoAdapter.setNotifyOnChange(true);
                     mVideoAdapter.sort();
-                    mVideoAdapter.notifyDataSetChanged();
                     mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();
                     mGridView.setSelection(mGVFirstVisiblePos);
                     mGridView.requestFocus();

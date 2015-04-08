@@ -35,10 +35,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.util.Extensions;
-import org.videolan.vlc.gui.MainActivity;
+import org.videolan.vlc.gui.audio.AudioBrowserListAdapter;
+import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
@@ -48,6 +48,7 @@ import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class MediaLibrary {
@@ -62,6 +63,7 @@ public class MediaLibrary {
     private boolean isStopping = false;
     private boolean mRestart = false;
     protected Thread mLoadingThread;
+    private IBrowser mBrowser = null;
 
     public final static HashSet<String> FOLDER_BLACKLIST;
     static {
@@ -172,6 +174,35 @@ public class MediaLibrary {
         return audioItems;
     }
 
+    public ArrayList<MediaWrapper> getPlaylistFilesItems() {
+        ArrayList<MediaWrapper> playlistItems = new ArrayList<MediaWrapper>();
+        mItemListLock.readLock().lock();
+        for (int i = 0; i < mItemList.size(); i++) {
+            MediaWrapper item = mItemList.get(i);
+            if (item.getType() == MediaWrapper.TYPE_PLAYLIST) {
+                playlistItems.add(item);
+            }
+        }
+        mItemListLock.readLock().unlock();
+        return playlistItems;
+    }
+
+    public ArrayList<AudioBrowserListAdapter.ListItem> getPlaylistDbItems() {
+        ArrayList<AudioBrowserListAdapter.ListItem> playlistItems = new ArrayList<AudioBrowserListAdapter.ListItem>();
+        AudioBrowserListAdapter.ListItem playList;
+        MediaDatabase db = MediaDatabase.getInstance();
+        String[] items, playlistNames = db.getPlaylists();
+        for (String playlistName : playlistNames){
+            items = db.playlistGetItems(playlistName);
+            playList = new AudioBrowserListAdapter.ListItem(playlistName, null, null, false);
+            for (String track : items){
+                playList.mMediaList.add(new MediaWrapper(track));
+            }
+            playlistItems.add(playList);
+        }
+        return playlistItems;
+    }
+
     public ArrayList<MediaWrapper> getMediaItems() {
         return mItemList;
     }
@@ -214,7 +245,8 @@ public class MediaLibrary {
             final MediaDatabase mediaDatabase = MediaDatabase.getInstance();
 
             // show progressbar in footer
-            MainActivity.showProgressBar();
+            if (mBrowser != null)
+                mBrowser.showProgressBar();
 
             List<File> mediaDirs = mediaDatabase.getMediaDirs();
             if (mediaDirs.size() == 0) {
@@ -313,7 +345,8 @@ public class MediaLibrary {
                 // Process the stacked items
                 for (File file : mediaToScan) {
                     String fileURI = LibVLC.PathToURI(file.getPath());
-                    MainActivity.sendTextInfo(file.getName(), count,
+                    if (mBrowser != null)
+                        mBrowser.sendTextInfo(file.getName(), count,
                             mediaToScan.size());
                     count++;
                     if (existingMedias.containsKey(fileURI)) {
@@ -334,11 +367,17 @@ public class MediaLibrary {
                         final Media media = new Media(libVlcInstance, fileURI);
                         media.parse();
                         media.release();
+                        /* skip files with .mod extension and no duration */
+                        if ((media.getDuration() == 0 || (media.getTrackCount() != 0 && TextUtils.isEmpty(media.getTrack(0).codec))) &&
+                            fileURI.endsWith(".mod")) {
+                            mItemListLock.writeLock().unlock();
+                            continue;
+                        }
                         MediaWrapper mw = new MediaWrapper(media);
+                        mw.setLastModified(file.lastModified());
                         mItemList.add(mw);
                         // Add this item to database
-                        MediaDatabase db = MediaDatabase.getInstance();
-                        db.addMedia(mw);
+                        mediaDatabase.addMedia(mw);
                         mItemListLock.writeLock().unlock();
                     }
                     if (isStopping) {
@@ -369,8 +408,10 @@ public class MediaLibrary {
                 }
 
                 // hide progressbar in footer
-                MainActivity.clearTextInfo();
-                MainActivity.hideProgressBar();
+                if (mBrowser != null) {
+                    mBrowser.clearTextInfo();
+                    mBrowser.hideProgressBar();
+                }
 
                 Util.actionScanStop();
 
@@ -415,11 +456,16 @@ public class MediaLibrary {
                     if (dotIndex != -1) {
                         String fileExt = fileName.substring(dotIndex);
                         accepted = Extensions.AUDIO.contains(fileExt) ||
-                                   Extensions.VIDEO.contains(fileExt);
+                                   Extensions.VIDEO.contains(fileExt) ||
+                                   Extensions.PLAYLIST.contains(fileExt);
                     }
                 }
             }
             return accepted;
         }
+    }
+
+    public void setBrowser(IBrowser browser) {
+        mBrowser = browser;
     }
 }

@@ -44,6 +44,7 @@ public class MediaWrapper implements Parcelable {
     public final static int TYPE_GROUP = 2;
     public final static int TYPE_DIR = 3;
     public final static int TYPE_SUBTITLE = 4;
+    public final static int TYPE_PLAYLIST = 5;
 
     protected String mTitle;
     private String mArtist;
@@ -75,6 +76,7 @@ public class MediaWrapper implements Parcelable {
     private Bitmap mPicture;
     private boolean mIsPictureParsed;
     private int mFlags = 0;
+    private long mLastModified = 0l;
 
     /**
      * Create a new MediaWrapper
@@ -122,6 +124,8 @@ public class MediaWrapper implements Parcelable {
                 }
             }
             updateMeta(media);
+            if (mType == TYPE_ALL && media.getType() == Media.Type.Directory)
+                mType = TYPE_DIR;
         }
 
         if (mType == TYPE_ALL) {
@@ -134,21 +138,16 @@ public class MediaWrapper implements Parcelable {
                     mType = TYPE_AUDIO;
                 } else if (Extensions.SUBTITLES.contains(fileExt)) {
                     mType = TYPE_SUBTITLE;
+                } else if (Extensions.PLAYLIST.contains(fileExt)) {
+                    mType = TYPE_PLAYLIST;
                 }
-            }
-            if (mType == TYPE_ALL) {
-                /*
-                 * TODO: add something in libvlc to retrieve media type
-                 * In the meantime, assume media is a directory.
-                 */
-                mType = TYPE_DIR;
             }
         }
     }
 
     private void init(long time, long length, int type,
                       Bitmap picture, String title, String artist, String genre, String album, String albumArtist,
-                      int width, int height, String artworkURL, int audio, int spu, int trackNumber, int discNumber) {
+                      int width, int height, String artworkURL, int audio, int spu, int trackNumber, int discNumber, long lastModified) {
         mFilename = null;
         mTime = time;
         mAudioTrack = audio;
@@ -167,14 +166,15 @@ public class MediaWrapper implements Parcelable {
         mArtworkURL = artworkURL;
         mTrackNumber = trackNumber;
         mDiscNumber = discNumber;
+        mLastModified = lastModified;
     }
 
     public MediaWrapper(String location, long time, long length, int type,
                  Bitmap picture, String title, String artist, String genre, String album, String albumArtist,
-                 int width, int height, String artworkURL, int audio, int spu, int trackNumber, int discNumber) {
+                 int width, int height, String artworkURL, int audio, int spu, int trackNumber, int discNumber, long lastModified) {
         mLocation = location;
         init(time, length, type, picture, title, artist, genre, album, albumArtist,
-             width, height, artworkURL, audio, spu, trackNumber, discNumber);
+             width, height, artworkURL, audio, spu, trackNumber, discNumber, lastModified);
     }
 
     public String getLocation() {
@@ -262,6 +262,10 @@ public class MediaWrapper implements Parcelable {
 
     public int getType() {
         return mType;
+    }
+
+    public void setType(int type){
+        mType = type;
     }
 
     public int getWidth() {
@@ -402,6 +406,14 @@ public class MediaWrapper implements Parcelable {
         return mArtworkURL;
     }
 
+    public long getLastModified() {
+        return mLastModified;
+    }
+
+    public void setLastModified(long mLastModified) {
+        this.mLastModified = mLastModified;
+    }
+
     public void addFlags(int flags) {
         mFlags |= flags;
     }
@@ -434,7 +446,8 @@ public class MediaWrapper implements Parcelable {
                 in.readInt(),
                 in.readInt(),
                 in.readInt(),
-                in.readInt());
+                in.readInt(),
+                in.readLong());
     }
 
     @Override
@@ -456,6 +469,7 @@ public class MediaWrapper implements Parcelable {
         dest.writeInt(getSpuTrack());
         dest.writeInt(getTrackNumber());
         dest.writeInt(getDiscNumber());
+        dest.writeLong(getLastModified());
     }
 
     public static final Parcelable.Creator<MediaWrapper> CREATOR = new Parcelable.Creator<MediaWrapper>() {

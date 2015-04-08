@@ -70,13 +70,6 @@ public class SidebarAdapter extends BaseAdapter {
             this.attributeID = attributeID;
             this.type = type;
         }
-
-        public SidebarEntry(String id, String name, int attributeID, int type) {
-            this.id = id;
-            this.name = name;
-            this.attributeID = attributeID;
-            this.type = type;
-        }
     }
 
     private Context mContext;
