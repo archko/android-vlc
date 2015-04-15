@@ -33,18 +33,20 @@ import org.videolan.vlc.audio.RepeatType;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.CommonDialogs.MenuType;
+import org.videolan.vlc.gui.PreferencesActivity;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
 import org.videolan.vlc.gui.dialogs.SavePlaylist;
+import org.videolan.vlc.gui.video.AdvOptionsDialog;
 import org.videolan.vlc.interfaces.IAudioPlayer;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -189,18 +191,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
                 return true;
             }
         });
-        boolean blackTheme = PreferenceManager.getDefaultSharedPreferences(
-                getActivity()).getBoolean("enable_black_theme", false);
         mNext.setOnTouchListener(new LongSeekListener(true,
-                blackTheme ? R.drawable.ic_next_normal_w
-                        : R.drawable.ic_next_normal,
-                blackTheme ? R.drawable.ic_next_pressed_w
-                        : R.drawable.ic_next_pressed));
+                Util.getResourceFromAttribute(getActivity(), R.attr.ic_next),
+                R.drawable.ic_next_pressed));
         mPrevious.setOnTouchListener(new LongSeekListener(false,
-                blackTheme ? R.drawable.ic_previous_normal_w
-                        : R.drawable.ic_previous_normal,
-                blackTheme ? R.drawable.ic_previous_pressed_w
-                        : R.drawable.ic_previous_pressed));
+                Util.getResourceFromAttribute(getActivity(), R.attr.ic_previous),
+                R.drawable.ic_previous_pressed));
         mShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -226,10 +222,10 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
                 mSwitcher.showNext();
                 if (mSwitcher.getDisplayedChild() == 0)
                     mPlaylistSwitch.setImageResource(Util.getResourceFromAttribute(getActivity(),
-                                                     R.attr.ic_playlist_pressed));
+                                                     R.attr.ic_playlist_on));
                 else
                     mPlaylistSwitch.setImageResource(Util.getResourceFromAttribute(getActivity(),
-                                                     R.attr.ic_playlist_normal));
+                                                     R.attr.ic_playlist));
             }
         });
         mSongsList.setOnItemClickListener(new OnItemClickListener() {
@@ -321,6 +317,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
             return;
 
         if (mAudioController.hasMedia()) {
+            SharedPreferences mSettings= PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (mSettings.getBoolean(PreferencesActivity.VIDEO_RESTORE, false)){
+                Util.commitPreferences(mSettings.edit().putBoolean(PreferencesActivity.VIDEO_RESTORE, false));
+                mAudioController.handleVout();
+                return;
+            }
             show();
         } else {
             hide();
@@ -335,33 +337,38 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         if (mAudioController.isPlaying()) {
             mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mPlayPause.setContentDescription(getString(R.string.pause));
-            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause_for_header_play_pause));
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mHeaderPlayPause.setContentDescription(getString(R.string.pause));
         } else {
             mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mPlayPause.setContentDescription(getString(R.string.play));
-            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play_for_header_play_pause));
+            mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mHeaderPlayPause.setContentDescription(getString(R.string.play));
         }
         if (mAudioController.isShuffling()) {
-            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_pressed));
+            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_on));
+            mShuffle.setContentDescription(getResources().getString(R.string.shuffle_on));
         } else {
-            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_normal));
+            mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle));
+            mShuffle.setContentDescription(getResources().getString(R.string.shuffle));
         }
         switch(mAudioController.getRepeatType()) {
         case None:
-            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_normal));
+            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat));
+            mRepeat.setContentDescription(getResources().getString(R.string.repeat));
             break;
         case Once:
             mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_one));
+            mRepeat.setContentDescription(getResources().getString(R.string.repeat_single));
             break;
         default:
         case All:
-            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_pressed));
+            mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat_on));
+            mRepeat.setContentDescription(getResources().getString(R.string.repeat_all));
             break;
         }
 
-        mShuffle.setVisibility(mSongsListAdapter.getCount() > 2 ? View.VISIBLE : View.INVISIBLE);
+        mShuffle.setVisibility(mAudioController.getMediaLocations().size() > 2 ? View.VISIBLE : View.INVISIBLE);
         if (mAudioController.hasNext())
             mNext.setVisibility(ImageButton.VISIBLE);
         else
@@ -485,7 +492,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     public void showAdvancedOptions(View v) {
-        CommonDialogs.advancedOptions(getActivity(), v, MenuType.Audio);
+        FragmentManager fm = getActivity().getSupportFragmentManager();
+        AdvOptionsDialog advOptionsDialog = new AdvOptionsDialog();
+        Bundle args = new Bundle();
+        args.putInt(AdvOptionsDialog.MODE_KEY, AdvOptionsDialog.MODE_AUDIO);
+        advOptionsDialog.setArguments(args);
+        advOptionsDialog.show(fm, "fragment_adv_options");
     }
 
     public void show() {

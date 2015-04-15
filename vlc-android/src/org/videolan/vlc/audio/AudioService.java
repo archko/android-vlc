@@ -71,6 +71,7 @@ import org.videolan.vlc.RemoteControlClientReceiver;
 import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.audio.AudioUtil;
+import org.videolan.vlc.gui.video.VideoPlayerActivity;
 import org.videolan.vlc.interfaces.IAudioService;
 import org.videolan.vlc.interfaces.IAudioServiceCallback;
 import org.videolan.vlc.util.Util;
@@ -322,6 +323,8 @@ public class AudioService extends Service {
             audioFocusListener = new OnAudioFocusChangeListener() {
                 @Override
                 public void onAudioFocusChange(int focusChange) {
+                    if (!hasCurrentMedia())
+                        return;
                     switch (focusChange)
                     {
                         case AudioManager.AUDIOFOCUS_LOSS:
@@ -547,6 +550,9 @@ public class AudioService extends Service {
                     service.showNotification();
                     service.updateRemoteControlClientMetadata();
                     break;
+                case EventHandler.MediaPlayerESAdded:
+                    service.handleVout();
+                    break;
                 default:
                     Log.e(TAG, String.format("Event not handled (0x%x)", msg.getData().getInt("event")));
                     break;
@@ -610,6 +616,24 @@ public class AudioService extends Service {
             executeUpdate();
         }
     };
+
+    private void handleVout() {
+        if (mLibVLC.getVideoTracksCount() <= 0 || !hasCurrentMedia())
+            return;
+        final MediaWrapper mw = mMediaListPlayer.getMediaList().getMedia(mCurrentIndex);
+        if (mw == null || (mw.getFlags() & LibVLC.MEDIA_NO_VIDEO) != 0)
+            return;
+
+        Log.i(TAG, "Obtained video track");
+        int index = mCurrentIndex;
+        mCurrentIndex = -1;
+        mEventHandler.removeHandler(mVlcEventHandler);
+        // Preserve playback when switching to video
+        hideNotification(false);
+
+        // Switch to the video player & don't lose the currently playing stream
+        VideoPlayerActivity.startOpened(VLCApplication.getAppContext(), index);
+    }
 
     private void executeUpdate() {
         executeUpdate(true);
@@ -819,6 +843,7 @@ public class AudioService extends Service {
         mHandler.removeMessages(SHOW_PROGRESS);
         // hideNotification(); <-- see event handler
         mLibVLC.pause();
+        broadcastMetadata();
     }
 
     private void play() {
@@ -828,6 +853,7 @@ public class AudioService extends Service {
             mHandler.sendEmptyMessage(SHOW_PROGRESS);
             showNotification();
             updateWidget(this);
+            broadcastMetadata();
         }
     }
 
@@ -840,6 +866,7 @@ public class AudioService extends Service {
         mPrevious.clear();
         mHandler.removeMessages(SHOW_PROGRESS);
         hideNotification();
+        broadcastMetadata();
         executeUpdate();
         executeUpdateProgress();
         changeAudioFocus(false);
@@ -928,6 +955,7 @@ public class AudioService extends Service {
         setUpRemoteControlClient();
         showNotification();
         updateWidget(this);
+        broadcastMetadata();
         updateRemoteControlClientMetadata();
         saveCurrentMedia();
 
@@ -991,6 +1019,7 @@ public class AudioService extends Service {
         setUpRemoteControlClient();
         showNotification();
         updateWidget(this);
+        broadcastMetadata();
         updateRemoteControlClientMetadata();
         saveCurrentMedia();
 
@@ -1227,6 +1256,7 @@ public class AudioService extends Service {
             setUpRemoteControlClient();
             showNotification();
             updateWidget(AudioService.this);
+            broadcastMetadata();
             updateRemoteControlClientMetadata();
             AudioService.this.saveMediaList();
             AudioService.this.saveCurrentMedia();
@@ -1258,6 +1288,7 @@ public class AudioService extends Service {
             setUpRemoteControlClient();
             showNotification();
             updateWidget(AudioService.this);
+            broadcastMetadata();
             updateRemoteControlClientMetadata();
             determinePrevAndNextIndices();
         }
@@ -1418,6 +1449,11 @@ public class AudioService extends Service {
         public float getRate() throws RemoteException {
             return mLibVLC.getRate();
         }
+
+        @Override
+        public void handleVout() throws RemoteException {
+            AudioService.this.handleVout();
+        }
     };
 
     private void updateWidget(Context context) {
@@ -1476,6 +1512,23 @@ public class AudioService extends Service {
         i.setAction(ACTION_WIDGET_UPDATE_POSITION);
         i.putExtra("position", pos);
         sendBroadcast(i);
+    }
+
+    private void broadcastMetadata() {
+        MediaWrapper media = getCurrentMedia();
+        if (media == null || media.getType() != MediaWrapper.TYPE_AUDIO)
+            return;
+
+        boolean playing = mLibVLC.isPlaying();
+
+        Intent broadcast = new Intent("com.android.music.metachanged");
+        broadcast.putExtra("track", media.getTitle());
+        broadcast.putExtra("artist", media.getArtist());
+        broadcast.putExtra("album", media.getAlbum());
+        broadcast.putExtra("duration", media.getLength());
+        broadcast.putExtra("playing", playing);
+
+        sendBroadcast(broadcast);
     }
 
     private synchronized void loadLastPlaylist() {

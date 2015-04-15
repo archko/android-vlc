@@ -86,6 +86,7 @@ public class LibVLC {
     private boolean frameSkip = false;
     private int networkCaching = 0;
     private boolean httpReconnect = false;
+    private boolean hdmiAudioEnabled = false;
 
     /** Path of application-specific cache */
     private String mCachePath = "";
@@ -101,8 +102,6 @@ public class LibVLC {
 
     public native void attachSubtitlesSurface(Surface surface);
     public native void detachSubtitlesSurface();
-
-    public native void eventVideoPlayerActivityCreated(boolean created);
 
     /* Load library before object instantiation */
     static {
@@ -336,6 +335,14 @@ public class LibVLC {
             this.vout = vout;
         if (this.vout == VOUT_ANDROID_SURFACE && HAS_WINDOW_VOUT)
             this.vout = VOUT_ANDROID_WINDOW;
+    }
+
+    public void setHdmiAudioEnabled(boolean enable) {
+        this.hdmiAudioEnabled = enable;
+    }
+
+    public boolean isHdmiAudioEnabled() {
+        return this.hdmiAudioEnabled;
     }
 
     public boolean useCompatSurface() {
@@ -625,6 +632,8 @@ public class LibVLC {
     public native int setAudioTrack(int index);
 
     public native int getVideoTracksCount();
+
+    public native int setVideoTrack(int index);
 
     public native int addSubtitleTrack(String path);
 

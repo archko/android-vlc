@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/VLC.iml" filepath="$PROJECT_DIR$/VLC.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../java-libs/WheelView/WheelView.iml" filepath="$PROJECT_DIR$/../java-libs/WheelView/WheelView.iml" />
       <module fileurl="file://$PROJECT_DIR$/../java-libs/appcompat/appcompat.iml" filepath="$PROJECT_DIR$/../java-libs/appcompat/appcompat.iml" />
       <module fileurl="file://$PROJECT_DIR$/../java-libs/cardview/cardview.iml" filepath="$PROJECT_DIR$/../java-libs/cardview/cardview.iml" />
       <module fileurl="file://$PROJECT_DIR$/../libvlc/libvlc.iml" filepath="$PROJECT_DIR$/../libvlc/libvlc.iml" />
