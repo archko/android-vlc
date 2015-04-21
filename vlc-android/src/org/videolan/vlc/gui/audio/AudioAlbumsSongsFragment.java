@@ -52,7 +52,7 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.BrowserFragment;
+import org.videolan.vlc.gui.browser.MediaBrowserFragment;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
@@ -64,7 +64,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AudioAlbumsSongsFragment extends BrowserFragment implements SwipeRefreshLayout.OnRefreshListener {
+public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     public final static String TAG = "VLC/AudioAlbumsSongsFragment";
 
@@ -168,6 +168,9 @@ public class AudioAlbumsSongsFragment extends BrowserFragment implements SwipeRe
     public void onRefresh() {
         updateList();
     }
+
+    @Override
+    protected void display() {}
 
     @Override
     protected String getTitle() {

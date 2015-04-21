@@ -63,19 +63,19 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.BuildConfig;
 import org.videolan.vlc.MediaDatabase;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.audio.AudioService;
 import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.SidebarAdapter.SidebarEntry;
 import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.gui.audio.AudioPlayer;
-import org.videolan.vlc.gui.network.NetworkFragment;
+import org.videolan.vlc.gui.browser.BaseBrowserFragment;
+import org.videolan.vlc.gui.browser.MediaBrowserFragment;
+import org.videolan.vlc.gui.browser.NetworkBrowserFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
@@ -109,7 +109,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     private HackyDrawerLayout mRootContainer;
     private ListView mListView;
     private ActionBarDrawerToggle mDrawerToggle;
-    private View mSideMenu;
 
     private View mInfoLayout;
     private ProgressBar mInfoProgress;
@@ -171,7 +170,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         mSlidingPane = (SlidingPaneLayout) findViewById(R.id.pane);
         mSlidingPane.setPanelSlideListener(mPanelSlideListener);
 
-        mSideMenu = findViewById(R.id.side_menu);
         mListView = (ListView)findViewById(R.id.sidelist);
         mListView.setFooterDividersEnabled(true);
         mSidebarAdapter = new SidebarAdapter(this);
@@ -200,8 +198,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             @Override
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
-                if (getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder) instanceof BrowserFragment)
-                    ((BrowserFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder)).setReadyToDisplay(true);
+                if (getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder) instanceof MediaBrowserFragment)
+                    ((MediaBrowserFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder)).setReadyToDisplay(true);
             }
         };
 
@@ -229,7 +227,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mRootContainer.openDrawer(mSideMenu);
+                    mRootContainer.openDrawer(mListView);
                 }
             }, 500);
         }
@@ -369,10 +367,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     @Override
     public void onBackPressed() {
             /* Close the menu first */
-        if(mRootContainer.isDrawerOpen(mSideMenu)) {
+        if(mRootContainer.isDrawerOpen(mListView)) {
             if (mFocusedPrior != 0)
                 requestFocusOnSearch();
-            mRootContainer.closeDrawer(mSideMenu);
+            mRootContainer.closeDrawer(mListView);
             return;
         }
 
@@ -382,17 +380,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
         if (mCurrentFragment!= null) {
             // If it's the directory view, a "backpressed" action shows a parent.
-            if (mCurrentFragment.equals(SidebarEntry.ID_DIRECTORIES)) {
-                DirectoryViewFragment directoryView = (DirectoryViewFragment) getFragment(mCurrentFragment);
-                if (!directoryView.isRootDirectory()) {
-                    directoryView.showParentDirectory();
-                    return;
-                }
-            } else if (mCurrentFragment.equals(SidebarEntry.ID_NETWORK)){
-                NetworkFragment networkFragment = (NetworkFragment) getSupportFragmentManager()
+            if (mCurrentFragment.equals(SidebarEntry.ID_NETWORK) || mCurrentFragment.equals(SidebarEntry.ID_DIRECTORIES)){
+                BaseBrowserFragment browserFragment = (BaseBrowserFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.fragment_placeholder);
-                if (networkFragment !=null && !networkFragment.isRootDirectory()) {
-                    networkFragment.goBack();
+                if (browserFragment !=null && !browserFragment.isRootDirectory()) {
+                    browserFragment.goBack();
                     return;
                 }
             }
@@ -506,11 +498,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                     item.setTitle(R.string.sortby_date);
         }
 
-        boolean networkSave = current instanceof NetworkFragment && !((NetworkFragment)current).isRootDirectory();
+        boolean networkSave = current instanceof NetworkBrowserFragment && !((NetworkBrowserFragment)current).isRootDirectory();
         if (networkSave) {
             MenuItem item = menu.findItem(R.id.ml_menu_save);
             item.setVisible(true);
-            String mrl = ((NetworkFragment)current).mMrl;
+            String mrl = ((BaseBrowserFragment)current).mMrl;
             item.setIcon(MediaDatabase.getInstance().networkFavExists(mrl) ?
                     R.drawable.ic_menu_bookmark_w :
                     R.drawable.ic_menu_bookmark_outline_w);
@@ -555,7 +547,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 }
                 break;
             case R.id.ml_menu_equalizer:
-                showSecondaryFragment("equalizer");
+                showSecondaryFragment(SecondaryActivity.EQUALIZER);
                 break;
             // Refresh
             case R.id.ml_menu_refresh:
@@ -593,11 +585,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
             case R.id.ml_menu_save:
                 if (current == null)
                     break;
-                ((NetworkFragment)current).toggleFavorite();
+                ((NetworkBrowserFragment)current).toggleFavorite();
                 item.setIcon(R.drawable.ic_menu_bookmark_w);
                 break;
         }
-        mRootContainer.closeDrawer(mSideMenu);
+        mRootContainer.closeDrawer(mListView);
         return super.onOptionsItemSelected(item);
     }
 
@@ -944,20 +936,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         }
     }
 
-    public void onClick(View v){
-        switch (v.getId()){
-            case R.id.settings:
-            case R.id.settings_icon:
-                startActivityForResult(new Intent(this, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
-                break;
-            case R.id.about:
-            case R.id.about_icon:
-                showSecondaryFragment("about");
-                break;
-        }
-        mRootContainer.closeDrawer(mSideMenu);
-    }
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         SidebarAdapter.SidebarEntry entry = (SidebarEntry) mListView.getItemAtPosition(position);
@@ -966,7 +944,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
         if(current == null || (entry != null && current.getTag().equals(entry.id))) { /* Already selected */
             if (mFocusedPrior != 0)
                 requestFocusOnSearch();
-            mRootContainer.closeDrawer(mSideMenu);
+            mRootContainer.closeDrawer(mListView);
             return;
         }
 
@@ -981,8 +959,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
                 /* Switch the fragment */
             Fragment fragment = getFragment(entry.id);
-            if (fragment instanceof BrowserFragment)
-                ((BrowserFragment)fragment).setReadyToDisplay(false);
+            if (fragment instanceof MediaBrowserFragment)
+                ((MediaBrowserFragment)fragment).setReadyToDisplay(false);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.replace(R.id.fragment_placeholder, fragment, entry.id);
             ft.addToBackStack(mCurrentFragment);
@@ -992,10 +970,11 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
             if (mFocusedPrior != 0)
                 requestFocusOnSearch();
-            mRootContainer.closeDrawer(mSideMenu);
-        }else if (entry.attributeID == R.attr.ic_menu_preferences){
+        } else if (entry.type == SidebarEntry.TYPE_SECONDARY_FRAGMENT)
+            showSecondaryFragment(SecondaryActivity.ABOUT);
+        else if (entry.attributeID == R.attr.ic_menu_preferences)
             startActivityForResult(new Intent(this, PreferencesActivity.class), ACTIVITY_RESULT_PREFERENCES);
-        }
+        mRootContainer.closeDrawer(mListView);
     }
 
     private void requestFocusOnSearch() {

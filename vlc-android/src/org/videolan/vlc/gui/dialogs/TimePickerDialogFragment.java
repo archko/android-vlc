@@ -3,6 +3,7 @@
  * TimePickerDialogFragment.java
  * ****************************************************************************
  * Copyright © 2015 VLC authors and VideoLAN
+ * Author: Geoffrey Métais
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +33,6 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.gui.video.AdvOptionsDialog;
 import org.videolan.vlc.util.VLCInstance;
 
 import java.util.Calendar;

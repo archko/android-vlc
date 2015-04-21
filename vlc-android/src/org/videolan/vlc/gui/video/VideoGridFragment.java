@@ -54,8 +54,6 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
 import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
 import org.videolan.vlc.MediaDatabase;
@@ -65,7 +63,7 @@ import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.Thumbnailer;
 import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.BrowserFragment;
+import org.videolan.vlc.gui.browser.MediaBrowserFragment;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.SecondaryActivity;
@@ -81,7 +79,7 @@ import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
-public class VideoGridFragment extends BrowserFragment implements ISortable, IVideoBrowser, SwipeRefreshLayout.OnRefreshListener, AdapterView.OnItemClickListener {
+public class VideoGridFragment extends MediaBrowserFragment implements ISortable, IVideoBrowser, SwipeRefreshLayout.OnRefreshListener, AdapterView.OnItemClickListener {
 
     public final static String TAG = "VLC/VideoListFragment";
 
@@ -109,7 +107,6 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
 
     private MainActivity mMainActivity;
     private AudioServiceController mAudioController;
-    private boolean mReady = true;
 
     // Gridview position saved in onPause()
     private int mGVFirstVisiblePos;
@@ -284,7 +281,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             return;
         if (media instanceof MediaGroup) {
             MainActivity activity = (MainActivity)getActivity();
-            activity.showSecondaryFragment("videoGroupList", media.getTitle());
+            activity.showSecondaryFragment(SecondaryActivity.VIDEO_GROUP_LIST, media.getTitle());
         }
         else
             playVideo(media, false);
@@ -314,7 +311,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             case R.id.video_list_info:
                 Activity activity = getActivity();
                 if (activity instanceof MainActivity)
-                    ((MainActivity)activity).showSecondaryFragment("mediaInfo", media.getLocation());
+                    ((MainActivity)activity).showSecondaryFragment(SecondaryActivity.MEDIA_INFO, media.getLocation());
                 else {
                     Intent i = new Intent(activity, SecondaryActivity.class);
                     i.putExtra("fragment", "mediaInfo");
@@ -367,7 +364,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
             hasInfo = true;
         menu.findItem(R.id.video_list_info).setVisible(hasInfo);
         menu.findItem(R.id.video_list_delete).setVisible(!LibVlcUtil.isLolliPopOrLater() ||
-                mediaWrapper.getLocation().startsWith("file://"+ Environment.getExternalStorageDirectory().getPath()));
+                mediaWrapper.getLocation().startsWith("file://" + Environment.getExternalStorageDirectory().getPath()));
     }
 
     @Override
@@ -460,7 +457,7 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
                                 mThumbnailer.addJob(item);
                         }
                     }
-                    if (mReady)
+                    if (mReadyToDisplay)
                         display();
                 }
             }).start();
@@ -546,21 +543,13 @@ public class VideoGridFragment extends BrowserFragment implements ISortable, IVi
     }
 
     @Override
-    public void setReadyToDisplay(boolean ready) {
-        if (ready && !mReady)
-            display();
-        else
-            mReady = ready;
-    }
-
-    @Override
     public void display() {
         if (getActivity() != null)
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     mViewNomedia.setVisibility(mVideoAdapter.getCount()>0 ? View.GONE : View.VISIBLE);
-                    mReady = true;
+                    mReadyToDisplay = true;
                     mVideoAdapter.setNotifyOnChange(true);
                     mVideoAdapter.sort();
                     mGVFirstVisiblePos = mGridView.getFirstVisiblePosition();

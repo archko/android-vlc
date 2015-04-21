@@ -21,9 +21,7 @@
 package org.videolan.vlc.gui.video;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.app.Presentation;
 import android.content.ActivityNotFoundException;
@@ -54,7 +52,6 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -110,6 +107,7 @@ import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.PreferencesActivity;
+import org.videolan.vlc.gui.dialogs.AdvOptionsDialog;
 import org.videolan.vlc.interfaces.IDelayController;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Strings;
@@ -189,8 +187,8 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     private static final int FADE_OUT_INFO = 4;
     private static final int START_PLAYBACK = 5;
     private static final int AUDIO_SERVICE_CONNECTION_FAILED = 6;
-    private static final int END_DELAY_STATE = 7;
-    private static final int RESET_BACK_LOCK = 8;
+    private static final int RESET_BACK_LOCK = 7;
+    private static final int CHECK_VIDEO_TRACKS = 8;
     private boolean mDragging;
     private boolean mShowing;
     private DelayState mDelay = DelayState.OFF;
@@ -937,7 +935,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         if (mLockBackButton) {
             mLockBackButton = false;
             mHandler.sendEmptyMessageDelayed(RESET_BACK_LOCK, 2000);
-            Toast.makeText(this, "Press back again to quit video", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.back_quit_lock), Toast.LENGTH_SHORT).show();
         } else
             super.onBackPressed();
     }
@@ -1101,7 +1099,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
 
     @Override
     public void endDelaySetting() {
-        hideOverlay(true);
         mDelay = DelayState.OFF;
         mDelayMinus.setOnClickListener(null);
         mDelayPlus.setOnClickListener(null);
@@ -1109,7 +1106,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
         mDelayPlus.setVisibility(View.INVISIBLE);
         mInfo.setVisibility(View.INVISIBLE);
         mInfo.setText("");
-        mHandler.removeMessages(END_DELAY_STATE);
     }
 
     private OnClickListener mAudioDelayListener = new OnClickListener() {
@@ -1140,8 +1136,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mDelay = DelayState.AUDIO;
             initDelayInfo();
         }
-        mHandler.removeMessages(END_DELAY_STATE);
-        mHandler.sendEmptyMessageDelayed(END_DELAY_STATE, 2000);
     }
 
     public void delaySubs(long delta){
@@ -1153,8 +1147,6 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
             mDelay = DelayState.SUBS;
             initDelayInfo();
         }
-        mHandler.removeMessages(END_DELAY_STATE);
-        mHandler.sendEmptyMessageDelayed(END_DELAY_STATE, 2000);
     }
 
     private static class ConfigureSurfaceHolder {
@@ -1462,12 +1454,11 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                     // avoid useless error logs
                     break;
                 case EventHandler.MediaPlayerESAdded:
-                    if (!activity.mHasMenu && activity.mLibVLC.getVideoTracksCount() < 1) {
-                        Log.i(TAG, "No video track, open in audio mode");
-                        activity.switchToAudioMode(true);
-                    }
-                    // no break here, we want to invalidate tracks
                 case EventHandler.MediaPlayerESDeleted:
+                    if (!activity.mHasMenu) {
+                        activity.mHandler.removeMessages(CHECK_VIDEO_TRACKS);
+                        activity.mHandler.sendEmptyMessageDelayed(CHECK_VIDEO_TRACKS, 1000);
+                    }
                     activity.invalidateESTracks(msg.getData().getInt("data"));
                     break;
                 default:
@@ -1516,10 +1507,15 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
                 case AUDIO_SERVICE_CONNECTION_FAILED:
                     activity.finish();
                     break;
-                case END_DELAY_STATE:
-                    activity.endDelaySetting();
                 case RESET_BACK_LOCK:
                     activity.mLockBackButton = true;
+                    break;
+                case CHECK_VIDEO_TRACKS:
+                    if (activity.mLibVLC.getVideoTracksCount() < 1 && activity.mLibVLC.getAudioTracksCount() > 0) {
+                        Log.i(TAG, "No video track, open in audio mode");
+                        activity.switchToAudioMode(true);
+                    }
+                    break;
             }
         }
     };
@@ -1763,6 +1759,7 @@ public class VideoPlayerActivity extends ActionBarActivity implements IVideoPlay
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (mDelay != DelayState.OFF){
+            mTouchAction = TOUCH_NONE;
             endDelaySetting();
             return true;
         }
