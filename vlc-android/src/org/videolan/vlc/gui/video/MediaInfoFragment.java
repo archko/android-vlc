@@ -28,7 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,7 +44,6 @@ import org.videolan.libvlc.util.Extensions;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
-import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.util.BitmapUtil;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
@@ -59,6 +58,8 @@ import java.util.concurrent.Executors;
 public class MediaInfoFragment extends ListFragment {
 
     public final static String TAG = "VLC/MediaInfoFragment";
+
+    public final static String ITEM_KEY = "key_item";
 
     private MediaWrapper mItem;
     private Bitmap mImage;
@@ -77,6 +78,13 @@ public class MediaInfoFragment extends ListFragment {
     private final static int EXIT = 4;
     private final static int SHOW_SUBTITLES = 5;
     ExecutorService mThreadPoolExecutor;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (savedInstanceState != null)
+            mItem = savedInstanceState.getParcelable(ITEM_KEY);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -133,7 +141,7 @@ public class MediaInfoFragment extends ListFragment {
             return;
         }
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(mItem.getTitle());
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(mItem.getTitle());
         mLengthView.setText(Strings.millisToString(mItem.getLength()));
     }
 
@@ -141,6 +149,12 @@ public class MediaInfoFragment extends ListFragment {
         super.onStop();
         if (mThreadPoolExecutor != null)
             mThreadPoolExecutor.shutdownNow();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(ITEM_KEY, mItem);
     }
 
     public void setMediaLocation(String MRL) {

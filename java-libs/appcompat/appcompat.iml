@@ -4,19 +4,16 @@
     <facet type="android" name="Android">
       <configuration>
         <option name="LIBRARY_PROJECT" value="true" />
-        <option name="UPDATE_PROPERTY_FILES" value="true" />
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_6" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="android-support-v4" level="project" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">
@@ -78,7 +75,6 @@
         <entry key="ExplicitSerialization" value="true" />
         <entry key="FieldItemSummary" value="true" />
         <entry key="FinalizerNullsFields" value="true" />
-        <entry key="FindAndroidStream" value="true" />
         <entry key="FindBadCast2" value="true" />
         <entry key="FindBadForLoop" value="true" />
         <entry key="FindBugsSummaryStats" value="true" />

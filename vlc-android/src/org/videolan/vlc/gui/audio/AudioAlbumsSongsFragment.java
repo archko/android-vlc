@@ -22,10 +22,12 @@ package org.videolan.vlc.gui.audio;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -52,7 +54,7 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.browser.MediaBrowserFragment;
+import org.videolan.vlc.gui.SecondaryActivity;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
@@ -64,13 +66,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements SwipeRefreshLayout.OnRefreshListener {
+public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     public final static String TAG = "VLC/AudioAlbumsSongsFragment";
 
     AudioServiceController mAudioController;
     private MediaLibrary mMediaLibrary;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private ViewPager mViewPager;
     private SlidingTabLayout mSlidingTabLayout;
     private AudioBrowserListAdapter mSongsAdapter;
@@ -84,14 +87,14 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
     public final static int MODE_SONG = 1;
     public final static int MODE_TOTAL = 2; // Number of audio browser modes
 
-    private ArrayList<MediaWrapper> mediaList;
+    private ArrayList<MediaWrapper> mMediaList;
     private String mTitle;
 
     /* All subclasses of Fragment must include a public empty constructor. */
     public AudioAlbumsSongsFragment() { }
 
     public void setMediaList(ArrayList<MediaWrapper> mediaList, String title) {
-        this.mediaList = mediaList;
+        mMediaList = mediaList;
         mTitle = title;
     }
 
@@ -106,6 +109,8 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
 
         mAudioController = AudioServiceController.getInstance();
         mMediaLibrary = MediaLibrary.getInstance();
+        if (savedInstanceState != null)
+            setMediaList(savedInstanceState.<MediaWrapper>getParcelableArrayList("list"), savedInstanceState.getString("title"));
     }
 
     @Override
@@ -151,6 +156,7 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
         songsList.setOnScrollListener(mScrollListener);
         albumsList.setOnScrollListener(mScrollListener);
 
+        getActivity().setTitle(mTitle);
         return v;
     }
 
@@ -170,11 +176,9 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
     }
 
     @Override
-    protected void display() {}
-
-    @Override
-    protected String getTitle() {
-        return mTitle;
+    public void onResume() {
+        super.onResume();
+        AudioServiceController.getInstance().bindAudioService(getActivity());
     }
 
     @Override
@@ -184,9 +188,10 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        AudioServiceController.getInstance().bindAudioService(getActivity());
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("list", mMediaList);
+        outState.putString("title", mTitle);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -294,7 +299,7 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
     }
 
     private void updateList() {
-        if (mediaList == null || getActivity() == null)
+        if (mMediaList == null || getActivity() == null)
             return;
 
         final Activity activity = getActivity();
@@ -304,12 +309,12 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Collections.sort(mediaList, MediaComparators.byAlbum);
+                Collections.sort(mMediaList, MediaComparators.byAlbum);
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        for (int i = 0; i < mediaList.size(); ++i) {
-                            MediaWrapper media = mediaList.get(i);
+                        for (int i = 0; i < mMediaList.size(); ++i) {
+                            MediaWrapper media = mMediaList.get(i);
                             mAlbumsAdapter.addSeparator(Util.getMediaReferenceArtist(activity, media), media);
                             mAlbumsAdapter.add(Util.getMediaAlbum(activity, media), null, media);
                             mSongsAdapter.addSeparator(Util.getMediaAlbum(activity, media), media);
@@ -327,8 +332,13 @@ public class AudioAlbumsSongsFragment extends MediaBrowserFragment implements Sw
     OnItemClickListener albumsListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<String> mediaLocation = mAlbumsAdapter.getLocations(p, true);
-            mAudioController.load(mediaLocation, 0);
+            ArrayList<MediaWrapper> mediaList = mAlbumsAdapter.getMedia(p);
+            Intent i = new Intent(getActivity(), SecondaryActivity.class);
+            i.putExtra("fragment", SecondaryActivity.ALBUM);
+            i.putParcelableArrayListExtra("list", mediaList);
+            i.putExtra("filter", mAlbumsAdapter.getTitle(p));
+            startActivity(i);
+            getActivity().finish();
         }
     };
 

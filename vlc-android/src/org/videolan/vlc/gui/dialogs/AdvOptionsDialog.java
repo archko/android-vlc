@@ -147,12 +147,12 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
 
         mJumpTitle.setOnClickListener(this);
 
-        if (AndroidDevices.hasTsp()) {
+        /*if (BuildConfig.tv) {
+            root.findViewById(R.id.sleep_timer_container).setVisibility(View.GONE);
+        } else */{
             mSleepTitle.setOnClickListener(this);
             mSleepTime.setOnClickListener(this);
             mSleepCancel.setOnClickListener(this);
-        } else {
-            root.findViewById(R.id.sleep_timer_container).setVisibility(View.GONE);
         }
 
         mReset.setOnFocusChangeListener(mFocusListener);
@@ -173,12 +173,8 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
 
             mSpuDelay.setOnClickListener(this);
             mSpuDelay.setOnFocusChangeListener(mFocusListener);
-            if (BuildConfig.DEBUG) { //Hide audio delay option for now, it is not usable yet.
-                mAudioDelay.setOnClickListener(this);
-                mAudioDelay.setOnFocusChangeListener(mFocusListener);
-            } else {
-                mAudioDelay.setVisibility(View.GONE);
-            }
+            mAudioDelay.setOnClickListener(this);
+            mAudioDelay.setOnFocusChangeListener(mFocusListener);
             initChapterSpinner();
         } else {
             root.findViewById(R.id.audio_delay).setVisibility(View.GONE);
@@ -261,7 +257,21 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
         if (mDelayController == null && getActivity() instanceof IDelayController)
             mDelayController = (IDelayController) getActivity();
         DialogFragment newFragment = null;
-        if (AndroidDevices.hasTsp()) {
+        /*if (BuildConfig.tv) {
+            switch (action){
+                case PickTimeFragment.ACTION_AUDIO_DELAY:
+                    newFragment = new AudioDelayDialog();
+                    break;
+                case PickTimeFragment.ACTION_SPU_DELAY:
+                    newFragment = new SubsDelayDialog();
+                    break;
+                case PickTimeFragment.ACTION_JUMP_TO_TIME:
+                    newFragment = new JumpToTimeDialog();
+                    break;
+                default:
+                    return;
+            }
+        } else */{
             switch (action){
                 case PickTimeFragment.ACTION_AUDIO_DELAY:
                     if (mDelayController != null)
@@ -270,20 +280,6 @@ public class AdvOptionsDialog extends DialogFragment implements View.OnClickList
                 case PickTimeFragment.ACTION_SPU_DELAY:
                     if (mDelayController != null)
                         mDelayController.showSubsDelaySetting();
-                    break;
-                case PickTimeFragment.ACTION_JUMP_TO_TIME:
-                    newFragment = new JumpToTimeDialog();
-                    break;
-                default:
-                    return;
-            }
-        } else {
-            switch (action){
-                case PickTimeFragment.ACTION_AUDIO_DELAY:
-                    newFragment = new AudioDelayDialog();
-                    break;
-                case PickTimeFragment.ACTION_SPU_DELAY:
-                    newFragment = new SubsDelayDialog();
                     break;
                 case PickTimeFragment.ACTION_JUMP_TO_TIME:
                     newFragment = new JumpToTimeDialog();

@@ -42,8 +42,8 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -88,7 +88,7 @@ import org.videolan.vlc.util.WeakHandler;
 import org.videolan.vlc.widget.HackyDrawerLayout;
 import org.videolan.vlc.widget.SlidingPaneLayout;
 
-public class MainActivity extends ActionBarActivity implements OnItemClickListener, SearchSuggestionsAdapter.SuggestionDisplay, FilterQueryProvider {
+public class MainActivity extends AppCompatActivity implements OnItemClickListener, SearchSuggestionsAdapter.SuggestionDisplay, FilterQueryProvider {
     public final static String TAG = "VLC/MainActivity";
 
     public static final String ACTION_SHOW_PLAYER = "org.videolan.vlc.gui.ShowPlayer";
@@ -212,6 +212,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
         /* Set up the audio player */
         mAudioPlayer = new AudioPlayer();
+        mAudioPlayer.setUserVisibleHint(false);
         mAudioController = AudioServiceController.getInstance();
 
         getSupportFragmentManager().beginTransaction()
@@ -871,6 +872,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 if (resId != 0)
                     mSlidingPane.setShadowResource(resId);
                 mAudioPlayer.setHeaderVisibilities(false, false, true, true, true, false);
+                mAudioPlayer.setUserVisibleHint(false);
                 mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_UNLOCKED);
                 removeTipViewIfDisplayed();
                 mAudioPlayer.showAudioPlayerTips();
@@ -878,12 +880,14 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 
             @Override
             public void onPanelOpenedEntirely() {
+                mAudioPlayer.setUserVisibleHint(false);
                 mSlidingPane.setShadowDrawable(null);
                 mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_UNLOCKED);
             }
 
             @Override
             public void onPanelClosed() {
+                mAudioPlayer.setUserVisibleHint(true);
                 mAudioPlayer.setHeaderVisibilities(true, true, false, false, false, true);
                 mRootContainer.setDrawerLockMode(HackyDrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                 mAudioPlayer.showPlaylistTips();
@@ -897,7 +901,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
      * @param settingKey the setting key to check if the view must be displayed or not.
      */
     public void showTipViewIfNeeded(final int layoutId, final String settingKey) {
-        if (!mSettings.getBoolean(settingKey, false) && AndroidDevices.hasTsp()) {
+        if (!mSettings.getBoolean(settingKey, false) /*&& !BuildConfig.tv*/) {
             removeTipViewIfDisplayed();
             View v = LayoutInflater.from(this).inflate(layoutId, null);
             mRootContainer.addView(v,

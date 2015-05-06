@@ -22,7 +22,6 @@ package org.videolan.vlc.gui.video;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +34,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -83,6 +83,8 @@ public class VideoGridFragment extends MediaBrowserFragment implements ISortable
 
     public final static String TAG = "VLC/VideoListFragment";
 
+    public final static String KEY_GROUP = "key_group";
+
     protected static final String ACTION_SCAN_START = "org.videolan.vlc.gui.ScanStart";
     protected static final String ACTION_SCAN_STOP = "org.videolan.vlc.gui.ScanStop";
     protected static final int UPDATE_ITEM = 0;
@@ -123,6 +125,8 @@ public class VideoGridFragment extends MediaBrowserFragment implements ISortable
         mVideoAdapter = new VideoListAdapter(getActivity(), this);
         mMediaLibrary = MediaLibrary.getInstance();
 
+        if (savedInstanceState != null)
+            setGroup(savedInstanceState.getString(KEY_GROUP));
         /* Load the thumbnailer */
         FragmentActivity activity = getActivity();
         if (activity != null)
@@ -215,6 +219,12 @@ public class VideoGridFragment extends MediaBrowserFragment implements ISortable
         /* Start the thumbnailer */
         if (mThumbnailer != null)
             mThumbnailer.start(this);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_GROUP, mGroup);
     }
 
     @Override
