@@ -34,6 +34,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -57,6 +58,7 @@ import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.DividerItemDecoration;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.SidebarAdapter;
+import org.videolan.vlc.gui.audio.MediaComparators;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
 import org.videolan.vlc.interfaces.IRefreshable;
 import org.videolan.vlc.util.Util;
@@ -69,6 +71,7 @@ import org.videolan.vlc.widget.SwipeRefreshLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 public abstract class BaseBrowserFragment extends MediaBrowserFragment implements IRefreshable, MediaBrowser.EventListener, SwipeRefreshLayout.OnRefreshListener {
@@ -92,7 +95,7 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
     protected boolean mRoot;
     protected LibVLC mLibVLC;
 
-    private SparseArray<ArrayList<MediaWrapper>> mMediaLists;
+    private SparseArray<ArrayList<MediaWrapper>> mMediaLists = new SparseArray<ArrayList<MediaWrapper>>();
     private ArrayList<MediaWrapper> mediaList;
     public int mCurrentParsedPosition = 0;
 
@@ -270,7 +273,6 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
 
     protected void updateDisplay() {
         if (!mAdapter.isEmpty()) {
-            mAdapter.sortList();
             if (mSavedPosition > 0) {
                 mLayoutManager.scrollToPositionWithOffset(mSavedPosition, 0);
                 mSavedPosition = 0;
@@ -337,7 +339,7 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
         setContextMenu(getActivity().getMenuInflater(), menu, info.position);
     }
 
-    private void setContextMenu(MenuInflater inflater, Menu menu, int position) {
+    protected void setContextMenu(MenuInflater inflater, Menu menu, int position) {
         MediaWrapper mw = (MediaWrapper) mAdapter.getItem(position);
         boolean canWrite = Util.canWrite(mw.getLocation());
         if (mw.getType() == MediaWrapper.TYPE_AUDIO || mw.getType() == MediaWrapper.TYPE_VIDEO) {
@@ -381,7 +383,7 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
         popupMenu.show();
     }
 
-    private boolean handleContextItemSelected(MenuItem item, int position) {
+    protected boolean handleContextItemSelected(MenuItem item, int position) {
         int id = item.getItemId();
         if (! (mAdapter.getItem(position) instanceof MediaWrapper))
             return super.onContextItemSelected(item);
@@ -391,7 +393,7 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
                 Util.openMedia(getActivity(), (MediaWrapper) mAdapter.getItem(position));
                 return true;
             case R.id.directory_view_append:
-                AudioServiceController.getInstance().append(mw.getLocation());
+                AudioServiceController.getInstance().append(mw);
                 return true;
             case R.id.directory_view_delete:
                 AlertDialog alertDialog = CommonDialogs.deleteMedia(getActivity(), mw.getLocation(),
@@ -404,10 +406,18 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
                 alertDialog.show();
                 return true;
             case R.id.directory_view_play_audio:
-                AudioServiceController.getInstance().load(mw.getLocation(), true);
+                AudioServiceController.getInstance().load(mw);
                 return true;
             case  R.id.directory_view_play_video:
                 VideoPlayerActivity.start(getActivity(), mw.getLocation());
+                return true;
+            case R.id.directory_view_play_folder:
+                ArrayList<MediaWrapper> mediaList = new ArrayList<>();
+                for (MediaWrapper mediaItem : mMediaLists.get(position)){
+                    if (mediaItem.getType() == MediaWrapper.TYPE_AUDIO || mediaItem.getType() == MediaWrapper.TYPE_VIDEO)
+                        mediaList.add(mediaItem);
+                }
+                Util.openList(getActivity(), mediaList, 0);
                 return true;
             case R.id.directory_view_hide_media:
                 try {
@@ -444,17 +454,23 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
     protected void parseSubDirectories() {
         if (mCurrentParsedPosition == -1 || mAdapter.isEmpty())
             return;
-        mMediaLists = new SparseArray<ArrayList<MediaWrapper>>();
+        mMediaLists.clear();
         mMediaBrowser.changeEventListener(mFoldersBrowserListener);
         mCurrentParsedPosition = 0;
         Object item;
         MediaWrapper mw;
         while (mCurrentParsedPosition <mAdapter.getItemCount()){
             item = mAdapter.getItem(mCurrentParsedPosition);
-            if (item instanceof MediaWrapper){
+            if (item instanceof BaseBrowserAdapter.Storage) {
+                mw = new MediaWrapper(((BaseBrowserAdapter.Storage) item).getPath());
+                mw.setType(MediaWrapper.TYPE_DIR);
+            } else  if (item instanceof MediaWrapper){
                 mw = (MediaWrapper) item;
+            } else
+                mw = null;
+            if (mw != null){
                 if (mw.getType() == MediaWrapper.TYPE_DIR || mw.getType() == MediaWrapper.TYPE_PLAYLIST){
-                    mMediaBrowser.browse(((MediaWrapper) mAdapter.getItem(mCurrentParsedPosition)).getLocation());
+                    mMediaBrowser.browse(mw.getLocation());
                     return;
                 }
             }
@@ -486,30 +502,35 @@ public abstract class BaseBrowserFragment extends MediaBrowserFragment implement
                 return;
             }
             String holderText = getDescription(directories.size(), files.size());
-            MediaWrapper mw = (MediaWrapper) mAdapter.getItem(mCurrentParsedPosition);
+            MediaWrapper mw = null;
 
             if (!TextUtils.equals(holderText, "")) {
-                mw.setDescription(holderText);
-                mAdapter.notifyItemChanged(mCurrentParsedPosition);
+                mAdapter.setDescription(mCurrentParsedPosition, holderText);
                 directories.addAll(files);
-                mMediaLists.append(mCurrentParsedPosition, directories);
+                mMediaLists.put(mCurrentParsedPosition, new ArrayList<MediaWrapper>(directories));
             }
-            while (++mCurrentParsedPosition < mAdapter.getItemCount()-1){ //skip media that are not browsable
+            while (++mCurrentParsedPosition < mAdapter.getItemCount()){ //skip media that are not browsable
                 if (mAdapter.getItem(mCurrentParsedPosition) instanceof MediaWrapper) {
                     mw = (MediaWrapper) mAdapter.getItem(mCurrentParsedPosition);
                     if (mw.getType() == MediaWrapper.TYPE_DIR || mw.getType() == MediaWrapper.TYPE_PLAYLIST)
                         break;
-                }
+                } else if (mAdapter.getItem(mCurrentParsedPosition) instanceof BaseBrowserAdapter.Storage) {
+                    mw = new MediaWrapper(((BaseBrowserAdapter.Storage) mAdapter.getItem(mCurrentParsedPosition)).getPath());
+                    break;
+                } else
+                    mw = null;
             }
 
-            if (mCurrentParsedPosition < mAdapter.getItemCount()) {
-                mMediaBrowser.browse(((MediaWrapper) mAdapter.getItem(mCurrentParsedPosition)).getLocation());
-                directories = new ArrayList<MediaWrapper>();
-                files = new ArrayList<MediaWrapper>();
-            } else {
-                mCurrentParsedPosition = -1;
-                mMediaBrowser.release();
+            if (mw != null) {
+                if (mCurrentParsedPosition < mAdapter.getItemCount()) {
+                    mMediaBrowser.browse(mw.getLocation());
+                } else {
+                    mCurrentParsedPosition = -1;
+                    mMediaBrowser.release();
+                }
             }
+            directories .clear();
+            files.clear();
         }
 
         private String getDescription(int folderCount, int mediaFileCount) {

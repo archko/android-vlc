@@ -20,18 +20,6 @@
 
 package org.videolan.vlc.gui;
 
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.videolan.vlc.R;
-import org.videolan.vlc.util.Logcat;
-import org.videolan.vlc.util.Util;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -47,7 +35,19 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateFormat;
-import android.util.Log;
+
+import org.videolan.vlc.R;
+import org.videolan.vlc.util.AndroidDevices;
+import org.videolan.vlc.util.Logcat;
+import org.videolan.vlc.util.Util;
+
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DebugLogService extends Service implements Logcat.Callback, Runnable {
 
@@ -171,7 +171,7 @@ public class DebugLogService extends Service implements Logcat.Callback, Runnabl
     public void run() {
         final CharSequence timestamp = DateFormat.format(
                 "yyyyMMdd_kkmmss", System.currentTimeMillis());
-        final String filename = Environment.getExternalStorageDirectory().getPath() + "/vlc_logcat_" + timestamp + ".log";
+        final String filename = AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY + "/vlc_logcat_" + timestamp + ".log";
         boolean saved = true;
         FileOutputStream fos = null;
         OutputStreamWriter output = null;

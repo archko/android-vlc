@@ -115,6 +115,7 @@ import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
+import org.videolan.vlc.widget.OnRepeatListener;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -131,7 +132,6 @@ import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Map;
 
 public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlayer, GestureDetector.OnDoubleTapListener, IDelayController {
@@ -180,6 +180,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
     private ActionBar mActionBar;
     private View mOverlayProgress;
     private View mOverlayBackground;
+    private View mOverlayButtons;
     private static final int OVERLAY_TIMEOUT = 4000;
     private static final int OVERLAY_INFINITE = -1;
     private static final int FADE_OUT = 1;
@@ -401,6 +402,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
         }
         mOverlayProgress.setLayoutParams(layoutParams);
         mOverlayBackground = findViewById(R.id.player_overlay_background);
+        mOverlayButtons =  findViewById(R.id.player_overlay_buttons);
 
         // Position and remaining time
         mTime = (TextView) findViewById(R.id.player_overlay_time);
@@ -511,6 +513,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
         } else
             setRequestedOrientation(getScreenOrientation());
 
+        resetHudLayout();
         updateNavStatus();
         mDetector = new GestureDetectorCompat(this, mGestureListener);
         mDetector.setOnDoubleTapListener(this);
@@ -554,6 +557,21 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
         if (!LibVlcUtil.isHoneycombOrLater())
             setSurfaceLayout(mVideoWidth, mVideoHeight, mVideoVisibleWidth, mVideoVisibleHeight, mSarNum, mSarDen);
         super.onConfigurationChanged(newConfig);
+        resetHudLayout();
+    }
+
+    public void resetHudLayout() {
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)mOverlayButtons.getLayoutParams();
+        if (getScreenOrientation() == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            layoutParams.addRule(RelativeLayout.BELOW, R.id.player_overlay_length);
+            layoutParams.addRule(RelativeLayout.RIGHT_OF, 0);
+            layoutParams.addRule(RelativeLayout.LEFT_OF, 0);
+        } else {
+            layoutParams.addRule(RelativeLayout.BELOW, R.id.player_overlay_seekbar);
+            layoutParams.addRule(RelativeLayout.RIGHT_OF, R.id.player_overlay_time);
+            layoutParams.addRule(RelativeLayout.LEFT_OF, R.id.player_overlay_length);
+        }
+        mOverlayButtons.setLayoutParams(layoutParams);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -681,12 +699,12 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
             mediaRouterAddCallback(true);
         }
 
-        mSurfaceView.setKeepScreenOn(true);
-
         final EventHandler em = EventHandler.getInstance();
         em.addHandler(mEventHandler);
 
         loadMedia();
+
+        mSurfaceView.setKeepScreenOn(true);
 
         // Add any selected subtitle file from the file picker
         if(mSubtitleSelectedFiles.size() > 0) {
@@ -1085,6 +1103,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
         showOverlayTimeout(OVERLAY_INFINITE);
         mDelayMinus.setOnClickListener(mAudioDelayListener);
         mDelayPlus.setOnClickListener(mAudioDelayListener);
+        mDelayMinus.setOnTouchListener(new OnRepeatListener(mAudioDelayListener));
+        mDelayPlus.setOnTouchListener(new OnRepeatListener(mAudioDelayListener));
         mDelayMinus.setVisibility(View.VISIBLE);
         mDelayPlus.setVisibility(View.VISIBLE);
         initDelayInfo();
@@ -2039,7 +2059,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
                 } else if (item.getItemId() == R.id.video_menu_subtitles_picker) {
                     Intent intent = new Intent("org.openintents.action.PICK_FILE");
 
-                    File file = new File(android.os.Environment.getExternalStorageDirectory().getPath());
+                    File file = new File(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY);
                     intent.setData(Uri.fromFile(file));
 
                     // Set fancy title and button (optional)
@@ -2634,13 +2654,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
                             Log.i(TAG, "Getting file " + filename + " from content:// URI");
 
                             is = getContentResolver().openInputStream(data);
-                            os = new FileOutputStream(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                            os = new FileOutputStream(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY + "/Download/" + filename);
                             byte[] buffer = new byte[1024];
                             int bytesRead = 0;
                             while((bytesRead = is.read(buffer)) >= 0) {
                                 os.write(buffer, 0, bytesRead);
                             }
-                            mLocation = LibVLC.PathToURI(Environment.getExternalStorageDirectory().getPath() + "/Download/" + filename);
+                            mLocation = LibVLC.PathToURI(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY + "/Download/" + filename);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Couldn't download file from mail URI");
@@ -2710,21 +2730,6 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
                 mSubtitleSelectedFiles.add(getIntent().getExtras().getString(PLAY_EXTRA_SUBTITLES_LOCATION));
             mAskResume &= !fromStart;
             openedPosition = getIntent().getExtras().getInt(PLAY_EXTRA_OPENED_POSITION, -1);
-        }
-
-        /* WARNING: hack to avoid a crash in mediacodec on KitKat.
-         * Disable hardware acceleration if the media has a ts extension. */
-        if (mLocation != null && LibVlcUtil.isKitKatOrLater()) {
-            String locationLC = mLocation.toLowerCase(Locale.ENGLISH);
-            if (locationLC.endsWith(".ts")
-                || locationLC.endsWith(".tts")
-                || locationLC.endsWith(".m2t")
-                || locationLC.endsWith(".mts")
-                || locationLC.endsWith(".m2ts")) {
-                mDisabledHardwareAcceleration = true;
-                mPreviousHardwareAccelerationMode = mLibVLC.getHardwareAcceleration();
-                mLibVLC.setHardwareAcceleration(LibVLC.HW_ACCELERATION_DISABLED);
-            }
         }
 
         if (openedPosition != -1) {
@@ -2937,6 +2942,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVideoPlay
                     }
                 })
                 .create();
+        mAlertDialog.setCancelable(false);
         mAlertDialog.show();
     }
 

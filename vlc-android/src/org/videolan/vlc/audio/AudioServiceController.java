@@ -20,17 +20,6 @@
 
 package org.videolan.vlc.audio;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.videolan.vlc.MediaWrapper;
-import org.videolan.vlc.interfaces.IAudioPlayer;
-import org.videolan.vlc.interfaces.IAudioPlayerControl;
-import org.videolan.vlc.interfaces.IAudioService;
-import org.videolan.vlc.interfaces.IAudioServiceCallback;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -41,6 +30,17 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
+import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.interfaces.IAudioPlayer;
+import org.videolan.vlc.interfaces.IAudioPlayerControl;
+import org.videolan.vlc.interfaces.IAudioService;
+import org.videolan.vlc.interfaces.IAudioServiceCallback;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AudioServiceController implements IAudioPlayerControl {
     public static final String TAG = "VLC/AudioServiceContoller";
@@ -290,32 +290,40 @@ public class AudioServiceController implements IAudioPlayerControl {
         }
     }
 
-    public void load(List<String> mediaPathList, int position) {
-        load(mediaPathList, position, false);
-    }
-
-    public void load(String mediaPath, boolean noVideo) {
-        ArrayList<String> arrayList = new ArrayList<String>();
+    public void loadLocation(String mediaPath) {
+        ArrayList < String > arrayList = new ArrayList<String>();
         arrayList.add(mediaPath);
-        load(arrayList, 0, noVideo);
+        loadLocations(arrayList, 0);
     }
 
-    public void load(List<String> mediaPathList, int position, boolean noVideo) {
-        remoteProcedureCall(mAudioServiceBinder, Void.class, (Void)null, "load",
-                new Class<?>[] { List.class, int.class, boolean.class },
-                new Object[] { mediaPathList, position, noVideo } );
+    public void load(MediaWrapper media) {
+        ArrayList<MediaWrapper> arrayList = new ArrayList<MediaWrapper>();
+        arrayList.add(media);
+        load(arrayList, 0);
     }
 
-    public void append(String mediaPath) {
-        ArrayList<String> arrayList = new ArrayList<String>();
-        arrayList.add(mediaPath);
+    public void loadLocations(List<String> mediaPathList, int position) {
+        remoteProcedureCall(mAudioServiceBinder, Void.class, (Void) null, "loadLocations",
+                new Class<?>[]{List.class, int.class},
+                new Object[]{mediaPathList, position});
+    }
+
+    public void load(List<MediaWrapper> mediaList, int position) {
+        remoteProcedureCall(mAudioServiceBinder, Void.class, (Void) null, "load",
+                new Class<?>[]{List.class, int.class},
+                new Object[]{mediaList, position});
+    }
+
+    public void append(MediaWrapper media) {
+        ArrayList<MediaWrapper> arrayList = new ArrayList<MediaWrapper>();
+        arrayList.add(media);
         append(arrayList);
     }
 
-    public void append(List<String> mediaPathList) {
-        remoteProcedureCall(mAudioServiceBinder, Void.class, (Void)null, "append",
-                new Class<?>[] { List.class },
-                new Object[] { mediaPathList } );
+    public void append(List<MediaWrapper> mediaList) {
+        remoteProcedureCall(mAudioServiceBinder, Void.class, (Void) null, "append",
+                new Class<?>[]{List.class},
+                new Object[]{mediaList});
     }
 
     public void moveItem(int positionStart, int positionEnd) {
@@ -349,6 +357,10 @@ public class AudioServiceController implements IAudioPlayerControl {
 
     public String getCurrentMediaLocation() {
         return remoteProcedureCall(mAudioServiceBinder, String.class, (String)null, "getCurrentMediaLocation", null, null);
+    }
+
+    public MediaWrapper getCurrentMediaWrapper() {
+        return remoteProcedureCall(mAudioServiceBinder, MediaWrapper.class, (MediaWrapper)null, "getCurrentMediaWrapper", null, null);
     }
 
     public void stop() {

@@ -24,8 +24,6 @@
 package org.videolan.vlc.gui.audio;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,7 +41,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListView;
 
@@ -52,13 +49,9 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.util.AndroidDevices;
-import org.videolan.vlc.util.VLCRunnable;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemClickListener, View.OnClickListener {
 
@@ -68,7 +61,6 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
     private MediaLibrary mMediaLibrary;
 
     private AlbumAdapter mAdapter;
-    ArrayList<String> mMediaLocations = new ArrayList<String>();
     private ArrayList<MediaWrapper> mMediaList;
     private String mTitle;
 
@@ -89,13 +81,6 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
     public void setMediaList(ArrayList<MediaWrapper> mediaList, String title) {
         this.mMediaList = mediaList;
         mTitle = title;
-        String location;
-        for (MediaWrapper media : mediaList) {
-            location = media.getLocation();
-            if (location != null) {
-                mMediaLocations.add(location);
-            }
-        }
     }
 
     @Override
@@ -125,18 +110,6 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        AudioServiceController.getInstance().unbindAudioService(getActivity());
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        AudioServiceController.getInstance().bindAudioService(getActivity());
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("list", mMediaList);
         outState.putString("title", mTitle);
@@ -153,9 +126,7 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        mAudioController.load(mMediaLocations, position);
-        if (getActivity() != null)
-            getActivity().finish();
+        mAudioController.load(mMediaList, position);
     }
 
     AlbumAdapter.ContextPopupMenuListener mContextPopupMenuListener
@@ -230,8 +201,7 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
         final int id = v.getId();
         switch (id){
             case R.id.album_play:
-                mAudioController.load(mMediaLocations, 0);
-                getActivity().finish();
+                mAudioController.load(mMediaList, 0);
                 break;
             default:
                 break;

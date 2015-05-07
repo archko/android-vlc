@@ -20,27 +20,9 @@
 
 package org.videolan.vlc.gui.audio;
 
-import java.util.List;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-
-import org.videolan.vlc.MediaWrapper;
-import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.audio.RepeatType;
-import org.videolan.vlc.gui.MainActivity;
-import org.videolan.vlc.gui.PreferencesActivity;
-import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
-import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
-import org.videolan.vlc.gui.dialogs.SavePlaylist;
-import org.videolan.vlc.gui.dialogs.AdvOptionsDialog;
-import org.videolan.vlc.interfaces.IAudioPlayer;
-import org.videolan.vlc.util.Strings;
-import org.videolan.vlc.util.Util;
-import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
-
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -51,23 +33,40 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.SeekBar.OnSeekBarChangeListener;
+
+import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.R;
+import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.audio.RepeatType;
+import org.videolan.vlc.gui.AudioPlayerContainerActivity;
+import org.videolan.vlc.gui.PreferencesActivity;
+import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
+import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
+import org.videolan.vlc.gui.dialogs.AdvOptionsDialog;
+import org.videolan.vlc.gui.dialogs.SavePlaylist;
+import org.videolan.vlc.interfaces.IAudioPlayer;
+import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.Util;
+import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
+
+import java.util.List;
 
 public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickListener {
     public static final String TAG = "VLC/AudioPlayer";
@@ -229,7 +228,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         mSongsList.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-                mAudioController.load(mSongsListAdapter.getLocations(), p);
+                mAudioController.load(mSongsListAdapter.getItems(), p);
             }
         });
         mSongsList.setOnItemLongClickListener(new OnItemLongClickListener() {
@@ -307,7 +306,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
      */
     public static void start(Context context) {
         Intent intent = new Intent();
-        intent.setAction(MainActivity.ACTION_SHOW_PLAYER);
+        intent.setAction(AudioPlayerContainerActivity.ACTION_SHOW_PLAYER);
         context.getApplicationContext().sendBroadcast(intent);
     }
 
@@ -502,13 +501,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     public void show() {
-        MainActivity activity = (MainActivity)getActivity();
+        AudioPlayerContainerActivity activity = (AudioPlayerContainerActivity)getActivity();
         if (activity != null)
             activity.showAudioPlayer();
     }
 
     public void hide() {
-        MainActivity activity = (MainActivity)getActivity();
+        AudioPlayerContainerActivity activity = (AudioPlayerContainerActivity)getActivity();
         if (activity != null)
             activity.hideAudioPlayer();
     }
@@ -573,7 +572,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
         @Override
         public void onTouchClick() {
-            MainActivity activity = (MainActivity)getActivity();
+            AudioPlayerContainerActivity activity = (AudioPlayerContainerActivity)getActivity();
             activity.slideUpOrDownAudioPlayer();
         }
     };
@@ -704,14 +703,23 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     public void showPlaylistTips() {
-        MainActivity activity = (MainActivity)getActivity();
+        AudioPlayerContainerActivity activity = (AudioPlayerContainerActivity)getActivity();
         if(activity != null)
             activity.showTipViewIfNeeded(R.layout.audio_playlist_tips, PREF_PLAYLIST_TIPS_SHOWN);
     }
 
     public void showAudioPlayerTips() {
-        MainActivity activity = (MainActivity)getActivity();
+        AudioPlayerContainerActivity activity = (AudioPlayerContainerActivity)getActivity();
         if(activity != null)
             activity.showTipViewIfNeeded(R.layout.audio_player_tips, PREF_AUDIOPLAYER_TIPS_SHOWN);
+    }
+
+    /*
+     * Override this method to prefent NPE on mFragmentManager reference.
+     */
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        if (getFragmentManager() != null)
+            super.setUserVisibleHint(isVisibleToUser);
     }
 }

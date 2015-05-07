@@ -74,7 +74,7 @@ public class SlidingTabLayout extends HorizontalScrollView {
     private int mTitleOffset;
     private int mTabViewLayoutId;
     private int mTabViewTextViewId;
-    private boolean mDistributeEvenly;
+    private boolean mDistributeEvenly=true;
     private ViewPager mViewPager;
     private OnTabChangedListener tabChangedListener;
     private SparseArray<String> mContentDescriptions = new SparseArray<String>();
@@ -189,7 +189,7 @@ public class SlidingTabLayout extends HorizontalScrollView {
             }
             if (mDistributeEvenly) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) tabView.getLayoutParams();
-                lp.width = 0;
+                lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
                 lp.weight = 1;
             }
             tabTitleView.setText(adapter.getPageTitle(i).toString().toUpperCase());

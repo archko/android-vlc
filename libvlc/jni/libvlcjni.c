@@ -39,6 +39,7 @@
 #include "vout.h"
 #include "utils.h"
 #include "native_crash_handler.h"
+#include "std_logger.h"
 
 #define VOUT_ANDROID_SURFACE 0
 #define VOUT_OPENGLES2       1
@@ -55,9 +56,7 @@ struct fields fields;
 #define VLC_JNI_VERSION JNI_VERSION_1_2
 
 #define THREAD_NAME "libvlcjni"
-int jni_attach_thread(JNIEnv **env, const char *thread_name);
-void jni_detach_thread();
-int jni_get_env(JNIEnv **env);
+JNIEnv *jni_get_env(const char *name);
 
 static void add_media_options(libvlc_media_t *p_md, JNIEnv *env, jobjectArray mediaOptions)
 {
@@ -117,28 +116,17 @@ static void releaseMediaPlayer(JNIEnv *env, jobject thiz)
     }
 }
 
-/* Pointer to the Java virtual machine
- * Note: It's okay to use a static variable for the VM pointer since there
- * can only be one instance of this shared library in a single VM
- */
-static JavaVM *myVm;
-
 static jobject eventHandlerInstance = NULL;
 
 static void vlc_event_callback(const libvlc_event_t *ev, void *data)
 {
     JNIEnv *env;
 
-    bool isAttached = false;
-
     if (eventHandlerInstance == NULL)
         return;
 
-    if (jni_get_env(&env) < 0) {
-        if (jni_attach_thread(&env, THREAD_NAME) < 0)
-            return;
-        isAttached = true;
-    }
+    if (!(env = jni_get_env(THREAD_NAME)))
+        return;
 
     /* Creating the bundle in C allows us to subscribe to more events
      * and get better flexibility for each event. For example, we can
@@ -153,6 +141,7 @@ static void vlc_event_callback(const libvlc_event_t *ev, void *data)
     jmethodID putLong = (*env)->GetMethodID(env, clsBundle, "putLong", "(Ljava/lang/String;J)V" );
     jmethodID putFloat = (*env)->GetMethodID(env, clsBundle, "putFloat", "(Ljava/lang/String;F)V" );
     jmethodID putString = (*env)->GetMethodID(env, clsBundle, "putString", "(Ljava/lang/String;Ljava/lang/String;)V" );
+    (*env)->DeleteLocalRef(env, clsBundle);
 
     if (ev->type == libvlc_MediaPlayerPositionChanged) {
         jstring sData = (*env)->NewStringUTF(env, "data");
@@ -211,12 +200,64 @@ static void vlc_event_callback(const libvlc_event_t *ev, void *data)
     } else {
         LOGE("EventHandler: failed to get the callback method");
     }
+    (*env)->DeleteLocalRef(env, cls);
 
 end:
     (*env)->DeleteLocalRef(env, bundle);
-    if (isAttached)
-        jni_detach_thread();
 }
+
+/* Pointer to the Java virtual machine
+ * Note: It's okay to use a static variable for the VM pointer since there
+ * can only be one instance of this shared library in a single VM
+ */
+static JavaVM *myVm;
+static pthread_key_t jni_env_key;
+
+/* This function is called when a thread attached to the Java VM is canceled or
+ * exited */
+static void jni_detach_thread(void *data)
+{
+    //JNIEnv *env = data;
+    (*myVm)->DetachCurrentThread(myVm);
+}
+
+JNIEnv *jni_get_env(const char *name)
+{
+    JNIEnv *env;
+
+    env = pthread_getspecific(jni_env_key);
+    if (env == NULL) {
+        /* if GetEnv returns JNI_OK, the thread is already attached to the
+         * JavaVM, so we are already in a java thread, and we don't have to
+         * setup any destroy callbacks */
+        if ((*myVm)->GetEnv(myVm, (void **)&env, VLC_JNI_VERSION) != JNI_OK)
+        {
+            /* attach the thread to the Java VM */
+            JavaVMAttachArgs args;
+            jint result;
+
+            args.version = VLC_JNI_VERSION;
+            args.name = name;
+            args.group = NULL;
+
+            if ((*myVm)->AttachCurrentThread(myVm, &env, &args) != JNI_OK)
+                return NULL;
+
+            /* Set the attached env to the thread-specific data area (TSD) */
+            if (pthread_setspecific(jni_env_key, env) != 0)
+            {
+                (*myVm)->DetachCurrentThread(myVm);
+                return NULL;
+            }
+        }
+    }
+
+    return env;
+}
+
+#ifndef NDEBUG
+static std_logger *p_std_logger = NULL;
+#endif
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -226,8 +267,18 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 
     if ((*vm)->GetEnv(vm, (void**) &env, VLC_JNI_VERSION) != JNI_OK)
         return -1;
+
+    /* Create a TSD area and setup a destroy callback when a thread that
+     * previously set the jni_env_key is canceled or exited */
+    if (pthread_key_create(&jni_env_key, jni_detach_thread) != 0)
+        return -1;
+
     pthread_mutex_init(&vout_android_lock, NULL);
     pthread_cond_init(&vout_android_surf_attached, NULL);
+
+#ifndef NDEBUG
+    p_std_logger = std_logger_Open("VLC-std");
+#endif
 
 #define GET_CLASS(clazz, str, b_globlal) do { \
     (clazz) = (*env)->FindClass(env, (str)); \
@@ -354,29 +405,12 @@ void JNI_OnUnload(JavaVM* vm, void* reserved)
     (*env)->DeleteGlobalRef(env, fields.String.clazz);
     (*env)->DeleteGlobalRef(env, fields.VLCObject.clazz);
     (*env)->DeleteGlobalRef(env, fields.Media.clazz);
-}
 
-int jni_attach_thread(JNIEnv **env, const char *thread_name)
-{
-    JavaVMAttachArgs args;
-    jint result;
+    pthread_key_delete(jni_env_key);
 
-    args.version = VLC_JNI_VERSION;
-    args.name = thread_name;
-    args.group = NULL;
-
-    result = (*myVm)->AttachCurrentThread(myVm, env, &args);
-    return result == JNI_OK ? 0 : -1;
-}
-
-void jni_detach_thread()
-{
-    (*myVm)->DetachCurrentThread(myVm);
-}
-
-int jni_get_env(JNIEnv **env)
-{
-    return (*myVm)->GetEnv(myVm, (void **)env, VLC_JNI_VERSION) == JNI_OK ? 0 : -1;
+#ifndef NDEBUG
+    std_logger_Close(p_std_logger);
+#endif
 }
 
 void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
@@ -439,7 +473,10 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         (*env)->ReleaseStringUTFChars(env, cachePath, cache_path);
     }
 
-#define MAX_ARGV 20
+    methodId = (*env)->GetMethodID(env, cls, "isHdmiAudioEnabled", "()Z");
+    bool hdmi_audio = (*env)->CallBooleanMethod(env, thiz, methodId);
+
+#define MAX_ARGV 22
     const char *argv[MAX_ARGV];
     int argc = 0;
 
@@ -478,7 +515,11 @@ void Java_org_videolan_libvlc_LibVLC_nativeInit(JNIEnv *env, jobject thiz)
         argv[argc++] = "--no-omxil-dr";
 #endif
     }
-    argv[argc++] = "--spdif";
+    if (hdmi_audio) {
+        argv[argc++] = "--spdif";
+        argv[argc++] = "--audiotrack-audio-channels";
+        argv[argc++] = "8"; // 7.1 maximum
+    }
     argv[argc++] = b_verbose ? "-vvv" : "-vv";
 
     /* Reconnect on lost HTTP streams, e.g. network change */
@@ -759,12 +800,64 @@ void Java_org_videolan_libvlc_LibVLC_setTitle(JNIEnv *env, jobject thiz, jint ti
         libvlc_media_player_set_title(mp, title);
 }
 
+jint Java_org_videolan_libvlc_LibVLC_getChapterCount(JNIEnv *env, jobject thiz)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (mp)
+        return libvlc_media_player_get_chapter_count(mp);
+    return -1;
+}
+
 jint Java_org_videolan_libvlc_LibVLC_getChapterCountForTitle(JNIEnv *env, jobject thiz, jint title)
 {
     libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
     if (mp)
         return libvlc_media_player_get_chapter_count_for_title(mp, title);
     return -1;
+}
+
+jint Java_org_videolan_libvlc_LibVLC_getChapter(JNIEnv *env, jobject thiz)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (mp)
+        return libvlc_media_player_get_chapter(mp);
+    return -1;
+}
+
+jstring Java_org_videolan_libvlc_LibVLC_getChapterDescription(JNIEnv *env, jobject thiz, jint title)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    libvlc_track_description_t *description;
+    jstring string = NULL;
+    if (!mp)
+        return NULL;
+    description = libvlc_video_get_chapter_description(mp, title);
+    if (description) {
+        string = (*env)->NewStringUTF(env, description->psz_name);
+        free(description);
+    }
+    return string;
+}
+
+void Java_org_videolan_libvlc_LibVLC_setChapter(JNIEnv *env, jobject thiz, jint chapter)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (mp)
+        libvlc_media_player_set_chapter(mp, chapter);
+}
+
+void Java_org_videolan_libvlc_LibVLC_previousChapter(JNIEnv *env, jobject thiz)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (mp)
+        libvlc_media_player_previous_chapter(mp);
+}
+
+void Java_org_videolan_libvlc_LibVLC_nextChapter(JNIEnv *env, jobject thiz)
+{
+    libvlc_media_player_t *mp = getMediaPlayer(env, thiz);
+    if (mp)
+        libvlc_media_player_next_chapter(mp);
 }
 
 jint Java_org_videolan_libvlc_LibVLC_getTitleCount(JNIEnv *env, jobject thiz)
@@ -854,10 +947,10 @@ int jni_GetWindowSize(int *width, int *height)
 int aout_get_native_sample_rate(void)
 {
     JNIEnv *p_env;
-    jni_attach_thread (&p_env, THREAD_NAME);
+    if (!(p_env = jni_get_env(THREAD_NAME)))
+        return -1;
     jclass cls = (*p_env)->FindClass (p_env, "android/media/AudioTrack");
     jmethodID method = (*p_env)->GetStaticMethodID (p_env, cls, "getNativeOutputSampleRate", "(I)I");
     int sample_rate = (*p_env)->CallStaticIntMethod (p_env, cls, method, 3); // AudioManager.STREAM_MUSIC
-    jni_detach_thread ();
     return sample_rate;
 }

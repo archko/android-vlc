@@ -60,10 +60,10 @@ import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.browser.MediaBrowserFragment;
 import org.videolan.vlc.gui.CommonDialogs;
 import org.videolan.vlc.gui.MainActivity;
 import org.videolan.vlc.gui.SecondaryActivity;
+import org.videolan.vlc.gui.browser.MediaBrowserFragment;
 import org.videolan.vlc.interfaces.IBrowser;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
@@ -317,15 +317,14 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
     OnItemClickListener songListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<String> mediaLocation = mSongsAdapter.getLocations(p);
-            mAudioController.load(mediaLocation, 0);
+            mAudioController.load(mSongsAdapter.getMedias(p), 0);
         }
     };
 
     OnItemClickListener artistListListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<MediaWrapper> mediaList = mArtistsAdapter.getMedia(p);
+            ArrayList<MediaWrapper> mediaList = mArtistsAdapter.getMedias(p);
             MainActivity activity = (MainActivity)getActivity();
             Intent i = new Intent(getActivity(), SecondaryActivity.class);
             i.putExtra("fragment", "albumsSongs");
@@ -338,7 +337,7 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
     OnItemClickListener albumListListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<MediaWrapper> mediaList = mAlbumsAdapter.getMedia(p);
+            ArrayList<MediaWrapper> mediaList = mAlbumsAdapter.getMedias(p);
             Intent i = new Intent(getActivity(), SecondaryActivity.class);
             i.putExtra("fragment", SecondaryActivity.ALBUM);
             i.putParcelableArrayListExtra("list", mediaList);
@@ -350,7 +349,7 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
     OnItemClickListener genreListListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<MediaWrapper> mediaList = mGenresAdapter.getMedia(p);
+            ArrayList<MediaWrapper> mediaList = mGenresAdapter.getMedias(p);
             Intent i = new Intent(getActivity(), SecondaryActivity.class);
             i.putExtra("fragment", SecondaryActivity.ALBUMS_SONGS);
             i.putParcelableArrayListExtra("list", mediaList);
@@ -362,16 +361,18 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
     OnItemClickListener playlistListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            ArrayList<MediaWrapper> mediaList = mPlaylistAdapter.getItem(p).mMediaList;
-            if (mediaList.size() == 1) {
-                String mediaLocation = mediaList.get(0).getLocation();
-                mAudioController.load(mediaLocation, true);
-            } else {
-                ArrayList<String> mediaLocations = mPlaylistAdapter.getLocations(p);
-                mAudioController.load(mediaLocations, 0, true);
-            }
+            loadPlaylist(p);
         }
     };
+
+    private void loadPlaylist(int position) {
+        ArrayList<MediaWrapper> mediaList = mPlaylistAdapter.getItem(position).mMediaList;
+        if (mediaList.size() == 1 && mediaList.get(0).getType() == MediaWrapper.TYPE_PLAYLIST) {
+            mAudioController.load(mediaList.get(0));
+        } else {
+            mAudioController.load(mPlaylistAdapter.getMedias(position), 0);
+        }
+    }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -413,7 +414,7 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
         int startPosition;
         int groupPosition;
         int mode = mViewPager.getCurrentItem();
-        List<String> medias;
+        List<MediaWrapper> medias;
         int id = item.getItemId();
 
         boolean useAllItems = id == R.id.audio_list_browser_play_all;
@@ -434,11 +435,12 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
                 adapter = mPlaylistAdapter;
             } else
                 return false;
-            if (adapter.getCount() <= groupPosition || adapter.getLocations(groupPosition) == null || adapter.getLocations(groupPosition).isEmpty())
+            List<MediaWrapper> mediaList = adapter.getMedias(groupPosition);
+            if (adapter.getCount() <= groupPosition || mediaList == null || mediaList.isEmpty())
                 return false;
             AlertDialog alertDialog = CommonDialogs.deleteMedia(
                     getActivity(),
-                    adapter.getLocations(groupPosition).get(0),
+                    mediaList.get(0).getLocation(),
                     adapter.getItem(groupPosition).mTitle,
                     new VLCRunnable(adapter.getItem(groupPosition)) {
                         @Override
@@ -469,10 +471,9 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
         if (useAllItems) {
             if (mSongsAdapter.getCount() <= groupPosition)
                 return false;
-            medias = new ArrayList<String>();
+            medias = new ArrayList<MediaWrapper>();
             startPosition = mSongsAdapter.getListWithPosition(medias, groupPosition);
-        }
-        else {
+        } else {
             startPosition = 0;
             AudioBrowserListAdapter adapter = null;
             switch (mode){
@@ -489,32 +490,32 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
                     adapter = mGenresAdapter;
                     break;
                 case MODE_PLAYLIST: //For file playlist, we browse tracks with mediabrowser, and add them in callbacks onMediaAdded and onBrowseEnd
-                    medias = mPlaylistAdapter.getLocations(groupPosition);
-                    if (medias.size() <2) {
+                    medias = mPlaylistAdapter.getMedias(groupPosition);
+                    if (medias.size() == 1 && mPlaylistAdapter.getMedias(groupPosition).get(0).getType() == MediaWrapper.TYPE_PLAYLIST) {
                         if (mMediaBrowser == null)
                             mMediaBrowser = new MediaBrowser(VLCInstance.get(), this);
-                        mMediaBrowser.browse(mPlaylistAdapter.getMedia(groupPosition).get(0).getLocation());
+                        mMediaBrowser.browse(mPlaylistAdapter.getMedias(groupPosition).get(0).getLocation());
                         return true;
-                    }
+                    } else
+                        adapter = mPlaylistAdapter;
                     break;
                 default:
-                    return true;
+                    return false;
             }
             if (groupPosition >= adapter.getCount())
                 return false;
-            medias = adapter.getLocations(groupPosition);
+            medias = adapter.getMedias(groupPosition);
         }
 
         if (append)
             mAudioController.append(medias);
         else
             mAudioController.load(medias, startPosition);
-
-        return super.onContextItemSelected(item);
+        return true;
     }
 
     public void onFabPlayAllClick(View view) {
-        List<String> medias = new ArrayList<String>();
+        List<MediaWrapper> medias = new ArrayList<MediaWrapper>();
         mSongsAdapter.getListWithPosition(medias, 0);
         if (mSongsAdapter.getCount() > 0) {
             Random rand = new Random();
@@ -608,11 +609,11 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
         }
     }
 
-    ArrayList<String> mLocationsToAppend = new ArrayList<String>(); //Playlist tracks to append
+    ArrayList<MediaWrapper> mTracksToAppend = new ArrayList<MediaWrapper>(); //Playlist tracks to append
 
     @Override
     public void onMediaAdded(int index, Media media) {
-        mLocationsToAppend.add(media.getMrl());
+        mTracksToAppend.add(new MediaWrapper(media));
     }
 
     @Override
@@ -620,7 +621,7 @@ public class AudioBrowserFragment extends MediaBrowserFragment implements SwipeR
 
     @Override
     public void onBrowseEnd() {
-        mAudioController.append(mLocationsToAppend);
+        mAudioController.append(mTracksToAppend);
     }
 
     @Override

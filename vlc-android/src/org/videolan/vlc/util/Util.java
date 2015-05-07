@@ -20,26 +20,6 @@
 
 package org.videolan.vlc.util;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.libvlc.Media;
-import org.videolan.vlc.MediaWrapper;
-import org.videolan.vlc.MediaLibrary;
-import org.videolan.vlc.R;
-import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.VLCCallbackTask;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.video.VideoPlayerActivity;
-
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -50,13 +30,32 @@ import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils.TruncateAt;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.Media;
+import org.videolan.vlc.MediaLibrary;
+import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.R;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.VLCCallbackTask;
+import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.video.VideoPlayerActivity;
+
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Util {
     private static final AtomicInteger sNextGeneratedId = new AtomicInteger(1);
@@ -207,8 +206,34 @@ public class Util {
         String mrl = media.getLocation();
         if (media.getType() == MediaWrapper.TYPE_VIDEO)
             VideoPlayerActivity.start(context, mrl, media.getTitle());
-        else if (media.getType() == MediaWrapper.TYPE_AUDIO)
-            openStream(context, mrl);
+        else if (media.getType() == MediaWrapper.TYPE_AUDIO) {
+            VLCCallbackTask task = new VLCCallbackTask(context) {
+                @Override
+                public void run() {
+                    AudioServiceController c = AudioServiceController.getInstance();
+                    c.load(media);
+                }
+            };
+            task.execute();
+        }
+    }
+
+    public static  void openList(Context context, final List<MediaWrapper> list, final int position){
+        VLCCallbackTask task = new VLCCallbackTask(context){
+            @Override
+            public void run() {
+                AudioServiceController c = AudioServiceController.getInstance();
+
+                      /* Use the audio player by default. If a video track is
+                       * detected, then it will automatically switch to the video
+                       * player. This allows us to support more types of streams
+                       * (for example, RTSP and TS streaming) where ES can be
+                       * dynamically adapted rather than a simple scan.
+                       */
+                c.load(list, position);
+            }
+        };
+        task.execute();
     }
 
     public static void openStream(Context context, final String uri){
@@ -223,7 +248,7 @@ public class Util {
                        * (for example, RTSP and TS streaming) where ES can be
                        * dynamically adapted rather than a simple scan.
                        */
-                c.load(uri, false);
+                c.loadLocation(uri);
             }
         };
         task.execute();
@@ -330,7 +355,7 @@ public class Util {
             path = path.substring(7);
         if (!path.startsWith("/"))
             return false;
-        if (path.startsWith(Environment.getExternalStorageDirectory().getPath()))
+        if (path.startsWith(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY))
             return true;
         if (LibVlcUtil.isLolliPopOrLater())
             return false;
