@@ -19,9 +19,7 @@
  *****************************************************************************/
 package org.videolan.vlc;
 
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcException;
-import org.videolan.vlc.audio.AudioService;
+import org.videolan.libvlc.MediaPlayer;
 import org.videolan.vlc.util.VLCInstance;
 
 import android.content.BroadcastReceiver;
@@ -44,11 +42,10 @@ public class RemoteControlClientReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        LibVLC libVLC = VLCInstance.get();
 
         if(action.equalsIgnoreCase(Intent.ACTION_MEDIA_BUTTON)) {
 
-            KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            KeyEvent event = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
             if (event == null)
                 return;
 
@@ -77,44 +74,36 @@ public class RemoteControlClientReceiver extends BroadcastReceiver {
                         case KeyEvent.ACTION_UP:
                             // long click
                             if (time - mHeadsetDownTime >= 1000) {
-                                i = new Intent(AudioService.ACTION_REMOTE_BACKWARD);
+                                i = new Intent(PlaybackService.ACTION_REMOTE_BACKWARD);
                                 time = 0;
                                 // double click
                             } else if (time - mHeadsetUpTime <= 500) {
-                                i = new Intent(AudioService.ACTION_REMOTE_FORWARD);
+                                i = new Intent(PlaybackService.ACTION_REMOTE_FORWARD);
                             }
                             // one click
                             else {
-                                if (libVLC.isPlaying())
-                                    i = new Intent(AudioService.ACTION_REMOTE_PAUSE);
-                                else {
-                                    i = new Intent(context, AudioService.class);
-                                    i.setAction(AudioService.ACTION_REMOTE_PLAY);
-                                    context.startService(i);
-                                    mHeadsetUpTime = time;
-                                    return;
-                                }
+                                i = new Intent(PlaybackService.ACTION_REMOTE_PLAYPAUSE);
                             }
                             mHeadsetUpTime = time;
                             break;
                     }
                     break;
                 case KeyEvent.KEYCODE_MEDIA_PLAY:
-                    i = new Intent(context, AudioService.class);
-                    i.setAction(AudioService.ACTION_REMOTE_PLAY);
+                    i = new Intent(context, PlaybackService.class);
+                    i.setAction(PlaybackService.ACTION_REMOTE_PLAY);
                     context.startService(i);
                     return;
                 case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                    i = new Intent(AudioService.ACTION_REMOTE_PAUSE);
+                    i = new Intent(PlaybackService.ACTION_REMOTE_PAUSE);
                     break;
                 case KeyEvent.KEYCODE_MEDIA_STOP:
-                    i = new Intent(AudioService.ACTION_REMOTE_STOP);
+                    i = new Intent(PlaybackService.ACTION_REMOTE_STOP);
                     break;
                 case KeyEvent.KEYCODE_MEDIA_NEXT:
-                    i = new Intent(AudioService.ACTION_REMOTE_FORWARD);
+                    i = new Intent(PlaybackService.ACTION_REMOTE_FORWARD);
                     break;
                 case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                    i = new Intent(AudioService.ACTION_REMOTE_BACKWARD);
+                    i = new Intent(PlaybackService.ACTION_REMOTE_BACKWARD);
                     break;
             }
 
@@ -122,9 +111,9 @@ public class RemoteControlClientReceiver extends BroadcastReceiver {
                 abortBroadcast();
             if(i != null)
                 context.sendBroadcast(i);
-        } else if (action.equals(AudioService.ACTION_REMOTE_PLAYPAUSE)){
-            intent = new Intent(context, AudioService.class);
-            intent.setAction(AudioService.ACTION_REMOTE_PLAYPAUSE);
+        } else if (action.equals(PlaybackService.ACTION_REMOTE_PLAYPAUSE)){
+            intent = new Intent(context, PlaybackService.class);
+            intent.setAction(PlaybackService.ACTION_REMOTE_PLAYPAUSE);
             context.startService(intent);
         }
     }

@@ -23,29 +23,27 @@
 
 package org.videolan.vlc.gui.browser;
 
-import android.content.BroadcastReceiver;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
 
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
+import org.videolan.vlc.gui.AudioPlayerContainerActivity;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.CustomDirectories;
 import org.videolan.vlc.util.Strings;
+import org.videolan.vlc.util.Util;
 
 import java.io.File;
 
@@ -65,6 +63,12 @@ public class FileBrowserFragment extends BaseBrowserFragment {
     }
 
     @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mEmptyView.setText(getString(R.string.directory_empty));
+    }
+
+    @Override
     protected Fragment createFragment() {
         return new FileBrowserFragment();
     }
@@ -73,13 +77,14 @@ public class FileBrowserFragment extends BaseBrowserFragment {
         if (mRoot)
             return getCategoryTitle();
         else {
-            String title = mMrl;
+            String title;
             if (mCurrentMedia != null) {
-                if (TextUtils.equals(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY, mMrl))
+                if (TextUtils.equals(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY, Strings.removeFileProtocole(mMrl)))
                     title = getString(R.string.internal_memory);
                 else
                     title = mCurrentMedia.getTitle();
-            }
+            } else
+                title = Strings.getName(mMrl);
             return title;
         }
     }
@@ -91,31 +96,44 @@ public class FileBrowserFragment extends BaseBrowserFragment {
 
     @Override
     protected void browseRoot() {
+        final Activity context = getActivity();
         mAdapter.updateMediaDirs();
-        String storages[] = AndroidDevices.getMediaDirectories();
-        BaseBrowserAdapter.Storage storage;
-        for (String mediaDirLocation : storages) {
-            storage = new BaseBrowserAdapter.Storage(mediaDirLocation);
-            mAdapter.addItem(storage, false, false);
-        }
-        mHandler.sendEmptyMessage(BrowserFragmentHandler.MSG_HIDE_LOADING);
-        if (mReadyToDisplay) {
-            updateEmptyView();
-            mAdapter.notifyDataSetChanged();
-            parseSubDirectories();
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String storages[] = AndroidDevices.getMediaDirectories();
+                MediaWrapper directory;
+                for (String mediaDirLocation : storages) {
+                    if (!(new File(mediaDirLocation).exists()))
+                        continue;
+                    directory = new MediaWrapper(AndroidUtil.PathToUri(mediaDirLocation));
+                    directory.setType(MediaWrapper.TYPE_DIR);
+                    if (TextUtils.equals(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY, mediaDirLocation))
+                        directory.setTitle(getString(R.string.internal_memory));
+                    mAdapter.addItem(directory, false, false);
+                }
+                if (mReadyToDisplay) {
+                    context.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateEmptyView();
+                            mAdapter.notifyDataSetChanged();
+                            parseSubDirectories();
+                        }
+                    });
+                }
+                mHandler.sendEmptyMessage(BrowserFragmentHandler.MSG_HIDE_LOADING);
+            }
+        }).start();
     }
 
     public void onStart(){
         super.onStart();
+    }
 
-        //Handle network connection state
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-        filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
-        filter.addAction(Intent.ACTION_MEDIA_REMOVED);
-        filter.addAction(Intent.ACTION_MEDIA_EJECT);
-        getActivity().registerReceiver(storageReceiver, filter);
+    @Override
+    public void onResume() {
+        super.onResume();
         if (mReadyToDisplay)
             update();
     }
@@ -130,7 +148,6 @@ public class FileBrowserFragment extends BaseBrowserFragment {
     @Override
     public void onStop() {
         super.onStop();
-        getActivity().unregisterReceiver(storageReceiver);
         if (mAlertDialog != null && mAlertDialog.isShowing())
             mAlertDialog.dismiss();
     }
@@ -139,7 +156,7 @@ public class FileBrowserFragment extends BaseBrowserFragment {
         final Context context = getActivity();
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         final AppCompatEditText input = new AppCompatEditText(context);
-        if (!LibVlcUtil.isHoneycombOrLater()) {
+        if (!AndroidUtil.isHoneycombOrLater()) {
             input.setTextColor(getResources().getColor(R.color.grey50));
         }
         input.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
@@ -158,25 +175,16 @@ public class FileBrowserFragment extends BaseBrowserFragment {
                 String path = input.getText().toString().trim();
                 File f = new File(path);
                 if (!f.exists() || !f.isDirectory()) {
-                    Toast.makeText(context, getString(R.string.directorynotfound, path), Toast.LENGTH_SHORT).show();
+                    Util.snacker(getView(), getString(R.string.directorynotfound, path));
                     return;
                 }
 
                 CustomDirectories.addCustomDirectory(f.getAbsolutePath());
                 refresh();
+                ((AudioPlayerContainerActivity)getActivity()).updateLib();
             }
         });
         mAlertDialog = builder.show();
-    }
-
-    protected void setContextMenu(MenuInflater inflater, Menu menu, int position) {
-        if (mRoot) {
-            BaseBrowserAdapter.Storage storage = (BaseBrowserAdapter.Storage) mAdapter.getItem(position);
-            boolean isCustom = CustomDirectories.contains(storage.getPath());
-            if (isCustom)
-                inflater.inflate(R.menu.directory_custom_dir, menu);
-        } else
-            super.setContextMenu(inflater, menu, position);
     }
 
     @Override
@@ -184,29 +192,15 @@ public class FileBrowserFragment extends BaseBrowserFragment {
         if (mRoot) {
             if (item.getItemId() == R.id.directory_remove_custom_path){
                 BaseBrowserAdapter.Storage storage = (BaseBrowserAdapter.Storage) mAdapter.getItem(position);
-                MediaDatabase.getInstance().recursiveRemoveDir(storage.getPath());
-                CustomDirectories.removeCustomDirectory(storage.getPath());
+                MediaDatabase.getInstance().recursiveRemoveDir(storage.getUri().getPath());
+                CustomDirectories.removeCustomDirectory(storage.getUri().getPath());
                 mAdapter.updateMediaDirs();
                 mAdapter.removeItem(position, true);
+                ((AudioPlayerContainerActivity)getActivity()).updateLib();
                 return true;
             } else
                 return false;
         } else
             return super.handleContextItemSelected(item, position);
     }
-
-    private final BroadcastReceiver storageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (action.equalsIgnoreCase(Intent.ACTION_MEDIA_MOUNTED) ||
-                    action.equalsIgnoreCase(Intent.ACTION_MEDIA_UNMOUNTED) ||
-                    action.equalsIgnoreCase(Intent.ACTION_MEDIA_REMOVED) ||
-                    action.equalsIgnoreCase(Intent.ACTION_MEDIA_EJECT)) {
-                if (mReadyToDisplay)
-                    update();
-            }
-        }
-    };
 }

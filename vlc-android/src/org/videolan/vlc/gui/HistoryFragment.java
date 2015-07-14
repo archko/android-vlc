@@ -35,9 +35,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.browser.MediaBrowserFragment;
 import org.videolan.vlc.interfaces.IRefreshable;
 import org.videolan.vlc.widget.SwipeRefreshLayout;
@@ -78,7 +77,7 @@ public class HistoryFragment extends MediaBrowserFragment implements IRefreshabl
         mListView.setNextFocusUpId(R.id.ml_menu_search);
         mListView.setNextFocusLeftId(android.R.id.list);
         mListView.setNextFocusRightId(android.R.id.list);
-        if (LibVlcUtil.isHoneycombOrLater())
+        if (AndroidUtil.isHoneycombOrLater())
             mListView.setNextFocusForwardId(android.R.id.list);
         focusHelper(mHistoryAdapter.getCount() == 0);
         mListView.requestFocus();
@@ -107,12 +106,6 @@ public class HistoryFragment extends MediaBrowserFragment implements IRefreshabl
     }
 
     @Override
-    public void onDestroy() {
-        mHistoryAdapter.release();
-        super.onDestroy();
-    }
-
-    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         MenuInflater menuInflater = getActivity().getMenuInflater();
         menuInflater.inflate(R.menu.history_view, menu);
@@ -124,9 +117,8 @@ public class HistoryFragment extends MediaBrowserFragment implements IRefreshabl
     }
 
     private void playListIndex(int position) {
-        AudioServiceController audioController = AudioServiceController.getInstance();
-
-        audioController.playIndex(position);
+        if (mService != null)
+            mService.playIndex(position);
     }
 
     @Override

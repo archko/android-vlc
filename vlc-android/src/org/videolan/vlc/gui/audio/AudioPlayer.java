@@ -20,7 +20,6 @@
 
 package org.videolan.vlc.gui.audio;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,7 +27,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -51,24 +49,27 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
 import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.PlaybackService;
 import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.audio.RepeatType;
+import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.gui.AudioPlayerContainerActivity;
+import org.videolan.vlc.gui.PlaybackServiceFragment;
 import org.videolan.vlc.gui.PreferencesActivity;
 import org.videolan.vlc.gui.audio.widget.CoverMediaSwitcher;
 import org.videolan.vlc.gui.audio.widget.HeaderMediaSwitcher;
 import org.videolan.vlc.gui.dialogs.AdvOptionsDialog;
-import org.videolan.vlc.gui.dialogs.SavePlaylist;
-import org.videolan.vlc.interfaces.IAudioPlayer;
+import org.videolan.vlc.gui.dialogs.SavePlaylistDialog;
 import org.videolan.vlc.util.Strings;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.widget.AudioMediaSwitcher.AudioMediaSwitcherListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickListener {
+public class AudioPlayer extends PlaybackServiceFragment implements PlaybackService.Callback, View.OnClickListener {
     public static final String TAG = "VLC/AudioPlayer";
 
     private ProgressBar mProgressBar;
@@ -77,6 +78,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     private TextView mTime;
     private TextView mHeaderTime;
     private TextView mLength;
+    private ImageButton mResumeToVideo;
     private ImageButton mPlayPause;
     private ImageButton mHeaderPlayPause;
     private ImageButton mNext;
@@ -90,9 +92,9 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
     ViewSwitcher mSwitcher;
 
-    private AudioServiceController mAudioController;
     private boolean mShowRemainingTime = false;
     private boolean mPreviewingSeek = false;
+    private boolean mSwitchedToVideo = false;
 
     private AudioPlaylistAdapter mSongsListAdapter;
 
@@ -111,8 +113,6 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAudioController = AudioServiceController.getInstance();
-
         mSongsListAdapter = new AudioPlaylistAdapter(getActivity());
     }
 
@@ -130,6 +130,7 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         mTime = (TextView) v.findViewById(R.id.time);
         mHeaderTime = (TextView) v.findViewById(R.id.header_time);
         mLength = (TextView) v.findViewById(R.id.length);
+        mResumeToVideo = (ImageButton) v.findViewById(R.id.playlist_playasaudio_off);
         mPlayPause = (ImageButton) v.findViewById(R.id.play_pause);
         mHeaderPlayPause = (ImageButton) v.findViewById(R.id.header_play_pause);
         mNext = (ImageButton) v.findViewById(R.id.next);
@@ -160,6 +161,15 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
             @Override
             public void onClick(View v) {
                 onTimeLabelClick(v);
+            }
+        });
+        mResumeToVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService != null) {
+                    mService.switchToVideo();
+                    mSwitchedToVideo = true;
+                }
             }
         });
         mPlayPause.setOnClickListener(new View.OnClickListener() {
@@ -228,7 +238,9 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         mSongsList.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-                mAudioController.load(mSongsListAdapter.getItems(), p);
+                if (mService != null) {
+                    mService.playIndex(p);
+                }
             }
         });
         mSongsList.setOnItemLongClickListener(new OnItemLongClickListener() {
@@ -242,13 +254,15 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         mSongsList.setOnItemDraggedListener(new AudioPlaylistView.OnItemDraggedListener() {
             @Override
             public void onItemDragged(int positionStart, int positionEnd) {
-                mAudioController.moveItem(positionStart, positionEnd);
+                if (mService != null)
+                    mService.moveItem(positionStart, positionEnd);
             }
         });
         mSongsList.setOnItemRemovedListener(new AudioPlaylistView.OnItemRemovedListener() {
             @Override
             public void onItemRemoved(int position) {
-                mAudioController.remove(position);
+                if (mService != null)
+                    mService.remove(position);
                 update();
             }
         });
@@ -271,11 +285,6 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         MenuInflater menuInflater = getActivity().getMenuInflater();
         menuInflater.inflate(R.menu.audio_player, menu);
@@ -291,7 +300,8 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
             if(id == R.id.audio_player_mini_remove) {
                 Log.d(TAG, "Context menu removing " + info.position);
-                mAudioController.remove(info.position);
+                if (mService != null)
+                    mService.remove(info.position);
                 return true;
             }
             return super.onContextItemSelected(item);
@@ -311,30 +321,31 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     @Override
-    public synchronized void update() {
-
-        if (mAudioController == null)
+    public void update() {
+        if (mService == null || getActivity() == null)
             return;
 
-        if (mAudioController.hasMedia()) {
+        if (mService.hasMedia() && !mService.isVideoPlaying()) {
             SharedPreferences mSettings= PreferenceManager.getDefaultSharedPreferences(getActivity());
             if (mSettings.getBoolean(PreferencesActivity.VIDEO_RESTORE, false)){
                 Util.commitPreferences(mSettings.edit().putBoolean(PreferencesActivity.VIDEO_RESTORE, false));
-                mAudioController.handleVout();
+                mService.switchToVideo();
+                mSwitchedToVideo = true;
                 return;
-            }
-            show();
+            } else
+                show();
         } else {
             hide();
             return;
         }
 
-        mHeaderMediaSwitcher.updateMedia();
-        mCoverMediaSwitcher.updateMedia();
+        mHeaderMediaSwitcher.updateMedia(mService);
+        mCoverMediaSwitcher.updateMedia(mService);
 
         FragmentActivity act = getActivity();
+        mResumeToVideo.setVisibility(mService.getVideoTracksCount() > 0 ? View.VISIBLE : View.GONE);
 
-        if (mAudioController.isPlaying()) {
+        if (mService.isPlaying()) {
             mPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
             mPlayPause.setContentDescription(getString(R.string.pause));
             mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_pause));
@@ -345,14 +356,14 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
             mHeaderPlayPause.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_play));
             mHeaderPlayPause.setContentDescription(getString(R.string.play));
         }
-        if (mAudioController.isShuffling()) {
+        if (mService.isShuffling()) {
             mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle_on));
             mShuffle.setContentDescription(getResources().getString(R.string.shuffle_on));
         } else {
             mShuffle.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_shuffle));
             mShuffle.setContentDescription(getResources().getString(R.string.shuffle));
         }
-        switch(mAudioController.getRepeatType()) {
+        switch(mService.getRepeatType()) {
         case None:
             mRepeat.setImageResource(Util.getResourceFromAttribute(act, R.attr.ic_repeat));
             mRepeat.setContentDescription(getResources().getString(R.string.repeat));
@@ -368,12 +379,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
             break;
         }
 
-        mShuffle.setVisibility(mAudioController.getMediaLocations().size() > 2 ? View.VISIBLE : View.INVISIBLE);
-        if (mAudioController.hasNext())
+        final List<String> mediaLocations = mService.getMediaLocations();
+        mShuffle.setVisibility(mediaLocations != null && mediaLocations.size() > 2 ? View.VISIBLE : View.INVISIBLE);
+        if (mService.hasNext())
             mNext.setVisibility(ImageButton.VISIBLE);
         else
             mNext.setVisibility(ImageButton.INVISIBLE);
-        if (mAudioController.hasPrevious())
+        if (mService.hasPrevious())
             mPrevious.setVisibility(ImageButton.VISIBLE);
         else
             mPrevious.setVisibility(ImageButton.INVISIBLE);
@@ -383,9 +395,11 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     @Override
-    public synchronized void updateProgress() {
-        int time = mAudioController.getTime();
-        int length = mAudioController.getLength();
+    public void updateProgress() {
+        if (mService == null)
+            return;
+        int time = (int) mService.getTime();
+        int length = (int) mService.getLength();
 
         mHeaderTime.setText(Strings.millisToString(time));
         mLength.setText(Strings.millisToString(length));
@@ -399,13 +413,35 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
         }
     }
 
+    @Override
+    public void onMediaEvent(Media.Event event) {
+    }
+
+    @Override
+    public void onMediaPlayerEvent(MediaPlayer.Event event) {
+        switch (event.type) {
+            case MediaPlayer.Event.Opening:
+                mSwitchedToVideo = false;
+                break;
+            case MediaPlayer.Event.ESAdded:
+                final boolean forceAudio = (mService.getCurrentMediaWrapper().getFlags() & MediaWrapper.MEDIA_FORCE_AUDIO) != 0;
+                if (!forceAudio && !mSwitchedToVideo && event.getEsChangedType() == Media.Track.Type.Video) {
+                    mService.switchToVideo();
+                    mSwitchedToVideo = true;
+                }
+                break;
+        }
+    }
+
     private void updateList() {
         int currentIndex = -1;
+        if (mService == null)
+            return;
 
         mSongsListAdapter.clear();
 
-        final List<MediaWrapper> audioList = mAudioController.getMedias();
-        final String currentItem = mAudioController.getCurrentMediaLocation();
+        final List<MediaWrapper> audioList = mService.getMedias();
+        final String currentItem = mService.getCurrentMediaLocation();
 
         if (audioList != null) {
             for (int i = 0; i < audioList.size(); i++) {
@@ -437,9 +473,9 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
         @Override
         public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-            if (fromUser) {
-                mAudioController.setTime(prog);
-                mTime.setText(Strings.millisToString(mShowRemainingTime ? prog-mAudioController.getLength() : prog));
+            if (fromUser && mService != null) {
+                mService.setTime(prog);
+                mTime.setText(Strings.millisToString(mShowRemainingTime ? prog- mService.getLength() : prog));
                 mHeaderTime.setText(Strings.millisToString(prog));
         }
     }
@@ -451,43 +487,52 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     }
 
     public void onPlayPauseClick(View view) {
-        if (mAudioController.isPlaying()) {
-            mAudioController.pause();
+        if (mService == null)
+            return;
+        if (mService.isPlaying()) {
+            mService.pause();
         } else {
-            mAudioController.play();
+            mService.play();
         }
     }
 
     public void onStopClick(View view) {
-        mAudioController.stop();
+        if (mService != null)
+            mService.stop();
     }
 
     public void onNextClick(View view) {
-        mAudioController.next();
+        if (mService != null)
+            mService.next();
     }
 
     public void onPreviousClick(View view) {
-        mAudioController.previous();
+        if (mService != null)
+            mService.previous();
     }
 
     public void onRepeatClick(View view) {
-        switch (mAudioController.getRepeatType()) {
+        if (mService == null)
+            return;
+
+        switch (mService.getRepeatType()) {
             case None:
-                mAudioController.setRepeatType(RepeatType.All);
+                mService.setRepeatType(PlaybackService.RepeatType.All);
                 break;
             case All:
-                mAudioController.setRepeatType(RepeatType.Once);
+                mService.setRepeatType(PlaybackService.RepeatType.Once);
                 break;
             default:
             case Once:
-                mAudioController.setRepeatType(RepeatType.None);
+                mService.setRepeatType(PlaybackService.RepeatType.None);
                 break;
         }
         update();
     }
 
     public void onShuffleClick(View view) {
-        mAudioController.shuffle();
+        if (mService != null)
+            mService.shuffle();
         update();
     }
 
@@ -554,10 +599,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
         @Override
         public void onMediaSwitched(int position) {
+            if (mService == null)
+                return;
             if (position == AudioMediaSwitcherListener.PREVIOUS_MEDIA)
-                mAudioController.previous();
+                mService.previous();
             else if (position == AudioMediaSwitcherListener.NEXT_MEDIA)
-                mAudioController.next();
+                mService.next();
         }
 
         @Override
@@ -584,10 +631,12 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
         @Override
         public void onMediaSwitched(int position) {
+            if (mService == null)
+                return;
             if (position == AudioMediaSwitcherListener.PREVIOUS_MEDIA)
-                mAudioController.previous();
+                mService.previous();
             else if (position == AudioMediaSwitcherListener.NEXT_MEDIA)
-                mAudioController.next();
+                mService.next();
         }
 
         @Override
@@ -604,14 +653,31 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.playlist_save:
+                if (mService == null)
+                    return;
                 FragmentManager fm = getActivity().getSupportFragmentManager();
-                SavePlaylist savePlaylistDialog = new SavePlaylist();
+                SavePlaylistDialog savePlaylistDialog = new SavePlaylistDialog();
                 Bundle args = new Bundle();
-                args.putParcelableArrayList(SavePlaylist.KEY_TRACKS, mSongsListAdapter.getItems());
+                args.putParcelableArrayList(SavePlaylistDialog.KEY_TRACKS, (ArrayList<MediaWrapper>) mService.getMedias());
                 savePlaylistDialog.setArguments(args);
                 savePlaylistDialog.show(fm, "fragment_save_playlist");
                 break;
         }
+    }
+
+    @Override
+    public void onConnected(PlaybackService service) {
+        super.onConnected(service);
+        mService.addCallback(this);
+        update();
+    }
+
+    @Override
+    public void onStop() {
+        /* unregister before super.onStop() since mService is set to null from this call */
+        if (mService != null)
+            mService.removeCallback(this);
+        super.onStop();
     }
 
     class LongSeekListener implements View.OnTouchListener {
@@ -632,11 +698,8 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
             @Override
             public void run() {
                 if(!vibrated) {
-                    Activity activity = AudioPlayer.this.getActivity();
-                    if (activity != null) {
-                        ((android.os.Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE))
+                    ((android.os.Vibrator) VLCApplication.getAppContext().getSystemService(Context.VIBRATOR_SERVICE))
                                 .vibrate(80);
-                    }
                     vibrated = true;
                 }
 
@@ -661,14 +724,17 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+            if (mService == null)
+                return false;
             switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 (forward ? mNext : mPrevious).setImageResource(this.pressed);
 
-                possibleSeek = mAudioController.getTime();
+                possibleSeek = (int) mService.getTime();
+
                 mPreviewingSeek = true;
                 vibrated = false;
-                length = mAudioController.getLength();
+                length = mService.getLength();
 
                 h.postDelayed(seekRunnable, 1000);
                 return true;
@@ -685,13 +751,13 @@ public class AudioPlayer extends Fragment implements IAudioPlayer, View.OnClickL
                         onPreviousClick(v);
                 } else {
                     if(forward) {
-                        if(possibleSeek < mAudioController.getLength())
-                            mAudioController.setTime(possibleSeek);
+                        if(possibleSeek < mService.getLength())
+                            mService.setTime(possibleSeek);
                         else
                             onNextClick(v);
                     } else {
                         if(possibleSeek > 0)
-                            mAudioController.setTime(possibleSeek);
+                            mService.setTime(possibleSeek);
                         else
                             onPreviousClick(v);
                     }

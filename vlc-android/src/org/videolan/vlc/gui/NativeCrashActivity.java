@@ -58,9 +58,9 @@ public class NativeCrashActivity extends Activity {
         mSendLog.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String buildDate = "Build date: " + "2015-2-28"/*getString(R.string.build_time)*/;
-                String builder = "Builder: "  /*+ getString(R.string.build_host)*/;
-                String revision = "Revision: " /*+ getString(R.string.build_revision)*/;
+                String buildDate = "Build date: " + getString(R.string.build_time);
+                String builder = "Builder: "  + getString(R.string.build_host);
+                String revision = "Revision: " + getString(R.string.build_revision);
                 AsyncHttpRequest asyncHttpRequest = new AsyncHttpRequest();
                 asyncHttpRequest.execute(Build.BRAND, Build.MANUFACTURER, Build.PRODUCT, Build.MODEL,
                                          Build.DEVICE, Build.VERSION.RELEASE,

@@ -28,7 +28,6 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.internal.widget.AdapterViewCompat;
 import android.support.v7.widget.PopupMenu;
 import android.view.ContextMenu;
@@ -44,21 +43,17 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import org.videolan.libvlc.LibVlcUtil;
-import org.videolan.vlc.MediaLibrary;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.gui.PlaybackServiceFragment;
 import org.videolan.vlc.util.AndroidDevices;
 
 import java.util.ArrayList;
 
-public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemClickListener, View.OnClickListener {
+public class AudioAlbumFragment extends PlaybackServiceFragment implements AdapterView.OnItemClickListener, View.OnClickListener {
 
     public final static String TAG = "VLC/AudioAlbumFragment";
-
-    AudioServiceController mAudioController;
-    private MediaLibrary mMediaLibrary;
 
     private AlbumAdapter mAdapter;
     private ArrayList<MediaWrapper> mMediaList;
@@ -72,10 +67,13 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
 
         mAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
 
-        mAudioController = AudioServiceController.getInstance();
-        mMediaLibrary = MediaLibrary.getInstance();
         if (savedInstanceState != null)
             setMediaList(savedInstanceState.<MediaWrapper>getParcelableArrayList("list"), savedInstanceState.getString("title"));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     public void setMediaList(ArrayList<MediaWrapper> mediaList, String title) {
@@ -126,7 +124,8 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        mAudioController.load(mMediaList, position);
+        if (mService != null)
+            mService.load(mMediaList, position);
     }
 
     AlbumAdapter.ContextPopupMenuListener mContextPopupMenuListener
@@ -135,7 +134,7 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
         @Override
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         public void onPopupMenu(View anchor, final int position) {
-            if (!LibVlcUtil.isHoneycombOrLater()) {
+            if (!AndroidUtil.isHoneycombOrLater()) {
                 // Call the "classic" context menu
                 anchor.performLongClick();
                 return;
@@ -162,7 +161,7 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
         inflater.inflate(R.menu.audio_list_browser, menu);
         int position = 0;
         if (menuInfo instanceof AdapterViewCompat.AdapterContextMenuInfo)
-            position = ((AdapterView.AdapterContextMenuInfo)menuInfo).position;
+            position = ((AdapterViewCompat.AdapterContextMenuInfo)menuInfo).position;
         setContextMenuItems(menu, v, position);
     }
 
@@ -201,7 +200,8 @@ public class AudioAlbumFragment extends Fragment implements AdapterView.OnItemCl
         final int id = v.getId();
         switch (id){
             case R.id.album_play:
-                mAudioController.load(mMediaList, 0);
+                if (mService != null)
+                    mService.load(mMediaList, 0);
                 break;
             default:
                 break;

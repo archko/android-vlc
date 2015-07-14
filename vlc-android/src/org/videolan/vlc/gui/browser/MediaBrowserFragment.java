@@ -22,12 +22,12 @@
 
 package org.videolan.vlc.gui.browser;
 
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
+import org.videolan.vlc.gui.PlaybackServiceFragment;
 import org.videolan.vlc.widget.SwipeRefreshLayout;
 
-public abstract class MediaBrowserFragment extends Fragment {
+public abstract class MediaBrowserFragment extends PlaybackServiceFragment {
 
     protected SwipeRefreshLayout mSwipeRefreshLayout;
     protected volatile boolean mReadyToDisplay = true;
@@ -45,7 +45,10 @@ public abstract class MediaBrowserFragment extends Fragment {
     public abstract void clear();
     public void onStart(){
         super.onStart();
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getTitle());
-        getActivity().supportInvalidateOptionsMenu();
+        final AppCompatActivity activity = (AppCompatActivity)getActivity();
+        if (activity != null && activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setTitle(getTitle());
+            getActivity().supportInvalidateOptionsMenu();
+        }
     }
 }

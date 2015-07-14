@@ -32,9 +32,11 @@ import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.BuildConfig;
 import org.videolan.vlc.R;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.gui.MainActivity;
 
 public class VLCAppWidgetProvider extends AppWidgetProvider {
     public static final String TAG = "VLC/VLCAppWidgetProvider";
@@ -50,9 +52,6 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_WIDGET_UPDATE_POSITION = "org.videolan.vlc.widget.UPDATE_POSITION";
 
     public static final String VLC_PACKAGE = "org.videolan.vlc";
-    public static final String VLC_SERVICE = "org.videolan.vlc.AudioService";
-    public static final String VLC_PLAYER = "org.videolan.vlc.gui.audio.AudioPlayerActivity";
-    public static final String VLC_MAIN = "org.videolan.vlc.gui.MainActivity";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -77,8 +76,8 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
             return;
         }
 
-        RemoteViews views = new RemoteViews("org.videolan.vlc"/*BuildConfig.APPLICATION_ID*/, R.layout.vlcwidget);
-        boolean partial = LibVlcUtil.isHoneycombOrLater();
+        RemoteViews views = new RemoteViews(BuildConfig.APPLICATION_ID, R.layout.vlcwidget);
+        boolean partial = AndroidUtil.isHoneycombOrLater();
 
         if (ACTION_WIDGET_INIT.equals(action) || !partial) {
             /* commands */
@@ -86,8 +85,7 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
             Intent iPlay = new Intent(ACTION_REMOTE_PLAYPAUSE);
             Intent iStop = new Intent(ACTION_REMOTE_STOP);
             Intent iForward = new Intent(ACTION_REMOTE_FORWARD);
-            Intent iVlc = new Intent();
-            iVlc.setClassName(VLC_PACKAGE, VLC_MAIN);
+            Intent iVlc = new Intent(VLCApplication.getAppContext(), MainActivity.class);
             iVlc.putExtra(START_FROM_NOTIFICATION, true);
 
             PendingIntent piBackward = PendingIntent.getBroadcast(context, 0, iBackward, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -111,7 +109,7 @@ public class VLCAppWidgetProvider extends AppWidgetProvider {
 
             views.setTextViewText(R.id.songName, title);
             views.setTextViewText(R.id.artist, artist);
-            views.setImageViewResource(R.id.play_pause, isplaying ? R.drawable.ic_pause_w : R.drawable.ic_play_w);
+            views.setImageViewResource(R.id.play_pause, isplaying ? R.drawable.ic_widget_pause : R.drawable.ic_widget_play);
             views.setViewVisibility(R.id.timeline_parent, artist != null && artist.length() > 0 ? View.VISIBLE : View.INVISIBLE);
         }
         else if (ACTION_WIDGET_UPDATE_COVER.equals(action)) {

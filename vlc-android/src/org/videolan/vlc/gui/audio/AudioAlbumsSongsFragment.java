@@ -25,9 +25,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -41,47 +43,43 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ExpandableListView;
-import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
-import com.android.widget.SlidingTabLayout;
-
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.PlaybackService;
 import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioServiceController;
-import org.videolan.vlc.gui.CommonDialogs;
+import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.gui.PlaybackServiceFragment;
 import org.videolan.vlc.gui.SecondaryActivity;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.Util;
-import org.videolan.vlc.util.VLCRunnable;
+import org.videolan.vlc.util.WeakHandler;
 import org.videolan.vlc.widget.SwipeRefreshLayout;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class AudioAlbumsSongsFragment extends PlaybackServiceFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     public final static String TAG = "VLC/AudioAlbumsSongsFragment";
 
-    AudioServiceController mAudioController;
+    private static final int DELETE_MEDIA = 0;
+    private static final int DELETE_DURATION = 3000;
+
     private MediaLibrary mMediaLibrary;
+    private PlaybackService.Client mClient;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ViewPager mViewPager;
-    private SlidingTabLayout mSlidingTabLayout;
     private AudioBrowserListAdapter mSongsAdapter;
     private AudioBrowserListAdapter mAlbumsAdapter;
-
-    public final static String EXTRA_NAME = "name";
-    public final static String EXTRA_NAME2 = "name2";
-    public final static String EXTRA_MODE = "mode";
 
     public final static int MODE_ALBUM = 0;
     public final static int MODE_SONG = 1;
@@ -107,7 +105,6 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
         mAlbumsAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
         mSongsAdapter.setContextPopupMenuListener(mContextPopupMenuListener);
 
-        mAudioController = AudioServiceController.getInstance();
         mMediaLibrary = MediaLibrary.getInstance();
         if (savedInstanceState != null)
             setMediaList(savedInstanceState.<MediaWrapper>getParcelableArrayList("list"), savedInstanceState.getString("title"));
@@ -130,14 +127,12 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
         List<View> lists = Arrays.asList((View)albumsList, songsList);
         String[] titles = new String[] {getString(R.string.albums), getString(R.string.songs)};
         mViewPager = (ViewPager) v.findViewById(R.id.pager);
-        mViewPager.setOffscreenPageLimit(MODE_TOTAL-1);
+        mViewPager.setOffscreenPageLimit(MODE_TOTAL - 1);
         mViewPager.setAdapter(new AudioPagerAdapter(lists, titles));
 
         mViewPager.setOnTouchListener(mSwipeFilter);
-        mSlidingTabLayout = (SlidingTabLayout) v.findViewById(R.id.sliding_tabs);
-        mSlidingTabLayout.setCustomTabView(R.layout.tab_layout, R.id.tab_title);
-        mSlidingTabLayout.setDistributeEvenly(true);
-        mSlidingTabLayout.setViewPager(mViewPager);
+        TabLayout mTabLayout = (TabLayout) v.findViewById(R.id.sliding_tabs);
+        mTabLayout.setupWithViewPager(mViewPager);
 
         songsList.setAdapter(mSongsAdapter);
         albumsList.setAdapter(mAlbumsAdapter);
@@ -183,27 +178,25 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.audio_list_browser, menu);
         int position = 0;
         if (menuInfo instanceof AdapterContextMenuInfo)
             position = ((AdapterContextMenuInfo)menuInfo).position;
+        if (mViewPager.getCurrentItem() == MODE_SONG &&  mSongsAdapter.getItem(position).mIsSeparator)
+            return;
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.audio_list_browser, menu);
         setContextMenuItems(menu, v, position);
     }
 
     private void setContextMenuItems(Menu menu, View v, int position) {
-        if (mViewPager.getCurrentItem() != MODE_SONG || mSongsAdapter.getItem(position).mIsSeparator) {
+        if (mViewPager.getCurrentItem() != MODE_SONG) {
             menu.setGroupVisible(R.id.songs_view_only, false);
             menu.setGroupVisible(R.id.phone_only, false);
         }
         if (!AndroidDevices.isPhone())
             menu.setGroupVisible(R.id.phone_only, false);
+        menu.findItem(R.id.audio_list_browser_play).setVisible(true);
     }
 
     @Override
@@ -218,70 +211,53 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
     }
 
     private boolean handleContextItemSelected(MenuItem item, int position) {
-        ContextMenuInfo menuInfo = item.getMenuInfo();
 
         int startPosition;
-        int groupPosition;
         List<MediaWrapper> medias;
         int id = item.getItemId();
 
         boolean useAllItems = id == R.id.audio_list_browser_play_all;
         boolean append = id == R.id.audio_list_browser_append;
 
-        if (ExpandableListContextMenuInfo.class.isInstance(menuInfo)) {
-            ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-            groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-        }
-        else
-            groupPosition = position;
-
         if (id == R.id.audio_list_browser_delete) {
-            AlertDialog alertDialog = CommonDialogs.deleteMedia(
-                    getActivity(),
-                    mSongsAdapter.getMedias(groupPosition).get(0).getLocation(),
-                    new VLCRunnable(mSongsAdapter.getItem(groupPosition)) {
-                        @Override
-                        public void run(Object o) {
-                            AudioBrowserListAdapter.ListItem listItem = (AudioBrowserListAdapter.ListItem)o;
-                            MediaWrapper media = listItem.mMediaList.get(0);
-                            mMediaLibrary.getMediaItems().remove(media);
-                            mSongsAdapter.removeMedia(media);
-                            mAlbumsAdapter.removeMedia(media);
-                            mAudioController.removeLocation(media.getLocation());
-                        }
-                    });
-            alertDialog.show();
+            Snackbar.make(getView(), getString(R.string.file_deleted), Snackbar.LENGTH_LONG)
+                .setAction(android.R.string.cancel, mCancelDeleteMediaListener)
+                .show();
+                Message msg = mHandler.obtainMessage(DELETE_MEDIA, position, 0);
+            mHandler.sendMessageDelayed(msg, DELETE_DURATION);
             return true;
         }
 
         if (id == R.id.audio_list_browser_set_song) {
-            AudioUtil.setRingtone(mSongsAdapter.getItem(groupPosition).mMediaList.get(0), getActivity());
+            AudioUtil.setRingtone(mSongsAdapter.getItem(position).mMediaList.get(0), getActivity());
             return true;
         }
 
         if (useAllItems) {
             medias = new ArrayList<MediaWrapper>();
-            startPosition = mSongsAdapter.getListWithPosition(medias, groupPosition);
+            startPosition = mSongsAdapter.getListWithPosition(medias, position);
         }
         else {
             startPosition = 0;
             switch (mViewPager.getCurrentItem())
             {
                 case MODE_ALBUM: // albums
-                    medias = mAlbumsAdapter.getMedias(groupPosition);
+                    medias = mAlbumsAdapter.getMedias(position);
                     break;
                 case MODE_SONG: // songs
-                    medias = mSongsAdapter.getMedias(groupPosition);
+                    medias = mSongsAdapter.getMedias(position);
                     break;
                 default:
                     return true;
             }
         }
 
-        if (append)
-            mAudioController.append(medias);
-        else
-            mAudioController.load(medias, startPosition);
+        if (mService != null) {
+            if (append)
+                mService.append(medias);
+            else
+                mService.load(medias, startPosition);
+        }
 
         return super.onContextItemSelected(item);
     }
@@ -332,8 +308,10 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
     OnItemClickListener songsListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> av, View v, int p, long id) {
-            List<MediaWrapper> media = mSongsAdapter.getItem(p).mMediaList;
-            mAudioController.load(media, 0);
+            if (mService != null) {
+                final List<MediaWrapper> media = mSongsAdapter.getItem(p).mMediaList;
+                mService.load(media, 0);
+            }
         }
     };
 
@@ -343,7 +321,7 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
         @Override
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         public void onPopupMenu(View anchor, final int position) {
-            if (!LibVlcUtil.isHoneycombOrLater()) {
+            if (!AndroidUtil.isHoneycombOrLater()) {
                 // Call the "classic" context menu
                 anchor.performLongClick();
                 return;
@@ -383,5 +361,46 @@ public class AudioAlbumsSongsFragment extends Fragment implements SwipeRefreshLa
     public void clear(){
         mAlbumsAdapter.clear();
         mSongsAdapter.clear();
+    }
+
+
+    View.OnClickListener mCancelDeleteMediaListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            mHandler.removeMessages(DELETE_MEDIA);
+        }
+    };
+
+    Handler mHandler = new AudioAlbumsSongsFragmentHandler(this);
+
+    private static class AudioAlbumsSongsFragmentHandler extends WeakHandler<AudioAlbumsSongsFragment>{
+
+        public AudioAlbumsSongsFragmentHandler(AudioAlbumsSongsFragment owner) {
+            super(owner);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            final AudioAlbumsSongsFragment fragment = getOwner();
+            switch (msg.what){
+                case DELETE_MEDIA:
+                    AudioBrowserListAdapter.ListItem listItem = fragment.mSongsAdapter.getItem(msg.arg1);
+                    MediaWrapper media = listItem.mMediaList.get(0);
+                    final String path = media.getUri().getPath();
+                    fragment.mMediaLibrary.getMediaItems().remove(media);
+                    fragment.mSongsAdapter.removeMedia(media);
+                    fragment.mAlbumsAdapter.removeMedia(media);
+                    if (fragment.mService != null)
+                        fragment.mService.removeLocation(media.getLocation());
+                    fragment.mMediaLibrary.getMediaItems().remove(media);
+                    new Thread(new Runnable() {
+                        public void run() {
+                            Util.recursiveDelete(VLCApplication.getAppContext(), new File(path));
+                        }
+                    }).start();
+                    break;
+            }
+        }
     }
 }

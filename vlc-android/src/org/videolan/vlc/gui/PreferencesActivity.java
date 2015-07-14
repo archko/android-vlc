@@ -21,7 +21,6 @@
 package org.videolan.vlc.gui;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -48,22 +47,21 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import org.videolan.libvlc.HWDecoderUtil;
-import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.util.HWDecoderUtil;
 import org.videolan.vlc.MediaDatabase;
+import org.videolan.vlc.PlaybackService;
 import org.videolan.vlc.R;
-import org.videolan.vlc.audio.AudioService;
-import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.util.AndroidDevices;
 import org.videolan.vlc.util.BitmapCache;
 import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
+import org.videolan.vlc.util.VLCOptions;
+import org.videolan.vlc.BuildConfig;
 
 @SuppressWarnings("deprecation")
-public class PreferencesActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
+public class PreferencesActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener, PlaybackService.Client.Callback {
 
     public final static String TAG = "VLC/PreferencesActivity";
 
@@ -78,8 +76,11 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     public final static int RESULT_RESCAN = RESULT_FIRST_USER + 1;
     public final static int RESULT_RESTART = RESULT_FIRST_USER + 2;
 
+    private PlaybackService.Client mClient = new PlaybackService.Client(this, this);
+    private PlaybackService mService;
     public final static String SHOW_MEDIA_ONLY= "show_media_only";
     public final static String SHOW_HIDDEN= "show_hidden";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +88,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
         applyTheme();
 
         super.onCreate(savedInstanceState);
+
         addPreferencesFromResource(R.xml.preferences);
 
         if (!AndroidDevices.hasTsp()){
@@ -94,6 +96,20 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
             findPreference("enable_black_theme").setEnabled(false);
             findPreference("ui_category").setEnabled(false);
         }
+
+        // Directories
+        Preference directoriesPref = findPreference("directories");
+        directoriesPref.setOnPreferenceClickListener(
+                new OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Intent intent = new Intent(getApplicationContext(), SecondaryActivity.class);
+                        intent.putExtra("fragment", SecondaryActivity.STORAGE_BROWSER);
+                        startActivity(intent);
+                        setResult(RESULT_RESCAN);
+                        return true;
+                    }
+                });
 
         // Screen orientation
         ListPreference screenOrientationPref = (ListPreference) findPreference("screen_orientation");
@@ -114,7 +130,8 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 new OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        AudioServiceController.getInstance().detectHeadset(checkboxHS.isChecked());
+                        if (mService != null)
+                            mService.detectHeadset(checkboxHS.isChecked());
                         return true;
                     }
                 });
@@ -125,7 +142,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 new OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        restartService(preference.getContext());
+                        PlaybackService.Client.restartService(PreferencesActivity.this);
                         return true;
                     }
                 });
@@ -179,7 +196,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                         BitmapCache.getInstance().clear();
                         AudioUtil.clearCacheFolders();
                         setResult(RESULT_RESCAN);
-                        Toast.makeText(getBaseContext(), R.string.media_db_cleared, Toast.LENGTH_SHORT).show();
+                        Util.snacker(getWindow().getDecorView().findViewById(android.R.id.content), R.string.media_db_cleared);
                         return true;
                     }
                 });
@@ -198,15 +215,18 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
         /*** Attach debugging items **/
         Preference quitAppPref = findPreference("quit_app");
-        quitAppPref.setOnPreferenceClickListener(
-                new OnPreferenceClickListener() {
+        if (BuildConfig.FLAVOR_target != "chrome") {
+            quitAppPref.setOnPreferenceClickListener(
+                    new OnPreferenceClickListener() {
 
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        android.os.Process.killProcess(android.os.Process.myPid());
-                        return true;
-                    }
-                });
+                        @Override
+                        public boolean onPreferenceClick(Preference preference) {
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                            return true;
+                        }
+                    });
+        } else
+            quitAppPref.setEnabled(false);
 
         // Audio output
         ListPreference aoutPref = (ListPreference) findPreference("aout");
@@ -222,12 +242,12 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
             aoutPref.setEntryValues(aoutEntriesIdValues);
             final String value = aoutPref.getValue();
             if (value == null)
-                aoutPref.setValue(String.valueOf(LibVLC.AOUT_AUDIOTRACK));
+                aoutPref.setValue(String.valueOf(VLCOptions.AOUT_AUDIOTRACK));
             else {
                 /* number of entries decreased, handle old values */
                 final int intValue = Integer.parseInt(value);
-                if (intValue != LibVLC.AOUT_AUDIOTRACK && intValue != LibVLC.AOUT_OPENSLES)
-                    aoutPref.setValue(String.valueOf(LibVLC.AOUT_AUDIOTRACK));
+                if (intValue != VLCOptions.AOUT_AUDIOTRACK && intValue != VLCOptions.AOUT_OPENSLES)
+                    aoutPref.setValue(String.valueOf(VLCOptions.AOUT_AUDIOTRACK));
             }
         }
         // Video output
@@ -245,7 +265,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Toast.makeText(getBaseContext(), R.string.set_locale_popup, Toast.LENGTH_SHORT).show();
+                Util.snacker(getWindow().getDecorView().findViewById(android.R.id.content), R.string.set_locale_popup);
                 return true;
             }
         });
@@ -273,6 +293,18 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mClient.disconnect();
+    }
+
     private void applyTheme() {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         boolean enableBlackTheme = pref.getBoolean("enable_black_theme", false);
@@ -285,7 +317,6 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         Toolbar bar;
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             LinearLayout root = (LinearLayout) getListView().getParent().getParent().getParent();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar, root, false);
@@ -336,22 +367,24 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
                 || key.equalsIgnoreCase("enable_verbose_mode")
                 || key.equalsIgnoreCase("network_caching")
                 || key.equalsIgnoreCase("dev_hardware_decoder")) {
-            VLCInstance.updateLibVlcSettings(sharedPreferences);
             VLCInstance.restart(this);
+            if (mService != null)
+                mService.restartMediaPlayer();
         }
     }
 
     @Override
-    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference)
-    {
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         super.onPreferenceTreeClick(preferenceScreen, preference);
+        if (preference instanceof PreferenceScreen)
+            setUpNestedScreen((PreferenceScreen) preference);
         try {
             if (preference!=null && preference instanceof PreferenceScreen) {
                 Dialog dialog = ((PreferenceScreen)preference).getDialog();
                 if (dialog!=null) {
                     Window window = dialog.getWindow();
                     if (window != null) {
-                        ConstantState state = this.getWindow().getDecorView().getBackground().getConstantState();
+                        ConstantState state = this.getWindow().getDecorView().findViewById(android.R.id.content).getBackground().getConstantState();
                         if (state != null)
                             window.getDecorView().setBackgroundDrawable(state.newDrawable());
                     }
@@ -362,24 +395,53 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        AudioServiceController.getInstance().bindAudioService(this);
+    public void onConnected(PlaybackService service) {
+        mService = service;
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        AudioServiceController.getInstance().unbindAudioService(this);
+    public void onDisconnected() {
+        mService = null;
     }
 
-    private void restartService(Context context) {
-        Intent service = new Intent(context, AudioService.class);
+    public void setUpNestedScreen(PreferenceScreen preferenceScreen) {
+        final Dialog dialog = preferenceScreen.getDialog();
 
-        AudioServiceController.getInstance().unbindAudioService(PreferencesActivity.this);
-        context.stopService(service);
+        Toolbar bar;
 
-        context.startService(service);
-        AudioServiceController.getInstance().bindAudioService(PreferencesActivity.this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            LinearLayout root = (LinearLayout) dialog.findViewById(android.R.id.list).getParent();
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar, root, false);
+            root.addView(bar, 0); // insert at top
+        } else {
+            ViewGroup root = (ViewGroup) dialog.findViewById(android.R.id.content);
+            ListView content = (ListView) root.getChildAt(0);
+
+            root.removeAllViews();
+
+            bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar, root, false);
+
+            int height;
+            TypedValue tv = new TypedValue();
+            if (getTheme().resolveAttribute(R.attr.actionBarSize, tv, true)) {
+                height = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
+            }else{
+                height = bar.getHeight();
+            }
+
+            content.setPadding(0, height, 0, 0);
+
+            root.addView(content);
+            root.addView(bar);
+        }
+
+        bar.setTitle(preferenceScreen.getTitle());
+
+        bar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
     }
 }

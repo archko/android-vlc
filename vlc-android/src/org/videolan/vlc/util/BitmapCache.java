@@ -20,15 +20,17 @@
 
 package org.videolan.vlc.util;
 
+import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
 
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.VLCApplication;
 
 public class BitmapCache {
@@ -45,16 +47,14 @@ public class BitmapCache {
         return mInstance;
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private BitmapCache() {
-
-        // Get the global context of the application
-        Context context = VLCApplication.getAppContext();
 
         // Get memory class of this device, exceeding this amount will throw an
         // OutOfMemory exception.
-        final ActivityManager am = ((ActivityManager) context.getSystemService(
+        final ActivityManager am = ((ActivityManager) VLCApplication.getAppContext().getSystemService(
                 Context.ACTIVITY_SERVICE));
-        final int memClass = LibVlcUtil.isHoneycombOrLater() ? am.getLargeMemoryClass() : am.getMemoryClass();
+        final int memClass = AndroidUtil.isHoneycombOrLater() ? am.getLargeMemoryClass() : am.getMemoryClass();
 
         // Use 1/5th of the available memory for this memory cache.
         final int cacheSize = 1024 * 1024 * memClass / 5;
@@ -100,7 +100,7 @@ public class BitmapCache {
         mMemCache.evictAll();
     }
 
-    public static Bitmap GetFromResource(View v, int resId) {
+    public static Bitmap getFromResource(View v, int resId) {
         BitmapCache cache = BitmapCache.getInstance();
         Bitmap bitmap = cache.getBitmapFromMemCache(resId);
         if (bitmap == null) {

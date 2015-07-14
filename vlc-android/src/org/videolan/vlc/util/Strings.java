@@ -20,6 +20,8 @@
 
 package org.videolan.vlc.util;
 
+import android.text.TextUtils;
+
 import org.videolan.vlc.MediaWrapper;
 
 import java.text.DecimalFormat;
@@ -117,7 +119,7 @@ public class Strings {
 
     public static String readableFileSize(long size) {
         if(size <= 0) return "0";
-        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        final String[] units = new String[] { "B", "KiB", "MiB", "GiB", "TiB" };
         int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
         return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
@@ -137,5 +139,28 @@ public class Strings {
         if (title == null)
             title = getName(mediaWrapper.getLocation());
         return title;
+    }
+
+    public static String getParent(String path){
+        if (TextUtils.equals("/", path))
+            return path;
+        String parentPath = path;
+        if (parentPath.endsWith("/"))
+            parentPath = parentPath.substring(0, parentPath.length()-1);
+        int index = parentPath.lastIndexOf('/');
+        if (index > 0){
+            parentPath = parentPath.substring(0, index);
+        } else if (index == 0)
+            parentPath = "/";
+        return parentPath;
+    }
+
+    public static String removeFileProtocole(String path){
+        if (path == null)
+            return null;
+        if (path.startsWith("file://"))
+            return path.substring(7);
+        else
+            return path;
     }
 }

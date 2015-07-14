@@ -29,12 +29,11 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.BuildConfig;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
@@ -47,6 +46,7 @@ import org.videolan.vlc.util.Util;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -76,7 +76,7 @@ public class AudioUtil {
     public static String PLAYLIST_DIR = null;
 
     public static void setRingtone(MediaWrapper song, Context context){
-        File newringtone = LibVlcUtil.URItoFile(song.getLocation());
+        File newringtone = AndroidUtil.UriToFile(song.getUri());
         if(newringtone == null || !newringtone.exists()) {
             Toast.makeText(context.getApplicationContext(),context.getString(R.string.ringtone_error), Toast.LENGTH_SHORT).show();
             return;
@@ -120,12 +120,12 @@ public class AudioUtil {
     @SuppressLint("NewApi")
     public static void prepareCacheFolder(Context context) {
         try {
-            if (LibVlcUtil.isFroyoOrLater() && AndroidDevices.hasExternalStorage() && context.getExternalCacheDir() != null)
+            if (AndroidUtil.isFroyoOrLater() && AndroidDevices.hasExternalStorage() && context.getExternalCacheDir() != null)
                 CACHE_DIR = context.getExternalCacheDir().getPath();
             else
-                CACHE_DIR = Environment.getExternalStorageDirectory().getPath() + "/Android/data/" + "org.videolan.vlc"/*BuildConfig.APPLICATION_ID*/+ "/cache";
+                CACHE_DIR = AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY + "/Android/data/" + BuildConfig.APPLICATION_ID + "/cache";
         } catch (Exception e) { // catch NPE thrown by getExternalCacheDir()
-            CACHE_DIR = Environment.getExternalStorageDirectory().getPath() + "/Android/data/" + "org.videolan.vlc"/*BuildConfig.APPLICATION_ID*/ + "/cache";
+            CACHE_DIR = AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY + "/Android/data/" + BuildConfig.APPLICATION_ID + "/cache";
         }
         ART_DIR = CACHE_DIR + "/art/";
         COVER_DIR = CACHE_DIR + "/covers/";
@@ -219,14 +219,49 @@ public class AudioUtil {
         return null;
     }
 
-    private static String getCoverFromFolder(Context context, MediaWrapper media) {
-        File f = LibVlcUtil.URItoFile(media.getLocation());
-        if (f != null && f.getParentFile() != null && f.getParentFile().listFiles() != null)
-            for (File s : f.getParentFile().listFiles()) {
-                if (s.getAbsolutePath().endsWith("png")
-                        || s.getAbsolutePath().endsWith("jpg"))
-                    return s.getAbsolutePath();
+    private static String getCoverFromFolder(MediaWrapper media) {
+        File f = AndroidUtil.UriToFile(media.getUri());
+        if (f == null)
+            return null;
+
+        File folder = f.getParentFile();
+        if (folder == null)
+            return null;
+
+        final String[] imageExt = { ".png", ".jpeg", ".jpg"};
+        final String[] coverImages = {
+                "Folder.jpg",           /* Windows */
+                "AlbumArtSmall.jpg",    /* Windows */
+                "AlbumArt.jpg",         /* Windows */
+                "Album.jpg",
+                ".folder.png",          /* KDE?    */
+                "cover.jpg",            /* rockbox */
+                "thumb.jpg"
+        };
+
+        /* Find the path without the extension  */
+        int index = f.getName().lastIndexOf('.');
+        if (index > 0) {
+            final String name = f.getName().substring(0, index);
+            final String ext  = f.getName().substring(index);
+            final File[] files = folder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String filename) {
+                    return filename.startsWith(name) && Arrays.asList(imageExt).contains(ext);
+                }
+            });
+            if (files != null && files.length > 0)
+                return files[0].getAbsolutePath();
+        }
+
+        /* Find the classic cover Images */
+        if ( folder.listFiles() != null) {
+            for (File file : folder.listFiles()) {
+                for (String str : coverImages) {
+                    if (file.getAbsolutePath().endsWith(str))
+                        return file.getAbsolutePath();
+                }
             }
+        }
         return null;
     }
 
@@ -274,7 +309,7 @@ public class AudioUtil {
 
             // no found yet, looking in folder
             if (coverPath == null || !(new File(coverPath)).exists())
-                coverPath = getCoverFromFolder(context, media);
+                coverPath = getCoverFromFolder(media);
 
             // try to get the cover from android MediaStore
             if (coverPath == null || !(new File(coverPath)).exists())

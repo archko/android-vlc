@@ -33,31 +33,22 @@ import android.widget.TextView;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.audio.AudioUtil;
 import org.videolan.vlc.util.Util;
 
 import java.util.ArrayList;
 
-public class HistoryAdapter extends BaseAdapter implements AudioServiceController.MediaPlayedListener {
+/* TODO */
+public class HistoryAdapter extends BaseAdapter  {
     public final static String TAG = "VLC/HistoryAdapter";
 
     private LayoutInflater mInflater;
-    private final AudioServiceController mAudioController;
     private final ArrayList<MediaWrapper> mMediaList;
 
     public HistoryAdapter(Context context) {
         mInflater = LayoutInflater.from(context);
 
-        mAudioController = AudioServiceController.getInstance();
-
         mMediaList = new ArrayList<MediaWrapper>();
-
-        mAudioController.addMediaPlayedListener(this);
-    }
-
-    public void release () {
-        mAudioController.removeMediaPlayedListener(this);
     }
 
     @Override
@@ -85,7 +76,6 @@ public class HistoryAdapter extends BaseAdapter implements AudioServiceControlle
         if (v == null) {
             v = mInflater.inflate(R.layout.list_item, parent, false);
             holder = new DirectoryViewHolder();
-            holder.layout = v.findViewById(R.id.layout_item);
             holder.title = (TextView) v.findViewById(R.id.title);
             holder.text = (TextView) v.findViewById(R.id.artist);
             holder.icon = (ImageView) v.findViewById(R.id.cover);
@@ -113,23 +103,9 @@ public class HistoryAdapter extends BaseAdapter implements AudioServiceControlle
     }
 
     public void remove(int position) {
-        mAudioController.remove(position);
-    }
-
-    @Override
-    public void onMediaPlayedAdded(MediaWrapper media, int index) {
-        mMediaList.add(index, media);
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public void onMediaPlayedRemoved(int index) {
-        mMediaList.remove(index);
-        notifyDataSetChanged();
     }
 
     private static class DirectoryViewHolder {
-        View layout;
         TextView title;
         TextView text;
         ImageView icon;

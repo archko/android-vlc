@@ -21,6 +21,7 @@
 package org.videolan.vlc.gui;
 
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -36,8 +37,6 @@ import android.view.animation.RotateAnimation;
 import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.android.widget.SlidingTabLayout;
 
 import org.videolan.vlc.BuildConfig;
 import org.videolan.vlc.R;
@@ -55,24 +54,23 @@ public class AboutFragment extends Fragment {
     public final static int MODE_TOTAL = 2; // Number of audio browser modes
 
     private ViewPager mViewPager;
-    private SlidingTabLayout mSlidingTabLayout;
+    private TabLayout mTabLayout;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("VLC " + "1.1.1"/*BuildConfig.VERSION_NAME*/);
-
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("VLC " + BuildConfig.VERSION_NAME);
         View v = inflater.inflate(R.layout.about, container, false);
 
         View aboutMain = v.findViewById(R.id.about_main);
         WebView t = (WebView)v.findViewById(R.id.webview);
-        String revision = "1"/*getString(R.string.build_revision)*/;
+        String revision = getString(R.string.build_revision);
         t.loadData(Util.readAsset("licence.htm", "").replace("!COMMITID!",revision), "text/html", "UTF8");
 
         TextView link = (TextView) v.findViewById(R.id.main_link);
         link.setText(Html.fromHtml(this.getString(R.string.about_link)));
 
-        String builddate = "2015-2-28";//getString(R.string.build_time);
-        String builder = "local";//getString(R.string.build_host);
+        String builddate = getString(R.string.build_time);
+        String builder = getString(R.string.build_host);
 
         TextView compiled = (TextView) v.findViewById(R.id.main_compiled);
         compiled.setText(builder + " (" + builddate + ")");
@@ -98,10 +96,8 @@ public class AboutFragment extends Fragment {
         mViewPager.setOffscreenPageLimit(MODE_TOTAL-1);
         mViewPager.setAdapter(new AudioPagerAdapter(lists, titles));
 
-        mSlidingTabLayout = (SlidingTabLayout) v.findViewById(R.id.sliding_tabs);
-        mSlidingTabLayout.setCustomTabView(R.layout.tab_layout, R.id.tab_title);
-        mSlidingTabLayout.setDistributeEvenly(true);
-        mSlidingTabLayout.setViewPager(mViewPager);
+        mTabLayout = (TabLayout) v.findViewById(R.id.sliding_tabs);
+        mTabLayout.setupWithViewPager(mViewPager);
 
         return v;
     }

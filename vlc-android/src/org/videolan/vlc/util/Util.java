@@ -21,8 +21,10 @@
 package org.videolan.vlc.util;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -31,21 +33,21 @@ import android.content.res.TypedArray;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils.TruncateAt;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcUtil;
 import org.videolan.libvlc.Media;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
+import org.videolan.vlc.PlaybackService;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
-import org.videolan.vlc.VLCCallbackTask;
-import org.videolan.vlc.audio.AudioServiceController;
 import org.videolan.vlc.gui.video.VideoPlayerActivity;
 
 import java.io.BufferedReader;
@@ -58,13 +60,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Util {
+    public final static String TAG = "VLC/Util";
     private static final AtomicInteger sNextGeneratedId = new AtomicInteger(1);
     public static final String ACTION_SCAN_START = "org.videolan.vlc.gui.ScanStart";
     public static final String ACTION_SCAN_STOP = "org.videolan.vlc.gui.ScanStop";
 
     /** Print an on-screen message to alert the user */
-    public static void toaster(Context context, int stringId) {
-        Toast.makeText(context, stringId, Toast.LENGTH_SHORT).show();
+    public static void snacker(View view, int stringId) {
+        Snackbar.make(view, stringId, Snackbar.LENGTH_SHORT).show();
+    }
+
+    /** Print an on-screen message to alert the user */
+    public static void snacker(View view, String message) {
+        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
     }
 
     public static int convertPxToDp(int px) {
@@ -105,25 +113,6 @@ public class Util {
             close(is);
             close(r);
         }
-    }
-
-    /**
-     * Retrieve the existing media object from the media library or create a
-     * new one from the given MRL.
-     *
-     * @param libVLC LibVLC instance
-     * @param mrl MRL of the media
-     * @return A media object from the media library or newly created
-     */
-    public static MediaWrapper getOrCreateMedia(LibVLC libVLC, String mrl) {
-        MediaWrapper mlItem = MediaLibrary.getInstance().getMediaItem(mrl);
-        if(mlItem == null) {
-            final Media media = new Media(libVLC, mrl);
-            media.parse(); // FIXME: parse should'nt be done asynchronously
-            media.release();
-            mlItem = new MediaWrapper(media);
-        }
-        return mlItem;
     }
 
     /**
@@ -199,59 +188,75 @@ public class Util {
         VLCApplication.getAppContext().sendBroadcast(intent);
     }
 
+    private static class DialogCallback implements PlaybackService.Client.Callback {
+        private final ProgressDialog dialog;
+        final private PlaybackService.Client mClient;
+        final private Runnable mRunnable;
 
-    public static void openMedia(Context context, final MediaWrapper media){
-        if (media == null)
-            return;
-        String mrl = media.getLocation();
-        if (media.getType() == MediaWrapper.TYPE_VIDEO)
-            VideoPlayerActivity.start(context, mrl, media.getTitle());
-        else if (media.getType() == MediaWrapper.TYPE_AUDIO) {
-            VLCCallbackTask task = new VLCCallbackTask(context) {
+        private interface Runnable {
+            void run(PlaybackService service);
+        }
+
+        private DialogCallback(Context context, Runnable runnable) {
+            mClient = new PlaybackService.Client(context, this);
+            mRunnable = runnable;
+            this.dialog = ProgressDialog.show(
+                    context,
+                    context.getApplicationContext().getString(R.string.loading) + "…",
+                    context.getApplicationContext().getString(R.string.please_wait), true);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
-                public void run() {
-                    AudioServiceController c = AudioServiceController.getInstance();
-                    c.load(media);
+                public void onCancel(DialogInterface dialog) {
+                    mClient.disconnect();
                 }
-            };
-            task.execute();
+            });
+            mClient.connect();
+        }
+
+        @Override
+        public void onConnected(PlaybackService service) {
+            mRunnable.run(service);
+            dialog.dismiss();
+        }
+
+        @Override
+        public void onDisconnected() {
+            dialog.dismiss();
         }
     }
 
-    public static  void openList(Context context, final List<MediaWrapper> list, final int position){
-        VLCCallbackTask task = new VLCCallbackTask(context){
-            @Override
-            public void run() {
-                AudioServiceController c = AudioServiceController.getInstance();
-
-                      /* Use the audio player by default. If a video track is
-                       * detected, then it will automatically switch to the video
-                       * player. This allows us to support more types of streams
-                       * (for example, RTSP and TS streaming) where ES can be
-                       * dynamically adapted rather than a simple scan.
-                       */
-                c.load(list, position);
-            }
-        };
-        task.execute();
+    public static void openMedia(final Context context, final MediaWrapper media){
+        if (media == null)
+            return;
+        if (media.getType() == MediaWrapper.TYPE_VIDEO)
+            VideoPlayerActivity.start(context, media.getUri(), media.getTitle());
+        else if (media.getType() == MediaWrapper.TYPE_AUDIO) {
+            new DialogCallback(context, new DialogCallback.Runnable() {
+                @Override
+                public void run(PlaybackService service) {
+                    service.load(media);
+                }
+            });
+        }
     }
 
-    public static void openStream(Context context, final String uri){
-        VLCCallbackTask task = new VLCCallbackTask(context){
+    public static void openList(final Context context, final List<MediaWrapper> list, final int position){
+        new DialogCallback(context, new DialogCallback.Runnable() {
             @Override
-            public void run() {
-                AudioServiceController c = AudioServiceController.getInstance();
-
-                      /* Use the audio player by default. If a video track is
-                       * detected, then it will automatically switch to the video
-                       * player. This allows us to support more types of streams
-                       * (for example, RTSP and TS streaming) where ES can be
-                       * dynamically adapted rather than a simple scan.
-                       */
-                c.loadLocation(uri);
+            public void run(PlaybackService service) {
+                service.load(list, position);
             }
-        };
-        task.execute();
+        });
+    }
+
+    public static void openStream(final Context context, final String uri){
+        new DialogCallback(context, new DialogCallback.Runnable() {
+            @Override
+            public void run(PlaybackService service) {
+                service.loadLocation(uri);
+            }
+        });
     }
 
     private static String getMediaString(Context ctx, int id) {
@@ -308,31 +313,37 @@ public class Util {
 
     @TargetApi(android.os.Build.VERSION_CODES.GINGERBREAD)
     public static void commitPreferences(SharedPreferences.Editor editor){
-        if (LibVlcUtil.isGingerbreadOrLater())
+        if (AndroidUtil.isGingerbreadOrLater())
             editor.apply();
         else
             editor.commit();
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static boolean deleteFile (Context context, String path){
+    public static boolean deleteFile (String path){
         boolean deleted = false;
-        if (path.startsWith("file://"))
-            path = path.substring(5);
-        else
-            return deleted;
-        if (LibVlcUtil.isHoneycombOrLater()){
-            ContentResolver cr = context.getContentResolver();
+        path = Uri.decode(Strings.removeFileProtocole(path));
+        //Delete from Android Medialib, for consistency with device MTP storing and other apps listing content:// media
+        if (AndroidUtil.isHoneycombOrLater()){
+            ContentResolver cr = VLCApplication.getAppContext().getContentResolver();
             String[] selectionArgs = { path };
             deleted = cr.delete(MediaStore.Files.getContentUri("external"),
-                    MediaStore.MediaColumns.DATA + "=?", selectionArgs) > 0;
+                    MediaStore.Files.FileColumns.DATA + "=?", selectionArgs) > 0;
         }
-        if (!deleted){
-            File file = new File(Uri.decode(path));
-            if (file.exists())
-                deleted = file.delete();
-        }
+        File file = new File(path);
+        if (file.exists())
+            deleted |= file.delete();
         return deleted;
+    }
+
+    public static boolean recursiveDelete(Context context, File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles())
+                recursiveDelete(context, child);
+            return fileOrDirectory.delete();
+        } else {
+            return deleteFile (fileOrDirectory.getPath());
+        }
     }
 
     public static boolean close(Closeable closeable) {
@@ -344,7 +355,7 @@ public class Util {
                 return false;
             }
         } else {
-                return false;
+            return false;
         }
     }
 
@@ -357,7 +368,7 @@ public class Util {
             return false;
         if (path.startsWith(AndroidDevices.EXTERNAL_PUBLIC_DIRECTORY))
             return true;
-        if (LibVlcUtil.isLolliPopOrLater())
+        if (AndroidUtil.isLolliPopOrLater())
             return false;
         File file = new File(path);
         return (file.exists() && file.canWrite());

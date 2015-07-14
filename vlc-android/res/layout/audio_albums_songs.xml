@@ -5,10 +5,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <com.android.widget.SlidingTabLayout
-        android:id="@+id/sliding_tabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+    <include layout="@layout/tab_layout" />
 
     <org.videolan.vlc.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"

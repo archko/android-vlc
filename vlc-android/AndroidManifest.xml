@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.videolan.vlc"
     android:installLocation="auto"
-    android:versionCode="01030100"
-    android:versionName="1.3.1" >
+    android:versionCode="01049900"
+    android:versionName="1.4.99" >
     <!--
          versionCode scheme is T M NN RR AA
          T: Target/Flavour (0 for Android, 1 for ATV, 2 for Chrome?)
@@ -26,16 +26,28 @@
         android:minSdkVersion="7"
         android:targetSdkVersion="22" />
 
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_LOGS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- /!\ PHONE_CALLS
+         See org.videolan.vlc.PhoneStateReceiver.java
+         -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"
+       android:maxSdkVersion="10" />
+
+    <!-- STORAGE -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- DEVELOPMENT_TOOLS signature -->
+    <uses-permission android:name="android.permission.READ_LOGS"
+       android:maxSdkVersion="15" />
+
+    <!-- Internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- normal -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <application
         android:name="org.videolan.vlc.VLCApplication"
@@ -51,6 +63,7 @@
             android:icon="@drawable/icon"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@style/Theme.VLC" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -63,13 +76,13 @@
         </activity>
         <activity
             android:name=".gui.SecondaryActivity"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@style/Theme.VLC"/>
+        <activity
+            android:name=".gui.browser.FilePickerActivity"
+            android:theme="@style/Theme.VLC.PickerDialog"/>
         <activity android:name=".gui.CompatErrorActivity" />
         <activity android:name=".gui.PreferencesActivity"
-            android:theme="@style/Theme.VLC" />
-        <activity
-            android:name=".gui.BrowserActivity"
-            android:label="@string/mediafiles"
             android:theme="@style/Theme.VLC" />
 
         <activity android:name=".gui.DebugLogActivity"
@@ -402,7 +415,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="org.videolan.vlc.audio.AudioService" />
+        <service android:name=".PlaybackService" />
 
         <receiver android:name=".PhoneStateReceiver" >
             <intent-filter>
@@ -412,7 +425,7 @@
         <receiver
             android:name=".widget.VLCAppWidgetProvider"
             android:exported="false"
-            android:label="VLC mini player" >
+            android:label="VLC resizable widget" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -18,7 +18,7 @@
 
         <item name="colorPrimary">@color/orange800</item>
         <item name="colorPrimaryDark">@color/orange700</item>
-        <item name="colorAccent">@color/orange800</item>
+        <item name="colorAccent">@color/orange500</item>
         <item name="item_footer">@color/grey300</item>
         <item name="background_default">@color/grey50</item>
         <item name="background_default_darker">@color/grey100</item>
@@ -54,7 +54,9 @@
         <item name="ic_pause">@drawable/ic_pause</item>
         <item name="ic_previous">@drawable/ic_previous</item>
         <item name="ic_next">@drawable/ic_next</item>
+        <item name="ic_close">@drawable/ic_close</item>
         <item name="ic_save">@drawable/ic_save</item>
+        <item name="ic_playasaudio_off">@drawable/ic_playasaudio_off</item>
         <item name="ic_menu_video">@drawable/ic_menu_video</item>
         <item name="ic_menu_audio">@drawable/ic_menu_audio</item>
         <item name="ic_menu_folder">@drawable/ic_menu_folder</item>
@@ -75,6 +77,17 @@
         <item name="ic_sleep_normal_style">@drawable/ic_sleep_normal</item>
         <item name="ic_jumpto_normal_style">@drawable/ic_jumpto_normal</item>
         <item name="ic_equalizer_normal_style">@drawable/ic_equalizer_normal</item>
+    </style>
+
+    <style name="Theme.VLC.PickerDialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:gridViewStyle">@style/Theme.VLC.List</item>
+        <item name="background_default">@color/grey50</item>
+        <item name="background_default_darker">@color/grey100</item>
+        <item name="font_default">@color/grey900</item>
+        <item name="font_light">@color/grey600</item>
+        <item name="list_subtitle">@color/list_subtitle</item>
+        <item name="list_title">@color/list_title</item>
+        <item name="android:windowBackground">@color/grey200</item>
     </style>
 
     <style name="Theme.VLC.Black" parent="Theme.VLC.Black.7"/>
@@ -130,7 +143,9 @@
         <item name="ic_pause">@drawable/ic_pause_w</item>
         <item name="ic_previous">@drawable/ic_previous_w</item>
         <item name="ic_next">@drawable/ic_next_w</item>
+        <item name="ic_close">@drawable/ic_close_w</item>
         <item name="ic_save">@drawable/ic_save_w</item>
+        <item name="ic_playasaudio_off">@drawable/ic_playasaudio_off_w</item>
         <item name="ic_menu_video">@drawable/ic_menu_video_w</item>
         <item name="ic_menu_audio">@drawable/ic_menu_audio_w</item>
         <item name="ic_menu_folder">@drawable/ic_menu_folder_w</item>

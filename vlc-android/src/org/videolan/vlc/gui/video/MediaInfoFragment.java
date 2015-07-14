@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
@@ -41,6 +42,7 @@ import android.widget.TextView;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.util.Extensions;
+import org.videolan.libvlc.util.VLCUtil;
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
 import org.videolan.vlc.R;
@@ -66,7 +68,7 @@ public class MediaInfoFragment extends ListFragment {
     private TextView mLengthView;
     private TextView mSizeView;
     private TextView mPathView;
-    private ImageButton mPlayButton;
+    private FloatingActionButton mPlayButton;
     private ImageButton mDelete;
     private ImageView mSubtitles;
     private Media mMedia;
@@ -94,7 +96,7 @@ public class MediaInfoFragment extends ListFragment {
         mLengthView = (TextView) v.findViewById(R.id.length);
         mSizeView = (TextView) v.findViewById(R.id.size_value);
         mPathView = (TextView) v.findViewById(R.id.info_path);
-        mPlayButton = (ImageButton) v.findViewById(R.id.play);
+        mPlayButton = (FloatingActionButton) v.findViewById(R.id.play);
         mDelete = (ImageButton) v.findViewById(R.id.info_delete);
         mSubtitles = (ImageView) v.findViewById(R.id.info_subtitles);
 
@@ -106,7 +108,7 @@ public class MediaInfoFragment extends ListFragment {
         mPlayButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                VideoPlayerActivity.start(getActivity(), mItem.getLocation());
+                VideoPlayerActivity.start(getActivity(), mItem.getUri());
             }
         });
 
@@ -117,7 +119,7 @@ public class MediaInfoFragment extends ListFragment {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            boolean deleted = Util.deleteFile(getActivity(), mItem.getLocation());
+                            boolean deleted = Util.deleteFile(mItem.getLocation());
                             if (deleted) {
                                 mHandler.obtainMessage(EXIT).sendToTarget();
                             }
@@ -149,6 +151,8 @@ public class MediaInfoFragment extends ListFragment {
         super.onStop();
         if (mThreadPoolExecutor != null)
             mThreadPoolExecutor.shutdownNow();
+        if (mMedia != null)
+            mMedia.release();
     }
 
     @Override
@@ -219,13 +223,13 @@ public class MediaInfoFragment extends ListFragment {
             final LibVLC libVlc = VLCInstance.get();
             if (libVlc == null)
                 return;
-            mMedia = new Media(libVlc, mItem.getLocation());
+            mMedia = new Media(libVlc, mItem.getUri());
             mMedia.parse();
-            mMedia.release();
             int videoHeight = mItem.getHeight();
             int videoWidth = mItem.getWidth();
-            if (videoWidth == 0 || videoHeight == 0)
+            if (videoWidth == 0 || videoHeight == 0) {
                 return;
+            }
 
             mHandler.sendEmptyMessage(NEW_TEXT);
 
@@ -242,7 +246,7 @@ public class MediaInfoFragment extends ListFragment {
             // Get the thumbnail.
             mImage = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 
-            byte[] b = libVlc.getThumbnail(mItem.getLocation(), width, height);
+            byte[] b = VLCUtil.getThumbnail(mMedia, width, height);
 
             if (b == null) // We were not able to create a thumbnail for this item.
                 return;
@@ -321,7 +325,7 @@ public class MediaInfoFragment extends ListFragment {
                     break;
                 case EXIT:
                     fragment.getActivity().finish();
-                    MediaLibrary.getInstance().loadMediaItems(fragment.getActivity(), true);
+                    MediaLibrary.getInstance().loadMediaItems(true);
                     break;
                 case SHOW_SUBTITLES:
                     fragment.mSubtitles.setVisibility(View.VISIBLE);

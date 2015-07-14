@@ -20,19 +20,18 @@
  *****************************************************************************/
 package org.videolan.vlc;
 
+import android.net.Uri;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
-
-import org.videolan.libvlc.LibVLC;
 
 public class MediaWrapperList {
     private static final String TAG = "VLC/MediaWrapperList";
 
     public interface EventListener {
-        public void onItemAdded(int index, String mrl);
-        public void onItemRemoved(int index, String mrl);
-        public void onItemMoved(int indexBefore, int indexAfter, String mrl);
+        void onItemAdded(int index, String mrl);
+        void onItemRemoved(int index, String mrl);
+        void onItemMoved(int indexBefore, int indexAfter, String mrl);
     }
 
     private static final int EVENT_ADDED = 0;
@@ -43,7 +42,7 @@ public class MediaWrapperList {
     private ArrayList<MediaWrapper> mInternalList;
     private ArrayList<EventListener> mEventListenerList;
 
-    public MediaWrapperList(LibVLC libVLC) {
+    public MediaWrapperList() {
         mEventListenerList = new ArrayList<EventListener>();
         mInternalList = new ArrayList<MediaWrapper>();
     }
@@ -91,8 +90,8 @@ public class MediaWrapperList {
         return position >= 0 && position < mInternalList.size();
     }
 
-    public void insert(int position, String mrl) {
-        insert(position, new MediaWrapper(mrl));
+    public void insert(int position, Uri uri) {
+        insert(position, new MediaWrapper(uri));
     }
     public void insert(int position, MediaWrapper media) {
         mInternalList.add(position, media);

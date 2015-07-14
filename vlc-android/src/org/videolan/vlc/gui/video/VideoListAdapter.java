@@ -54,12 +54,10 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
     private int mSortDirection = 1;
     private int mSortBy = SORT_BY_TITLE;
     private boolean mListMode = false;
-    private Context mContext;
     private VideoGridFragment mFragment;
 
-    public VideoListAdapter(Context context, VideoGridFragment fragment) {
-        super(context, 0);
-        mContext = context;
+    public VideoListAdapter(VideoGridFragment fragment) {
+        super(fragment.getActivity(), 0);
         mFragment = fragment;
     }
 
@@ -206,19 +204,19 @@ public class VideoListAdapter extends ArrayAdapter<MediaWrapper>
         if (thumbnail == null) {
             // missing thumbnail
             holder.thumbnail.setScaleType(ImageView.ScaleType.CENTER);
-            thumbnail = BitmapCache.GetFromResource(v, R.drawable.ic_cone_o);
+            thumbnail = BitmapCache.getFromResource(v, R.drawable.ic_cone_o);
         }
         else if (thumbnail.getWidth() == 1 && thumbnail.getHeight() == 1) {
             // dummy thumbnail
             holder.thumbnail.setScaleType(ImageView.ScaleType.CENTER);
-            thumbnail = BitmapCache.GetFromResource(v, R.drawable.ic_cone_o);
+            thumbnail = BitmapCache.getFromResource(v, R.drawable.ic_cone_o);
         }
         //FIXME Warning: the thumbnails are upscaled in the grid view!
         holder.thumbnail.setImageBitmap(thumbnail);
 
         /* Color state */
         ColorStateList titleColor = v.getResources().getColorStateList(
-                Util.getResourceFromAttribute(mContext, R.attr.list_title));
+                Util.getResourceFromAttribute(getContext(), R.attr.list_title));
         holder.title.setTextColor(titleColor);
 
         if (media instanceof MediaGroup)

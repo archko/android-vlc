@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.videolan.vlc.MediaLibrary;
 import org.videolan.vlc.MediaWrapper;
@@ -34,6 +35,7 @@ import org.videolan.vlc.R;
 import org.videolan.vlc.gui.audio.AudioAlbumFragment;
 import org.videolan.vlc.gui.audio.AudioAlbumsSongsFragment;
 import org.videolan.vlc.gui.audio.EqualizerFragment;
+import org.videolan.vlc.gui.browser.StorageBrowserFragment;
 import org.videolan.vlc.gui.video.MediaInfoFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.gui.video.VideoListAdapter;
@@ -42,7 +44,7 @@ import org.videolan.vlc.interfaces.ISortable;
 import java.util.ArrayList;
 
 public class SecondaryActivity extends AudioPlayerContainerActivity {
-    public final static String TAG = "VLC/EqualizerFragment";
+    public final static String TAG = "VLC/SecondaryActivity";
 
     public static final String ALBUMS_SONGS = "albumsSongs";
     public static final String ALBUM = "album";
@@ -50,6 +52,7 @@ public class SecondaryActivity extends AudioPlayerContainerActivity {
     public static final String ABOUT = "about";
     public static final String MEDIA_INFO = "mediaInfo";
     public static final String VIDEO_GROUP_LIST = "videoGroupList";
+    public static final String STORAGE_BROWSER = "storage_browser";
 
     Fragment mFragment;
 
@@ -75,6 +78,19 @@ public class SecondaryActivity extends AudioPlayerContainerActivity {
     }
 
     @Override
+    protected void onResume() {
+        overridePendingTransition(0,0);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        if (isFinishing())
+            overridePendingTransition(0, 0);
+        super.onPause();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         if (mFragment instanceof VideoGridFragment)
             getMenuInflater().inflate(R.menu.video_group, menu);
@@ -87,7 +103,11 @@ public class SecondaryActivity extends AudioPlayerContainerActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_placeholder);
+                if (current instanceof StorageBrowserFragment)
+                    ((StorageBrowserFragment) current).goBack();
+                else
+                    finish();
                 return true;
             case R.id.ml_menu_sortby_name:
             case R.id.ml_menu_sortby_length:
@@ -97,7 +117,7 @@ public class SecondaryActivity extends AudioPlayerContainerActivity {
                 break;
             case R.id.ml_menu_refresh:
                 if (!MediaLibrary.getInstance().isWorking())
-                    MediaLibrary.getInstance().loadMediaItems(this, true);
+                    MediaLibrary.getInstance().loadMediaItems(true);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -123,9 +143,10 @@ public class SecondaryActivity extends AudioPlayerContainerActivity {
             ((MediaInfoFragment)mFragment).setMediaLocation(getIntent().getStringExtra("param"));
         } else if(id.equals(VIDEO_GROUP_LIST)) {
             mFragment = new VideoGridFragment();
-            ((VideoGridFragment)mFragment).setGroup(getIntent().getStringExtra("param"));
-        }
-        else {
+            ((VideoGridFragment) mFragment).setGroup(getIntent().getStringExtra("param"));
+        } else if (id.equals(STORAGE_BROWSER)){
+            mFragment = new StorageBrowserFragment();
+        } else {
             throw new IllegalArgumentException("Wrong fragment id.");
         }
     }

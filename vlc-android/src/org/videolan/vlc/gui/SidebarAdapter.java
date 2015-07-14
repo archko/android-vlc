@@ -38,6 +38,7 @@ import org.videolan.vlc.VLCApplication;
 import org.videolan.vlc.gui.audio.AudioBrowserFragment;
 import org.videolan.vlc.gui.browser.FileBrowserFragment;
 import org.videolan.vlc.gui.browser.NetworkBrowserFragment;
+import org.videolan.vlc.gui.network.MRLPanelFragment;
 import org.videolan.vlc.gui.video.VideoGridFragment;
 import org.videolan.vlc.util.Util;
 
@@ -98,7 +99,6 @@ public class SidebarAdapter extends BaseAdapter {
         for(SidebarEntry e : entries) {
             sidebarFragments.add(e.id);
         }
-//        entries.add(new SidebarEntry(SidebarEntry.ID_PREFERENCES, R.string.preferences, R.attr.ic_menu_preferences, SidebarEntry.TYPE_ACTION));
     }
 
     public SidebarAdapter(Context context) {

@@ -20,22 +20,16 @@
 
 package org.videolan.vlc;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Stack;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.util.Log;
 
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
+import org.videolan.libvlc.util.AndroidUtil;
 import org.videolan.libvlc.util.Extensions;
 import org.videolan.vlc.gui.audio.AudioBrowserListAdapter;
 import org.videolan.vlc.interfaces.IBrowser;
@@ -44,12 +38,21 @@ import org.videolan.vlc.util.Util;
 import org.videolan.vlc.util.VLCInstance;
 import org.videolan.vlc.util.WeakHandler;
 
-import android.content.Context;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.text.TextUtils;
-import android.util.Log;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.lang.Thread.State;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Stack;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class MediaLibrary {
     public final static String TAG = "VLC/MediaLibrary";
@@ -63,7 +66,7 @@ public class MediaLibrary {
     private boolean isStopping = false;
     private boolean mRestart = false;
     protected Thread mLoadingThread;
-    private IBrowser mBrowser = null;
+    private WeakReference<IBrowser> mBrowser = null;
 
     public final static HashSet<String> FOLDER_BLACKLIST;
     static {
@@ -91,7 +94,7 @@ public class MediaLibrary {
         mItemListLock = new ReentrantReadWriteLock();
     }
 
-    public void loadMediaItems(Context context, boolean restart) {
+    public void loadMediaItems(boolean restart) {
         if (restart && isWorking()) {
             /* do a clean restart if a scan is ongoing */
             mRestart = true;
@@ -194,9 +197,11 @@ public class MediaLibrary {
         String[] items, playlistNames = db.getPlaylists();
         for (String playlistName : playlistNames){
             items = db.playlistGetItems(playlistName);
+            if (items == null)
+                continue;
             playList = new AudioBrowserListAdapter.ListItem(playlistName, null, null, false);
             for (String track : items){
-                playList.mMediaList.add(new MediaWrapper(track));
+                playList.mMediaList.add(new MediaWrapper(AndroidUtil.LocationToUri(track)));
             }
             playlistItems.add(playList);
         }
@@ -245,8 +250,8 @@ public class MediaLibrary {
             final MediaDatabase mediaDatabase = MediaDatabase.getInstance();
 
             // show progressbar in footer
-            if (mBrowser != null)
-                mBrowser.showProgressBar();
+            if (mBrowser != null && mBrowser.get() != null)
+                mBrowser.get().showProgressBar();
 
             List<File> mediaDirs = mediaDatabase.getMediaDirs();
             if (mediaDirs.size() == 0) {
@@ -282,7 +287,6 @@ public class MediaLibrary {
                 while (!directories.isEmpty()) {
                     File dir = directories.pop();
                     String dirPath = dir.getAbsolutePath();
-                    File[] f = null;
 
                     // Skip some system folders
                     if (dirPath.startsWith("/proc/") || dirPath.startsWith("/sys/") || dirPath.startsWith("/dev/"))
@@ -308,17 +312,15 @@ public class MediaLibrary {
                     // Filter the extensions and the folders
                     try {
                         String[] files = dir.list();
-                        File file;
-                        if (files != null){
-                            for (String fileName : files){
-                                file = new File(dirPath, fileName);
+                        if (files != null) {
+                            for (String fileName : files) {
+                                File file = new File(dirPath, fileName);
                                 if (mediaFileFilter.accept(file)){
                                     if (file.isFile())
                                         mediaToScan.add(file);
                                     else if (file.isDirectory())
                                         directories.push(file);
                                 }
-                                file = null;
                             }
                         }
                     } catch (Exception e){
@@ -333,12 +335,14 @@ public class MediaLibrary {
                 }
 
                 //Remove ignored files
-                HashSet<String> mediasToRemove = new HashSet<String>();
+                HashSet<Uri> mediasToRemove = new HashSet<Uri>();
+                String path;
                 outloop:
-                for (String path : existingMedias.keySet()){
+                for (Map.Entry<String, MediaWrapper> entry : existingMedias.entrySet()){
+                    path = entry.getKey();
                     for (String dirPath : dirsToIgnore) {
                         if (path.startsWith(dirPath)) {
-                            mediasToRemove.add(path);
+                            mediasToRemove.add(entry.getValue().getUri());
                             mItemList.remove(existingMedias.get(path));
                             continue outloop;
                         }
@@ -348,10 +352,10 @@ public class MediaLibrary {
 
                 // Process the stacked items
                 for (File file : mediaToScan) {
-                    String fileURI = LibVLC.PathToURI(file.getPath());
-                    if (mBrowser != null)
-                        mBrowser.sendTextInfo(file.getName(), count,
-                            mediaToScan.size());
+                    String fileURI = AndroidUtil.FileToUri(file).toString();
+                    if (mBrowser != null && mBrowser.get() != null)
+                        mBrowser.get().sendTextInfo(file.getName(), count,
+                                mediaToScan.size());
                     count++;
                     if (existingMedias.containsKey(fileURI)) {
                         /**
@@ -368,16 +372,17 @@ public class MediaLibrary {
                     } else {
                         mItemListLock.writeLock().lock();
                         // create new media item
-                        final Media media = new Media(libVlcInstance, fileURI);
+                        final Media media = new Media(libVlcInstance, Uri.parse(fileURI));
                         media.parse();
-                        media.release();
                         /* skip files with .mod extension and no duration */
                         if ((media.getDuration() == 0 || (media.getTrackCount() != 0 && TextUtils.isEmpty(media.getTrack(0).codec))) &&
                             fileURI.endsWith(".mod")) {
                             mItemListLock.writeLock().unlock();
+                            media.release();
                             continue;
                         }
                         MediaWrapper mw = new MediaWrapper(media);
+                        media.release();
                         mw.setLastModified(file.lastModified());
                         mItemList.add(mw);
                         // Add this item to database
@@ -401,7 +406,7 @@ public class MediaLibrary {
                     for (String fileURI : addedLocations) {
                         existingMedias.remove(fileURI);
                     }
-                    mediaDatabase.removeMedias(existingMedias.keySet());
+                    mediaDatabase.removeMediaWrappers(existingMedias.values());
 
                     /*
                      * In case of file matching path of a folder from another removable storage
@@ -412,9 +417,9 @@ public class MediaLibrary {
                 }
 
                 // hide progressbar in footer
-                if (mBrowser != null) {
-                    mBrowser.clearTextInfo();
-                    mBrowser.hideProgressBar();
+                if (mBrowser != null && mBrowser.get() != null) {
+                    mBrowser.get().clearTextInfo();
+                    mBrowser.get().hideProgressBar();
                 }
 
                 Util.actionScanStop();
@@ -426,7 +431,7 @@ public class MediaLibrary {
                 }
             }
         }
-    };
+    }
 
     private Handler restartHandler = new RestartHandler(this);
 
@@ -470,6 +475,9 @@ public class MediaLibrary {
     }
 
     public void setBrowser(IBrowser browser) {
-        mBrowser = browser;
+        if (browser != null)
+            mBrowser = new WeakReference<IBrowser>(browser);
+        else
+            mBrowser.clear();
     }
 }

@@ -20,7 +20,7 @@
 
 package org.videolan.vlc.widget;
 
-import org.videolan.vlc.audio.AudioServiceController;
+import org.videolan.vlc.PlaybackService;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -41,36 +41,32 @@ public abstract class AudioMediaSwitcher extends FlingViewGroup {
         setOnViewSwitchedListener(mViewSwitchListener);
     }
 
-    public void updateMedia() {
-        AudioServiceController audioController = AudioServiceController.getInstance();
-        if (audioController == null)
-            return;
-
+    public void updateMedia(PlaybackService service) {
         removeAllViews();
 
         hasPrevious = false;
         previousPosition = 0;
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (audioController.hasPrevious()) {
+        if (service.hasPrevious()) {
             addMediaView(inflater,
-                    audioController.getTitlePrev(),
-                    audioController.getArtistPrev(),
-                    audioController.getCoverPrev());
+                    service.getTitlePrev(),
+                    service.getArtistPrev(),
+                    service.getCoverPrev());
             hasPrevious = true;
         }
-        if (audioController.hasMedia())
+        if (service.hasMedia())
             addMediaView(inflater,
-                    audioController.getTitle(),
-                    audioController.getArtist(),
-                    audioController.getCover());
-        if (audioController.hasNext())
+                    service.getTitle(),
+                    service.getArtist(),
+                    service.getCover());
+        if (service.hasNext())
             addMediaView(inflater,
-                    audioController.getTitleNext(),
-                    audioController.getArtistNext(),
-                    audioController.getCoverNext());
+                    service.getTitleNext(),
+                    service.getArtistNext(),
+                    service.getCoverNext());
 
-        if (audioController.hasPrevious() && audioController.hasMedia()) {
+        if (service.hasPrevious() && service.hasMedia()) {
             previousPosition = 1;
             scrollTo(1);
         }

@@ -29,20 +29,23 @@ import android.support.v4.app.DialogFragment;
 import android.text.format.DateFormat;
 import android.widget.TimePicker;
 
-import org.videolan.libvlc.LibVLC;
-import org.videolan.libvlc.LibVlcUtil;
+import org.videolan.libvlc.MediaPlayer;
+import org.videolan.libvlc.util.AndroidUtil;
+import org.videolan.vlc.PlaybackService;
 import org.videolan.vlc.R;
 import org.videolan.vlc.VLCApplication;
+import org.videolan.vlc.gui.PlaybackServiceFragment;
 import org.videolan.vlc.util.VLCInstance;
 
 import java.util.Calendar;
 
-public class TimePickerDialogFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
-
+public class TimePickerDialogFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener,
+        PlaybackService.Client.Callback {
+    private PlaybackService mService;
     public static final int ACTION_SLEEP = 0;
     public static final int ACTION_JUMP = 1;
 
-    boolean setTime = !LibVlcUtil.isICSOrLater() || LibVlcUtil.isLolliPopOrLater();
+    boolean setTime = !AndroidUtil.isICSOrLater() || AndroidUtil.isLolliPopOrLater();
     int action =-1;
 
     public TimePickerDialogFragment(){}
@@ -68,12 +71,6 @@ public class TimePickerDialogFragment extends DialogFragment implements TimePick
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        getDialog().setCancelable(true);
-    }
-
-    @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         if (!setTime){  //workaround for weird ICS&JB bug
             setTime = true;
@@ -89,13 +86,36 @@ public class TimePickerDialogFragment extends DialogFragment implements TimePick
                 if (sleepTime.before(currentTime))
                     sleepTime.add(Calendar.DATE, 1);
 
-                AdvOptionsDialog.setSleep(view.getContext(), sleepTime);
+                AdvOptionsDialog.setSleep(sleepTime);
                 break;
             case ACTION_JUMP:
                 long time = ( hourOfDay * 60l + minute ) * 60000l;
-                final LibVLC libVLC = VLCInstance.get();
-                libVLC.setTime(time);
+                if (mService != null)
+                    mService.setTime(time);
                 break;
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        getDialog().setCancelable(true);
+        PlaybackServiceFragment.registerPlaybackService(this, this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        PlaybackServiceFragment.unregisterPlaybackService(this, this);
+    }
+
+    @Override
+    public void onConnected(PlaybackService service) {
+        mService = service;
+    }
+
+    @Override
+    public void onDisconnected() {
+        mService = null;
     }
 }

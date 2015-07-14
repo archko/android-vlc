@@ -37,6 +37,8 @@
     <string name="set_song">Set as ringtone</string>
     <string name="info">Information</string>
     <string name="confirm_delete">Delete the file \'%1$s\'?</string>
+    <string name="confirm_delete_folder">Delete the folder \'%1$s\' and all its contents?</string>
+    <string name="confirm_delete_playlist">Delete playlist \'%1$s\'?</string>
     <string name="ringtone_set">The file \'%1$s\' was set as the ringtone.</string>
     <string name="ringtone_error">An error occurred while setting the ringtone.</string>
     <string name="pause">Pause</string>
@@ -141,6 +143,7 @@
     <string name="tools">Tools</string>
     <string name="playback_speed">Playback speed</string>
     <string name="sleep_title">Sleep timer</string>
+    <string name="sleep_in">Sleep in</string>
     <string name="sleep_cancel">Cancel sleep timer</string>
     <string name="jump_to_time">Jump to Time</string>
     <string name="subtitle_label">Add subtitle file</string>
@@ -325,6 +328,7 @@
 
     <string name="audio_delay">Audio delay</string>
     <string name="spu_delay">Subtitle delay</string>
+    <string name="sleep_time_not_set">none set</string>
     <string name="network_shares_discovery">Looking for network shares...</string>
     <string name="network_empty">This directory is empty.</string>
     <string name="network_connection_needed">No connection to local network.</string>
@@ -344,6 +348,9 @@
     <string name="more_actions">More Actions</string>
     <string name="move">Move</string>
     <string name="back_quit_lock">Press back again to quit video</string>
+    <string name="playlist_deleted">Playlist deleted</string>
+    <string name="file_deleted">File deleted</string>
+    <string name="no_subs_found">No subtitles in this directory</string>
 
     <string-array name="hardware_acceleration_list">
         <item>@string/automatic</item>
