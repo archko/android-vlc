@@ -304,12 +304,4 @@
 
     <string name="show_hidden_summary">show hidden files</string>
     <string name="show_hidden">show hidden files</string>
-
-    <!-- custom prefs -->
-    <string name="show_media_only_category">显示媒体文件</string>
-    <string name="show_media_only_summary">只显示媒体文件</string>
-    <string name="show_media_only">只显示媒体文件</string>
-
-    <string name="show_hidden_summary">显示隐藏文件</string>
-    <string name="show_hidden">显示隐藏文件</string>
 </resources>

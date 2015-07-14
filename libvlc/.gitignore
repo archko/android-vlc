@@ -1,6 +1,1 @@
-bin/
-gen/
-libs/
-obj/
-jni/libvlcjni.h
-.settings
+/build

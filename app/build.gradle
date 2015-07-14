@@ -3,7 +3,7 @@ android {
     signingConfigs {
         config {
             keyAlias 'android'
-            storeFile file('D:/Ganji/ganji_debug.keystore')
+            storeFile file('D:/Projects/VLC/android-vlc/vlc_debug.keystore')
         }
     }
     compileSdkVersion 22
@@ -24,6 +24,8 @@ android {
         }
         release {
             minifyEnabled false
+            buildConfigField "Boolean", "tv", "false"
+            buildConfigField "String", "FLAVOR_target", "\"chrome\""
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

@@ -63,14 +63,14 @@ public class AboutFragment extends Fragment {
 
         View aboutMain = v.findViewById(R.id.about_main);
         WebView t = (WebView)v.findViewById(R.id.webview);
-        String revision = getString(R.string.build_revision);
+        String revision = ""/*getString(R.string.build_revision)*/;
         t.loadData(Util.readAsset("licence.htm", "").replace("!COMMITID!",revision), "text/html", "UTF8");
 
         TextView link = (TextView) v.findViewById(R.id.main_link);
         link.setText(Html.fromHtml(this.getString(R.string.about_link)));
 
-        String builddate = getString(R.string.build_time);
-        String builder = getString(R.string.build_host);
+        String builddate = ""/*getString(R.string.build_time)*/;
+        String builder = ""/*getString(R.string.build_host)*/;
 
         TextView compiled = (TextView) v.findViewById(R.id.main_compiled);
         compiled.setText(builder + " (" + builddate + ")");
