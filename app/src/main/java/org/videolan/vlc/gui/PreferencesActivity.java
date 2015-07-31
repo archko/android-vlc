@@ -78,9 +78,6 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
     private PlaybackService.Client mClient = new PlaybackService.Client(this, this);
     private PlaybackService mService;
-    public final static String SHOW_MEDIA_ONLY= "show_media_only";
-    public final static String SHOW_HIDDEN= "show_hidden";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -539,10 +539,10 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
         mSize.setOnClickListener(null);
 
         /* Stop the earliest possible to avoid vout error */
-        if (isFinishing())
+        //if (isFinishing())
             stopPlayback();
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            requestVisibleBehind(true);
+        //else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            //requestVisibleBehind(true);
     }
 
     @Override
@@ -661,11 +661,20 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
         if (AndroidUtil.isHoneycombOrLater()) {
             if (mOnLayoutChangeListener == null) {
                 mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
+                    private final Runnable mRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            changeSurfaceLayout();
+                        }
+                    };
                     @Override
                     public void onLayoutChange(View v, int left, int top, int right,
                                                int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                        if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom)
-                            changeSurfaceLayout();
+                        if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+                            /* changeSurfaceLayout need to be called after the layout changed */
+                            mHandler.removeCallbacks(mRunnable);
+                            mHandler.post(mRunnable);
+                        }
                     }
                 };
             }
@@ -968,6 +977,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
         case KeyEvent.KEYCODE_SPACE:
             if (mIsNavMenu)
                 return navigateDvdMenu(keyCode);
+            else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) //prevent conflict with remote control
+                return super.onKeyDown(keyCode, event);
             else
                 doPlayPause();
             return true;
@@ -1423,6 +1434,12 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
             return;
         /* Encountered Error, exit player with a message */
         mAlertDialog = new AlertDialog.Builder(VideoPlayerActivity.this)
+        .setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                exit(RESULT_PLAYBACK_ERROR);
+            }
+        })
         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int id) {
@@ -2736,7 +2753,14 @@ public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
     public void showAdvancedOptions(View v) {
         FragmentManager fm = getSupportFragmentManager();
         AdvOptionsDialog advOptionsDialog = new AdvOptionsDialog();
+        advOptionsDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                dimStatusBar(true);
+            }
+        });
         advOptionsDialog.show(fm, "fragment_adv_options");
+        hideOverlay(false);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)

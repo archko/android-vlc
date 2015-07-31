@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -90,6 +92,7 @@ public class NativeCrashActivity extends Activity {
             mCrashLog.setText(log);
             mRestartButton.setEnabled(true);
             mSendLog.setEnabled(true);
+            longLog("log", log);
         }
     }
 
@@ -144,4 +147,25 @@ public class NativeCrashActivity extends Activity {
         }
     }
 
+    public static void longLog(String tag, String tempData) {
+
+        if (TextUtils.isEmpty(tempData)) {
+            Log.d(tag, "result is null.");
+            return;
+        }
+        final int len = tempData.length();
+        final int div = 2000;
+        int count = len / div;
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                Log.d(tag, tempData.substring(i * div, (i + 1) * div));
+            }
+            int mode = len % div;
+            if (mode > 0) {
+                Log.d(tag, tempData.substring(div * count, len));
+            }
+        } else {
+            Log.d(tag, tempData);
+        }
+    }
 }

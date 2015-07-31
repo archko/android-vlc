@@ -39,7 +39,7 @@ public class VLCInstance {
     /** A set of utility functions for the VLC application */
     public synchronized static LibVLC get() throws IllegalStateException {
         if (sLibVLC == null) {
-            Thread.setDefaultUncaughtExceptionHandler(new VLCCrashHandler());
+            //Thread.setDefaultUncaughtExceptionHandler(new VLCCrashHandler());
 
             final Context context = VLCApplication.getAppContext();
             if(!VLCUtil.hasCompatibleCPU(context)) {
